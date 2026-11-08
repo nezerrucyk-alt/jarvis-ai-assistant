@@ -1,0 +1,66 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# ── віртуальне оточення ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── артефакти збірки PyInstaller ──────────────────────────────────────────────
+build/
+dist/
+dist_*/
+build_*/
+android/.buildozer/
+android/bin/
+website/downloads/JARVIS.exe
+*.spec.bak
+*.manifest
+*.toc
+warn-JARVIS.txt
+
+# ── secrets ──
+.env
+.env.*
+*.pem
+*.key
+*.keystore
+config.json
+
+# ── логи та тимчасові файли ───────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+~$*
+
+# ── архів старих/одноразових матеріалів ───────────────────────────────────────
+_archive/
+
+# ── зібрані exe (перезібрати: python build_exe.py) ────────────────────────────
+/JARVIS.exe
+/JARVIS_backup_*.exe
+/JARVIS_complete.exe
+
+# ── IDE / ОС ─────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+Thumbs.db
+desktop.ini
+
+# ── особисті дані й локальні діагностичні файли ──────────────────────────────
+AUDIT_REPORT.md
+.codex/
+.aws/
+.agents/
+*.sqlite
+*.sqlite3
+*.db
+*.secret
+*.secrets
+*_credentials.json
+*_token.txt
+android/local.properties
+website/downloads/*.exe
