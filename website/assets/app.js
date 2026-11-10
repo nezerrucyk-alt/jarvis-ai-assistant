@@ -15,11 +15,11 @@
   /* ── language switch ─────────────────────────────────── */
   const originalText = new Map();
   const titleUk = document.title;
-  const titleEn = "J.A.R.V.I.S. — voice AI assistant for Windows";
+  const titleEn = "J.A.R.V.I.S. — voice AI assistant for Windows, macOS and Linux";
   const descMeta = document.querySelector('meta[name="description"]');
   const descUk = descMeta ? descMeta.content : "";
   const descEn =
-    "J.A.R.V.I.S. is a Windows voice AI assistant with PC control, Roblox Studio MCP, screen vision, translation, local plugins and 67 models.";
+    "J.A.R.V.I.S. is a desktop voice AI assistant for Windows, macOS and Linux: chat, voice, plugins, screen vision, translation and 67 models.";
 
   function setLanguage(lang) {
     const isEn = lang === "en";
@@ -102,12 +102,64 @@
     if (event.key === "Escape") closeLightbox();
   });
 
+  /* ── install tabs ───────────────────────────────────── */
+  const osTabs = Array.from(document.querySelectorAll("[data-os-tab]"));
+  const osPanes = Array.from(document.querySelectorAll("[data-os-pane]"));
+
+  function setOS(os, persist = true) {
+    if (!osPanes.some((pane) => pane.dataset.osPane === os)) os = "windows";
+    osTabs.forEach((tab) => {
+      const active = tab.dataset.osTab === os;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", String(active));
+      tab.tabIndex = active ? 0 : -1;
+    });
+    osPanes.forEach((pane) => {
+      const active = pane.dataset.osPane === os;
+      pane.classList.toggle("active", active);
+      pane.hidden = !active;
+    });
+    if (persist) {
+      try {
+        localStorage.setItem("jarvis-os", os);
+      } catch (_) {
+        /* private mode */
+      }
+    }
+  }
+
+  osTabs.forEach((tab) => {
+    tab.addEventListener("click", () => setOS(tab.dataset.osTab));
+  });
+
+  function detectOS() {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes("mac")) return "macos";
+    if (ua.includes("linux") || ua.includes("android")) return "linux";
+    return "windows";
+  }
+
+  let savedOS = detectOS();
+  try {
+    savedOS = localStorage.getItem("jarvis-os") || savedOS;
+  } catch (_) {
+    /* private mode */
+  }
+  setOS(savedOS, false);
+
   /* ── download links + counter ───────────────────────── */
-  const downloadNodes = Array.from(document.querySelectorAll(".js-download"));
+  const downloadNodes = Array.from(
+    document.querySelectorAll(".js-download[data-download]")
+  );
   const countNodes = [
     document.getElementById("downloadCount"),
     document.getElementById("footerDownloads"),
   ].filter(Boolean);
+  const fallbackLinks = {
+    windows: `https://github.com/${repoSlug}/releases/latest/download/JARVIS.exe`,
+    macos: `https://github.com/${repoSlug}/releases/latest/download/JARVIS-macOS.zip`,
+    linux: `https://github.com/${repoSlug}/releases/latest/download/JARVIS-Linux.tar.gz`,
+  };
 
   function setCounter(value) {
     const formatted = new Intl.NumberFormat("uk-UA").format(value);
@@ -116,11 +168,39 @@
     });
   }
 
-  function useFallbackDownload() {
-    downloadNodes.forEach((node) => {
-      node.href = "downloads/JARVIS.exe";
-      node.setAttribute("download", "");
+  function setDownload(platform, url) {
+    downloadNodes
+      .filter((node) => node.dataset.download === platform)
+      .forEach((node) => {
+        node.href = url;
+        node.removeAttribute("download");
+        node.setAttribute("target", "_blank");
+        node.setAttribute("rel", "noopener");
+      });
+  }
+
+  function useFallbackDownloads() {
+    Object.entries(fallbackLinks).forEach(([platform, url]) => {
+      setDownload(platform, url);
     });
+  }
+
+  function matchesPlatform(platform, name) {
+    const lower = (name || "").toLowerCase();
+    if (platform === "windows") {
+      return lower.endsWith(".exe") && /win|jarvis/.test(lower);
+    }
+    if (platform === "macos") {
+      return lower.includes("macos") || lower.includes("darwin") || lower.endsWith(".dmg");
+    }
+    if (platform === "linux") {
+      return (
+        lower.includes("linux") ||
+        lower.endsWith(".appimage") ||
+        lower.endsWith(".tar.gz")
+      );
+    }
+    return false;
   }
 
   async function initDownload() {
@@ -132,43 +212,31 @@
       if (!response.ok) throw new Error(`GitHub API ${response.status}`);
       const releases = await response.json();
       if (!Array.isArray(releases) || releases.length === 0) {
-        useFallbackDownload();
+        useFallbackDownloads();
         setCounter(0);
         return;
       }
 
       let total = 0;
-      let windowsAsset = null;
+      const found = {};
       releases.forEach((release) => {
         (release.assets || []).forEach((asset) => {
           total += Number(asset.download_count || 0);
-          if (!windowsAsset && /windows|win64|win32|\.exe$/i.test(asset.name || "")) {
-            windowsAsset = asset;
-          }
+          ["windows", "macos", "linux"].forEach((platform) => {
+            if (!found[platform] && matchesPlatform(platform, asset.name)) {
+              found[platform] = asset.browser_download_url;
+            }
+          });
         });
       });
 
       setCounter(total);
-      if (windowsAsset?.browser_download_url) {
-        downloadNodes.forEach((node) => {
-          node.href = windowsAsset.browser_download_url;
-          node.removeAttribute("download");
-          node.setAttribute("target", "_blank");
-          node.setAttribute("rel", "noopener");
-        });
-      } else {
-        const latest = releases.find((release) => !release.draft) || releases[0];
-        downloadNodes.forEach((node) => {
-          node.href =
-            latest.html_url || `https://github.com/${repoSlug}/releases/latest`;
-          node.removeAttribute("download");
-          node.setAttribute("target", "_blank");
-          node.setAttribute("rel", "noopener");
-        });
-      }
+      Object.entries(fallbackLinks).forEach(([platform, fallback]) => {
+        setDownload(platform, found[platform] || fallback);
+      });
     } catch (error) {
       console.warn("Release lookup failed:", error);
-      useFallbackDownload();
+      useFallbackDownloads();
       setCounter(0);
     }
   }
@@ -176,21 +244,20 @@
   initDownload();
 
   /* ── copy SHA256 ────────────────────────────────────── */
-  const shaNode = document.getElementById("shaValue");
-  if (shaNode) {
-    shaNode.style.cursor = "copy";
-    shaNode.title = "Натисни, щоб скопіювати SHA256";
-    shaNode.addEventListener("click", async () => {
+  document.querySelectorAll(".js-sha").forEach((node) => {
+    node.addEventListener("click", async () => {
+      const full = node.dataset.sha || "";
+      if (!full) return;
       try {
-        await navigator.clipboard.writeText(shaNode.textContent.trim());
-        const old = shaNode.textContent;
-        shaNode.textContent = "Скопійовано ✓";
+        await navigator.clipboard.writeText(full);
+        const old = node.textContent;
+        node.textContent = "Скопійовано ✓";
         setTimeout(() => {
-          shaNode.textContent = old;
+          node.textContent = old;
         }, 1400);
       } catch (_) {
         /* clipboard blocked */
       }
     });
-  }
+  });
 })();
