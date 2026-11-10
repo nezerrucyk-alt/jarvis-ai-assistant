@@ -21,6 +21,8 @@
 | Скріншоти й демо сайту | `C:\Users\nezer\Jarvis\website\assets\` |
 | Генератор демо-відео | `C:\Users\nezer\AppData\Local\Temp\opencode\make_demo.py` |
 | GitHub-репозиторій | `nezerrucyk-alt/jarvis-ai-assistant` |
+| GitHub Pages | `https://nezerrucyk-alt.github.io/jarvis-ai-assistant/` |
+| GitHub Release | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.0.0` |
 | GitHub Pages workflow | `C:\Users\nezer\Jarvis\.github\workflows\pages.yml` |
 | Демо-профіль для скріншотів | `C:\Users\nezer\AppData\Local\Temp\opencode\jarvis_demo\Jarvis\` |
 | Лог останньої збірки | `C:\Users\nezer\Jarvis\build_last.log` |
@@ -68,11 +70,9 @@ cd C:\Users\nezer\Jarvis
 
 ## Що ще зробити
 
-1. Закомітити й запушити зміни в `main`; перевірити GitHub Pages.
-2. Створити GitHub Release з `JARVIS.exe` — тоді запрацює лічильник і пряме посилання на завантаження.
-3. Підключити Home Assistant (URL + токен) і протестувати на реальному інстансі.
-4. Відкликати/перегенерувати ключ Ashna, який був показаний у чаті.
-5. За бажанням: автооновлення exe, більше мов перекладу, Pro-сторінка.
+1. Підключити Home Assistant (URL + токен) і протестувати на реальному інстансі.
+2. Відкликати/перегенерувати ключ Ashna, який був показаний у чаті.
+3. За бажанням: автооновлення exe, більше мов перекладу, Pro-сторінка.
 
 ## Важливі нюанси
 

@@ -44,7 +44,11 @@
 - Home Assistant ще не підключений: потрібно вписати URL і токен у Налаштуваннях.
 
 ## Що далі
-1. Закомітити й запушити сайт, перевірити GitHub Pages.
-2. Створити GitHub Release з `JARVIS.exe`, щоб запрацював лічильник і пряме посилання.
-3. Підключити Home Assistant і протестувати на реальному інстансі.
-4. Відкликати старий ключ Ashna.
+1. Підключити Home Assistant і протестувати на реальному інстансі.
+2. Відкликати старий ключ Ashna.
+3. За бажанням: автооновлення exe, більше мов, Pro-сторінка.
+
+## Публікація
+- Сайт: https://nezerrucyk-alt.github.io/jarvis-ai-assistant/
+- Реліз: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.0.0
+- Ассет: `JARVIS.exe` (89 393 601 байт), прикріплений до релізу v2.0.0.
