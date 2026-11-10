@@ -17,6 +17,8 @@ from __future__ import annotations
 import asyncio
 import difflib
 import base64
+import ctypes
+import glob
 import html
 import io
 import json
@@ -35,7 +37,7 @@ import uuid
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 import tkinter as tk
 import tkinter.font as tkfont
@@ -58,6 +60,46 @@ REMINDERS_PATH = DATA_DIR / "reminders.json"
 PROJECT_MEMORY_PATH = DATA_DIR / "projects.json"
 CHATS_PATH = DATA_DIR / "chats.json"
 SCREENSHOTS_DIR = DATA_DIR / "screenshots"
+PLUGINS_DIR = DATA_DIR / "plugins"
+PLUGIN_README = """# J.A.R.V.I.S. plugins / Плагіни
+
+Поклади сюди `.py`-файл — Jarvis підхопить його під час запуску
+або після команди `plugin_reload`.
+
+Мінімальний приклад:
+
+```python
+TOOLS = [{
+    "type": "function",
+    "function": {
+        "name": "hello_plugin",
+        "description": "Привітатися з користувачем.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Ім'я"}
+            }
+        }
+    }
+}]
+
+def run(name, args, ctx):
+    if name == "hello_plugin":
+        who = (args.get("name") or "сер").strip()
+        return f"Привіт, {who}! Це локальний плагін Jarvis."
+    return "Невідомий інструмент плагіна."
+```
+
+`ctx` надає:
+- `ctx.confirm(action, detail)` — запитати підтвердження;
+- `ctx.log(text)` — написати в журнал Jarvis;
+- `ctx.run(tool_name, args)` — викликати інший інструмент;
+- `ctx.cfg` — поточні налаштування (тільки читання);
+- `ctx.data_dir`, `ctx.plugins_dir` — шляхи.
+
+Плагіни — це локальний код, якому ти довіряєш. Не запускай чужі
+плагіни без перевірки.
+"""
 MAX_CHATS = 60
 MAX_CHAT_MESSAGES = 400
 RECENT_CHATS_LIMIT = 3
@@ -495,6 +537,10 @@ DEFAULT_CONFIG = {
     "response_mode": "natural",
     "use_memory": False,
     "voice_hotkey": False,
+    "home_assistant_url": "",
+    "home_assistant_token": "",
+    "gaming_mode": False,
+    "plugins_enabled": True,
 }
 
 SYSTEM_PROMPT = """Ти — J.A.R.V.I.S., особистий асистент, який спілкується з власником як близький знайомий у чаті: живо, просто й по-людськи, без офіційщини.
@@ -524,9 +570,13 @@ SYSTEM_PROMPT = """Ти — J.A.R.V.I.S., особистий асистент, �
 - давай зрозуміле обґрунтування висновку, але не розкривай прихований ланцюг внутрішніх міркувань. Замість цього подавай перевірювані причини, розрахунки чи джерела.
 
 ІНСТРУМЕНТИ Й ДІЇ НА ПК:
-- доступні інструменти: run_powershell, open_app, find_files, read_file, write_file, project_open, project_memory, code_review, code_check, code_run, create_project_template, git_helper, system_info, look_at_screen, translate_screen, roblox_studio та roblox_reset_server;
+- доступні інструменти: run_powershell, open_app, find_files, read_file, write_file, project_open, project_memory, code_review, code_check, code_run, create_project_template, git_helper, system_info, system_control, play_media, smart_home, gaming_mode, plugin_list, look_at_screen, translate_screen, roblox_studio та roblox_reset_server;
 - для програмування спершу визнач активний проєкт; читай файли перед правками й використовуй code_review/code_check для пошуку помилок; показуй diff у підтвердженні запису, запускай код лише після підтвердження, Git використовуй тільки для читання та підготовки повідомлення коміту;
 - project_memory читай за потреби, а зберігай нотатку лише після прямого прохання; create_project_template викликай лише за запитом створити новий шаблон; не коміть і не змінюй Git-історію;
+- для гучності, яскравості, скріншота, блокування екрана, сну, вимкнення або перезавантаження ПК використовуй system_control; вимкнення, перезавантаження, вихід і сон завжди підтверджуй;
+- для музики, YouTube або Spotify використовуй play_media; якщо користувач просить «музику для гри», передай platform='youtube' і query='gaming music';
+- для розумного дому використовуй smart_home; спочатку перевір status, якщо URL або токен Home Assistant не налаштовані — підкажи додати їх у налаштуваннях Jarvis; не вигадуй пристрої;
+- gaming_mode вмикає тихий ігровий режим; plugin_list показує локальні плагіни з %APPDATA%\\Jarvis\\plugins;
 - для питань «що на екрані», «глянь на екран», «прочитай помилку» використовуй look_at_screen;
 - для запитів «переклади екран», «переклади текст на екрані», «переведи игру» використовуй translate_screen;
 - для Roblox Studio використовуй roblox_studio: спочатку виклич tool='list_roblox_studios', потім get_studio_state або get_console_output для діагностики, script_read / script_grep / multi_edit для коду, execute_luau для перевірки, start_stop_play для запуску гри. Не вигадуй назви MCP-інструментів — за потреби виклич tool='list_tools';
@@ -564,6 +614,67 @@ def save_config(cfg: dict) -> None:
     tmp = CONFIG_PATH.with_suffix(".tmp")
     tmp.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(CONFIG_PATH)
+
+
+# ── режим ґеймера ────────────────────────────────────────────────────────────
+GAME_PROCESSES = frozenset({
+    "robloxplayerbeta", "robloxplayerlauncher", "minecraft", "minecraftlauncher",
+    "javaw", "steam", "steamwebhelper", "cs2", "csgo", "valorant", "valorant-win64-shipping",
+    "fortniteclient-win64-shipping", "gta5", "gta5_enhanced", "fivem", "dota2",
+    "league of legends", "leagueclient", "riotclient", "battle.net", "overwatch",
+    "wow", "world of warcraft", "genshinimpact", "starrail", "zenlesszonezero",
+    "rainbowsix", "rainbowsix_dx11", "r5apex", "r5apex_dx12", "pubg", "tslgame",
+    "escapefromtarkov", "rustclient", "dayz", "terraria", "among us", "amongus",
+    "hollow_knight", "stardew valley", "stardewvalley", "phasmophobia",
+    "deadbydaylight-win64-shipping", "destiny2", "warframe", "pathofexile",
+    "diablo iv", "diabloiv", "baldursgate3", "bg3", "eldenring", "sekiro",
+    "cyberpunk2077", "witcher3", "footballmanager", "fc24", "fc25", "eafc24",
+    "eafc25", "rocketleague", "fall guys", "fallguys_client", "brawlhalla",
+})
+
+
+def _foreground_process_info() -> tuple[str, str]:
+    """Повертає (назва exe без розширення, повний шлях) активного вікна."""
+    if os.name != "nt":
+        return "", ""
+    try:
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+        hwnd = user32.GetForegroundWindow()
+        if not hwnd:
+            return "", ""
+        pid = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if not pid.value:
+            return "", ""
+        handle = kernel32.OpenProcess(0x1000, False, pid.value)
+        if not handle:
+            return "", ""
+        try:
+            size = wintypes.DWORD(1024)
+            buffer = ctypes.create_unicode_buffer(1024)
+            if not kernel32.QueryFullProcessImageNameW(handle, 0, buffer, ctypes.byref(size)):
+                return "", ""
+            full_path = buffer.value
+        finally:
+            kernel32.CloseHandle(handle)
+        return Path(full_path).stem.lower(), full_path.lower()
+    except Exception:
+        return "", ""
+
+
+def _is_game_process(name: str, full_path: str = "") -> bool:
+    name = (name or "").lower().strip()
+    path = (full_path or "").lower().replace("/", "\\")
+    if name in GAME_PROCESSES:
+        return True
+    markers = (
+        "\\steamapps\\common\\", "\\epic games\\", "\\riot games\\",
+        "\\gog games\\", "\\xboxgames\\", "\\games\\",
+    )
+    return any(marker in path for marker in markers)
 
 
 def load_local_records(path: Path) -> list[dict]:
@@ -893,6 +1004,130 @@ TOOLS = [
                     },
                 },
             },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "system_control",
+            "description": (
+                "Control Windows itself: volume, mute, screen brightness, screenshot, "
+                "lock, sleep, shutdown, restart, logoff, cancel shutdown, and media keys. "
+                "Shutdown, restart, logoff and sleep require confirmation."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "volume_up", "volume_down", "set_volume",
+                            "mute", "unmute", "toggle_mute",
+                            "brightness_up", "brightness_down", "set_brightness",
+                            "screenshot", "lock", "sleep", "shutdown", "restart",
+                            "logoff", "cancel_shutdown", "media_play_pause",
+                            "media_next", "media_prev", "media_stop",
+                        ],
+                        "description": "The system action to perform.",
+                    },
+                    "value": {
+                        "type": "integer",
+                        "description": "Target level 0-100 for set_volume/set_brightness, or step size for volume_up/down and brightness_up/down.",
+                    },
+                },
+                "required": ["action"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "play_media",
+            "description": (
+                "Open music or video for the user. Searches YouTube (and tries to start the "
+                "first result) or opens Spotify search. Use for 'play music', 'gaming music', "
+                "or a specific song."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Song, artist, mood or search query. Empty means a default gaming mix on YouTube.",
+                    },
+                    "platform": {
+                        "type": "string",
+                        "enum": ["youtube", "spotify", "auto"],
+                        "description": "Where to play. Default youtube.",
+                    },
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "smart_home",
+            "description": (
+                "Control Home Assistant devices (lights, sockets, speakers, scenes, scripts). "
+                "Requires home_assistant_url and home_assistant_token in Jarvis settings. "
+                "Entities may be given by entity_id or friendly name."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "status", "list", "on", "off", "toggle",
+                            "brightness", "scene", "script",
+                        ],
+                        "description": "Action to perform.",
+                    },
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity id like light.kitchen or a friendly name like 'світло на кухні'.",
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Brightness percent for brightness action, or extra value.",
+                    },
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "gaming_mode",
+            "description": "Turn the quiet gaming mode on or off, or report its status.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": ["on", "off", "status"],
+                        "description": "Gaming mode action.",
+                    },
+                },
+                "required": ["action"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "plugin_list",
+            "description": "List locally installed Jarvis plugins and the tools they provide.",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "plugin_reload",
+            "description": "Reload plugins from %APPDATA%\\Jarvis\\plugins without restarting Jarvis.",
+            "parameters": {"type": "object", "properties": {}},
         },
     },
     {
@@ -1879,6 +2114,35 @@ def close_studio_bridge() -> None:
 
 
 # ── інструменти керування ПК ────────────────────────────────────────────────
+class PluginContext:
+    """Контекст, який Jarvis передає локальним плагінам."""
+
+    def __init__(self, tools):
+        self._tools = tools
+
+    @property
+    def cfg(self) -> dict:
+        getter = self._tools.get_cfg
+        return getter() if getter else {}
+
+    @property
+    def data_dir(self) -> Path:
+        return DATA_DIR
+
+    @property
+    def plugins_dir(self) -> Path:
+        return PLUGINS_DIR
+
+    def confirm(self, action: str, detail: str = "") -> bool:
+        return bool(self._tools.confirm(action, detail))
+
+    def log(self, text: str) -> None:
+        self._tools.log(str(text))
+
+    def run(self, name: str, args: dict | None = None) -> str:
+        return self._tools.run(name, args or {})
+
+
 class PcTools:
     """Дії на Windows для Jarvis. Небезпечні операції підтверджуються користувачем."""
 
@@ -1982,21 +2246,118 @@ class PcTools:
     }
 
     APP_ALIASES = {
-        "chrome": "chrome",
-        "хром": "chrome",
-        "edge": "msedge",
-        "браузер": "https://www.google.com",
+        "chrome": "Google Chrome",
+        "google chrome": "Google Chrome",
+        "гугл хром": "Google Chrome",
+        "хром": "Google Chrome",
+        "edge": "Microsoft Edge",
+        "microsoft edge": "Microsoft Edge",
+        "едж": "Microsoft Edge",
+        "браузер": "Google Chrome",
+        "firefox": "Mozilla Firefox",
+        "файрфокс": "Mozilla Firefox",
+        "opera": "Opera GX",
+        "opera gx": "Opera GX",
+        "опера": "Opera GX",
         "notepad": "notepad.exe",
         "блокнот": "notepad.exe",
         "calculator": "calc.exe",
         "калькулятор": "calc.exe",
         "explorer": "explorer.exe",
         "проводник": "explorer.exe",
-        "vscode": "code",
-        "vs code": "code",
-        "код": "code",
-        "discord": "discord://",
-        "telegram desktop": "tg://",
+        "vscode": "Visual Studio Code",
+        "vs code": "Visual Studio Code",
+        "visual studio code": "Visual Studio Code",
+        "віжуал студіо код": "Visual Studio Code",
+        "код": "Visual Studio Code",
+        "visual studio": "Visual Studio",
+        "віжуал студіо": "Visual Studio",
+        "pycharm": "PyCharm",
+        "пічарм": "PyCharm",
+        "intellij": "IntelliJ IDEA",
+        "intellij idea": "IntelliJ IDEA",
+        "інтелідж": "IntelliJ IDEA",
+        "android studio": "Android Studio",
+        "blender": "Blender",
+        "блендер": "Blender",
+        "obs": "OBS Studio",
+        "obs studio": "OBS Studio",
+        "обс": "OBS Studio",
+        "discord": "Discord",
+        "дискорд": "Discord",
+        "telegram": "Telegram",
+        "telegram desktop": "Telegram",
+        "телеграм": "Telegram",
+        "телега": "Telegram",
+        "whatsapp": "WhatsApp",
+        "вотсап": "WhatsApp",
+        "viber": "Viber",
+        "вайбер": "Viber",
+        "skype": "Skype",
+        "скайп": "Skype",
+        "steam": "Steam",
+        "стім": "Steam",
+        "epic games": "Epic Games Launcher",
+        "epic games launcher": "Epic Games Launcher",
+        "епік геймс": "Epic Games Launcher",
+        "roblox": "Roblox",
+        "роблокс": "Roblox",
+        "roblox studio": "Roblox Studio",
+        "роблокс студіо": "Roblox Studio",
+        "minecraft": "Minecraft Launcher",
+        "майнкрафт": "Minecraft Launcher",
+        "spotify": "Spotify",
+        "спотіфай": "Spotify",
+        "figma": "Figma",
+        "фігма": "Figma",
+        "capcut": "CapCut",
+        "капкат": "CapCut",
+        "cursor": "Cursor",
+        "курсор": "Cursor",
+        "claude": "Claude",
+        "клод": "Claude",
+        "chatgpt": "ChatGPT",
+        "чатгпт": "ChatGPT",
+        "opencode": "OpenCode",
+        "опенкод": "OpenCode",
+        "word": "WINWORD.EXE",
+        "ворд": "WINWORD.EXE",
+        "excel": "EXCEL.EXE",
+        "ексель": "EXCEL.EXE",
+        "powerpoint": "POWERPNT.EXE",
+        "паверпоінт": "POWERPNT.EXE",
+        "onenote": "OneNote",
+        "outlook": "OUTLOOK.EXE",
+        "аутлук": "OUTLOOK.EXE",
+        "teams": "Microsoft Teams",
+        "тімс": "Microsoft Teams",
+        "zoom": "Zoom",
+        "зум": "Zoom",
+        "task manager": "taskmgr.exe",
+        "диспетчер задач": "taskmgr.exe",
+        "control panel": "control.exe",
+        "панель керування": "control.exe",
+        "settings": "ms-settings:",
+        "налаштування": "ms-settings:",
+        "terminal": "wt.exe",
+        "термінал": "wt.exe",
+        "cmd": "cmd.exe",
+        "командний рядок": "cmd.exe",
+        "powershell": "powershell.exe",
+        "павершелл": "powershell.exe",
+        "python": "python.exe",
+        "пітон": "python.exe",
+        "idle": "IDLE (Python 3.12 64-bit)",
+        "idle python": "IDLE (Python 3.12 64-bit)",
+        "node": "node.exe",
+        "нода": "node.exe",
+        "git bash": "Git Bash",
+        "гіт баш": "Git Bash",
+        "lm studio": "LM Studio",
+        "lmstudio": "LM Studio",
+        "clash royale": "Clash Royale",
+        "3d models": "3D-моделі",
+        "3д моделі": "3D-моделі",
     }
 
     CHROME_PATHS = (
@@ -2018,6 +2379,12 @@ class PcTools:
         self.get_cfg = get_cfg
         self.vision_runner = vision_runner
         self.translate_runner = translate_runner
+        self._start_apps_cache: list[tuple[str, str]] | None = None
+        self._registry_apps_cache: list[tuple[str, str]] | None = None
+        self._plugin_tools: dict[str, object] = {}
+        self._plugin_tool_names: set[str] = set()
+        self._plugin_files: dict[str, int] = {}
+        self.plugin_context = PluginContext(self)
         from modules.coding_workspace import CodingWorkspace
         self.coding = CodingWorkspace(
             get_config=get_cfg or (lambda: {}),
@@ -2025,6 +2392,402 @@ class PcTools:
             save_config=save_config,
             log=log,
         )
+        self.load_plugins()
+
+    # ── пошук і запуск встановлених програм ─────────────────────────────────
+    @staticmethod
+    def _norm_app_name(value: str) -> str:
+        text = str(value or "").lower().replace("ё", "е").replace("ї", "і")
+        text = re.sub(r"\([^)]*\)", " ", text)
+        text = re.sub(r"\b(?:x64|x86|64-bit|32-bit|version|версия|версія)\b", " ", text)
+        text = re.sub(r"\b\d+(?:[._-]\d+)*\b", " ", text)
+        text = text.replace("++", " plus ").replace("+", " plus ")
+        return re.sub(r"[^a-zа-яіїєґ0-9]+", "", text)
+
+    @staticmethod
+    def _translit(value: str) -> str:
+        table = str.maketrans({
+            "а": "a", "б": "b", "в": "v", "г": "h", "ґ": "g", "д": "d",
+            "е": "e", "є": "ie", "ж": "zh", "з": "z", "и": "y", "і": "i",
+            "ї": "i", "й": "i", "к": "k", "л": "l", "м": "m", "н": "n",
+            "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+            "ф": "f", "х": "kh", "ц": "ts", "ч": "ch", "ш": "sh",
+            "щ": "shch", "ь": "", "ю": "iu", "я": "ia",
+        })
+        return str(value or "").translate(table)
+
+    def _app_score(self, query: str, candidate: str) -> float:
+        q = self._norm_app_name(query)
+        c = self._norm_app_name(candidate)
+        if not q or not c:
+            return 0.0
+        if q == c:
+            return 100.0
+        qt, ct = self._translit(q), self._translit(c)
+        if qt and qt == ct:
+            return 99.0
+
+        raw_candidate = str(candidate or "").lower().replace("ё", "е").replace("ї", "і")
+        raw_letters = re.findall(r"[0-9a-zа-яіїєґ]+", raw_candidate)
+        raw_words = {self._norm_app_name(word) for word in raw_letters}
+        raw_words.discard("")
+        translit_words = {self._translit(word) for word in raw_words}
+        translit_words.discard("")
+        boundary_latin = "|" + re.sub(r"[^a-z0-9]+", "|", self._translit(raw_candidate)).strip("|") + "|"
+        raw_query = str(query or "").lower().replace("ё", "е").replace("ї", "і")
+        query_words = {self._norm_app_name(word) for word in re.findall(r"[0-9a-zа-яіїєґ]+", raw_query)}
+        query_words.discard("")
+
+        score = 0.0
+        for a, b, words in (
+            (q, c, raw_words),
+            (qt, ct, translit_words),
+        ):
+            if not a or not b:
+                continue
+            if a in words:
+                score = max(score, 94.0)
+            if b.startswith(a):
+                score = max(score, 94.0 - min(8, len(b) - len(a)))
+            elif len(a) >= 4 and ("|" + a) in boundary_latin:
+                score = max(score, 92.0 - min(5, len(b) - len(a)))
+            elif b in query_words and len(b) >= 4:
+                score = max(score, 88.0)
+            ratio = difflib.SequenceMatcher(None, a, b).ratio()
+            if ratio >= 0.87:
+                score = max(score, ratio * 100)
+        return score
+
+    def _get_start_apps(self) -> list[tuple[str, str]]:
+        """Читає Start Menu через Get-StartApps (з кешем на сесію)."""
+        if self._start_apps_cache is not None:
+            return self._start_apps_cache
+        self._start_apps_cache = []
+        if os.name != "nt":
+            return self._start_apps_cache
+        tmp_path = ""
+        try:
+            fd, tmp_path = tempfile.mkstemp(prefix="jarvis_apps_", suffix=".json")
+            os.close(fd)
+            escaped = str(tmp_path).replace("'", "''")
+            command = (
+                "$ProgressPreference='SilentlyContinue'; "
+                "Get-StartApps | Select-Object Name,AppID | "
+                f"ConvertTo-Json -Compress | Set-Content -LiteralPath '{escaped}' -Encoding UTF8"
+            )
+            proc = subprocess.run(
+                [
+                    "powershell", "-NoProfile", "-NonInteractive",
+                    "-ExecutionPolicy", "Bypass", "-Command", command,
+                ],
+                capture_output=True,
+                timeout=25,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            if proc.returncode != 0:
+                logging.warning("Get-StartApps failed: %s", proc.stderr[:200])
+                return self._start_apps_cache
+            data = json.loads(Path(tmp_path).read_text(encoding="utf-8-sig"))
+            if isinstance(data, dict):
+                data = [data]
+            entries: list[tuple[str, str]] = []
+            seen: set[str] = set()
+            for item in data or []:
+                if not isinstance(item, dict):
+                    continue
+                name = str(item.get("Name") or "").strip()
+                appid = str(item.get("AppID") or "").strip()
+                if not name or not appid:
+                    continue
+                key = f"{name.lower()}|{appid.lower()}"
+                if key in seen:
+                    continue
+                seen.add(key)
+                entries.append((name, appid))
+            self._start_apps_cache = entries
+            logging.info("Get-StartApps: %s програм", len(entries))
+        except Exception:
+            logging.exception("Не вдалося прочитати список програм Start Menu")
+        finally:
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+        return self._start_apps_cache
+
+    def _get_registry_apps(self) -> list[tuple[str, str]]:
+        """App Paths + встановлені програми з реєстру (з кешем)."""
+        if self._registry_apps_cache is not None:
+            return self._registry_apps_cache
+        self._registry_apps_cache = []
+        if os.name != "nt":
+            return self._registry_apps_cache
+        try:
+            import winreg
+        except Exception:
+            return self._registry_apps_cache
+
+        entries: list[tuple[str, str]] = []
+        roots = [
+            (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths"),
+            (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths"),
+            (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths"),
+            (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+        ]
+        for root, subkey in roots:
+            try:
+                key = winreg.OpenKey(root, subkey)
+            except OSError:
+                continue
+            try:
+                count = winreg.QueryInfoKey(key)[0]
+                for index in range(count):
+                    try:
+                        name = winreg.EnumKey(key, index)
+                        child = winreg.OpenKey(key, name)
+                    except OSError:
+                        continue
+                    try:
+                        if "App Paths" in subkey:
+                            try:
+                                path = str(winreg.QueryValue(child, "") or "").strip().strip('"')
+                            except OSError:
+                                path = ""
+                            if path and Path(os.path.expandvars(path)).is_file():
+                                entries.append((Path(path).stem, path))
+                            continue
+                        try:
+                            display = str(winreg.QueryValueEx(child, "DisplayName")[0] or "").strip()
+                        except OSError:
+                            display = ""
+                        try:
+                            icon = str(winreg.QueryValueEx(child, "DisplayIcon")[0] or "").strip()
+                        except OSError:
+                            icon = ""
+                        icon = icon.split(",")[0].strip().strip('"')
+                        if display and icon and icon.lower().endswith((".exe", ".lnk", ".bat", ".cmd")):
+                            icon = os.path.expandvars(icon)
+                            if Path(icon).is_file():
+                                entries.append((display, icon))
+                    finally:
+                        try:
+                            winreg.CloseKey(child)
+                        except OSError:
+                            pass
+            finally:
+                try:
+                    winreg.CloseKey(key)
+                except OSError:
+                    pass
+
+        # Прибираємо дублікати.
+        unique: list[tuple[str, str]] = []
+        seen: set[str] = set()
+        for name, path in entries:
+            key = f"{name.lower()}|{path.lower()}"
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append((name, path))
+        self._registry_apps_cache = unique
+        logging.info("Реєстр програм: %s записів", len(unique))
+        return self._registry_apps_cache
+
+    def _common_app_paths(self, name: str) -> str:
+        """Резервний пошук у типових папках встановлення."""
+        query = self._norm_app_name(name)
+        if not query:
+            return ""
+        patterns: dict[str, tuple[str, ...]] = {
+            "pycharm": (
+                r"%LocalAppData%\Programs\PyCharm*\bin\pycharm64.exe",
+                r"%LocalAppData%\JetBrains\Toolbox\apps\PyCharm*\*\*\bin\pycharm64.exe",
+                r"%ProgramFiles%\JetBrains\PyCharm*\bin\pycharm64.exe",
+            ),
+            "intellij": (
+                r"%LocalAppData%\Programs\IntelliJ IDEA*\bin\idea64.exe",
+                r"%LocalAppData%\JetBrains\Toolbox\apps\IntelliJ*\*\*\bin\idea64.exe",
+                r"%ProgramFiles%\JetBrains\IntelliJ*\bin\idea64.exe",
+            ),
+            "chrome": tuple(self.CHROME_PATHS),
+            "firefox": (
+                r"%ProgramFiles%\Mozilla Firefox\firefox.exe",
+                r"%ProgramFiles(x86)%\Mozilla Firefox\firefox.exe",
+            ),
+            "steam": (
+                r"%ProgramFiles(x86)%\Steam\steam.exe",
+                r"%ProgramFiles%\Steam\steam.exe",
+                r"%LocalAppData%\Programs\Steam\steam.exe",
+            ),
+            "epicgames": (
+                r"%ProgramFiles(x86)%\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe",
+                r"%ProgramFiles%\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe",
+            ),
+            "minecraft": (
+                r"%ProgramFiles(x86)%\Minecraft Launcher\MinecraftLauncher.exe",
+                r"%ProgramFiles%\Minecraft Launcher\MinecraftLauncher.exe",
+                r"%LocalAppData%\Programs\Minecraft Launcher\MinecraftLauncher.exe",
+            ),
+            "spotify": (
+                r"%AppData%\Spotify\Spotify.exe",
+                r"%LocalAppData%\Microsoft\WindowsApps\Spotify.exe",
+            ),
+            "telegram": (
+                r"%AppData%\Telegram Desktop\Telegram.exe",
+                r"%LocalAppData%\Telegram Desktop\Telegram.exe",
+            ),
+            "discord": (
+                r"%LocalAppData%\Discord\Update.exe",
+                r"%LocalAppData%\Discord\app-*\Discord.exe",
+            ),
+            "obs": (
+                r"%ProgramFiles%\obs-studio\bin\64bit\obs64.exe",
+                r"%ProgramFiles(x86)%\obs-studio\bin\64bit\obs64.exe",
+            ),
+            "blender": (
+                r"%ProgramFiles%\Blender Foundation\Blender*\blender.exe",
+                r"%ProgramFiles%\Blender Foundation\Blender*\blender-launcher.exe",
+            ),
+            "word": (
+                r"%ProgramFiles%\Microsoft Office\root\Office*\WINWORD.EXE",
+                r"%ProgramFiles(x86)%\Microsoft Office\root\Office*\WINWORD.EXE",
+            ),
+            "excel": (
+                r"%ProgramFiles%\Microsoft Office\root\Office*\EXCEL.EXE",
+                r"%ProgramFiles(x86)%\Microsoft Office\root\Office*\EXCEL.EXE",
+            ),
+            "powerpoint": (
+                r"%ProgramFiles%\Microsoft Office\root\Office*\POWERPNT.EXE",
+                r"%ProgramFiles(x86)%\Microsoft Office\root\Office*\POWERPNT.EXE",
+            ),
+            "vscode": (
+                r"%LocalAppData%\Programs\Microsoft VS Code\Code.exe",
+                r"%ProgramFiles%\Microsoft VS Code\Code.exe",
+            ),
+            "cursor": (r"%LocalAppData%\Programs\Cursor\Cursor.exe",),
+            "figma": (r"%LocalAppData%\Figma\Figma.exe",),
+            "capcut": (r"%LocalAppData%\CapCut\CapCut.exe",),
+        }
+        for key, candidates in patterns.items():
+            if key not in query and query not in key:
+                continue
+            for pattern in candidates:
+                try:
+                    matches = glob.glob(os.path.expandvars(pattern), recursive=True)  # noqa: F821
+                except Exception:
+                    matches = []
+                for match in matches[:10]:
+                    if Path(match).is_file():
+                        return match
+        return ""
+
+    @staticmethod
+    def _start_app_target(appid: str) -> str:
+        appid = str(appid or "").strip()
+        if re.match(r"^[a-zA-Z]:[\\/]", appid):
+            return appid
+        return "shell:AppsFolder\\" + appid
+
+    def _best_app(self, query: str, entries: list[tuple[str, str]]) -> tuple[str, str] | None:
+        ranked: list[tuple[float, int, str, str]] = []
+        for label, target in entries:
+            score = self._app_score(query, label)
+            if score >= 75:
+                ranked.append((score, -len(label), label, target))
+        if not ranked:
+            return None
+        ranked.sort(reverse=True)
+        best = ranked[0]
+        second = ranked[1][0] if len(ranked) > 1 else 0.0
+        score = best[0]
+        if score >= 96 or score - second >= 5:
+            return best[2], best[3]
+        # «chrome» має вибрати Google Chrome, а не Chrome Remote Desktop.
+        if score >= 86 and best[1] <= (ranked[1][1] if len(ranked) > 1 else best[1]):
+            return best[2], best[3]
+        return None
+
+    def resolve_app(self, name: str) -> tuple[str, str, bool] | None:
+        """Знаходить встановлену програму за людською назвою.
+
+        Повертає (target, label, known). known=False означає, що це
+        довільний шлях і перед запуском варто запитати підтвердження.
+        """
+        raw = str(name or "").strip().strip('"').strip("'")
+        if not raw:
+            return None
+
+        low = raw.lower().strip()
+        if re.fullmatch(r"(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:/\S*)?", low):
+            return "https://" + raw, raw, True
+        if re.match(r"(?i)^(?:https?|ftp)://", raw):
+            return raw, raw, True
+        if re.match(r"(?i)^[a-z][a-z0-9+.-]*:", raw) and not re.match(r"(?i)^[a-z]:[\\/]", raw):
+            return raw, raw, True
+
+        expanded = os.path.expandvars(os.path.expanduser(raw))
+        if Path(expanded).exists():
+            return expanded, Path(expanded).stem, False
+
+        queries: list[str] = []
+        norm = self._norm_app_name(raw)
+        for key, value in self.APP_ALIASES.items():
+            if self._norm_app_name(key) == norm:
+                queries.append(value)
+                break
+        queries.append(raw)
+
+        for query in queries:
+            if re.match(r"(?i)^(?:https?|ftp)://", query):
+                return query, query, True
+            if re.match(r"(?i)^[a-z][a-z0-9+.-]*:", query) and not re.match(r"(?i)^[a-z]:[\\/]", query):
+                return query, query, True
+            path = os.path.expandvars(os.path.expanduser(query))
+            if Path(path).is_file():
+                return path, Path(path).stem, True
+
+            found = self._best_app(query, self._get_start_apps())
+            if found:
+                label, appid = found
+                return self._start_app_target(appid), label, True
+
+            found = self._best_app(query, self._get_registry_apps())
+            if found:
+                label, path = found
+                return path, label, True
+
+            exe = shutil.which(query)
+            if exe:
+                return exe, Path(exe).stem, True
+
+            path = self._common_app_paths(query)
+            if path:
+                return path, Path(path).stem, True
+
+        for key in (low, str(queries[0]).lower().strip()):
+            site = self.SITE_ALIASES.get(key)
+            if site:
+                return site, key, True
+        return None
+
+    def _launch_target(self, target: str) -> None:
+        low = target.lower()
+        if target.startswith("shell:AppsFolder\\"):
+            subprocess.Popen(["explorer.exe", target])
+            return
+        if low.startswith(("http://", "https://")):
+            import webbrowser
+            webbrowser.open(target)
+            return
+        if os.name == "nt":
+            os.startfile(target)  # type: ignore[attr-defined]
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", target])
+        else:
+            subprocess.Popen(["xdg-open", target])
 
     def _project_open(self, path: str = "") -> str:
         return self.coding.project_open(path)
@@ -2048,11 +2811,28 @@ class PcTools:
         return self.coding.git_helper(action)
 
     def run(self, name: str, args: dict) -> str:
-        fn = getattr(self, "_" + str(name or ""), None)
-        if fn is None:
-            return f"Невідомий інструмент: {name}"
+        name = str(name or "")
         if not isinstance(args, dict):
             args = {}
+        plugin = self._plugin_tools.get(name)
+        if plugin is not None:
+            try:
+                import inspect
+
+                handler = plugin  # type: ignore[assignment]
+                parameters = inspect.signature(handler).parameters  # type: ignore[arg-type]
+                if len(parameters) >= 3:
+                    result = handler(name, args, self.plugin_context)  # type: ignore[operator]
+                else:
+                    result = handler(name, args)  # type: ignore[operator]
+                return str(result)
+            except Exception as exc:
+                logging.exception("Plugin tool %s failed", name)
+                return f"Помилка плагіна {name}: {exc}"
+
+        fn = getattr(self, "_" + name, None)
+        if fn is None:
+            return f"Невідомий інструмент: {name}"
         try:
             return fn(**args)
         except TypeError as exc:
@@ -2060,6 +2840,104 @@ class PcTools:
         except Exception as exc:
             logging.exception("Tool %s failed", name)
             return f"Помилка інструмента {name}: {exc}"
+
+    # ── плагіни ──────────────────────────────────────────────────────────────
+    def load_plugins(self) -> str:
+        """Завантажує *.py з %APPDATA%\\Jarvis\\plugins і додає їхні tools."""
+        if self._plugin_tool_names:
+            TOOLS[:] = [
+                tool for tool in TOOLS
+                if tool.get("function", {}).get("name") not in self._plugin_tool_names
+            ]
+        self._plugin_tools.clear()
+        self._plugin_tool_names.clear()
+        self._plugin_files.clear()
+
+        try:
+            PLUGINS_DIR.mkdir(parents=True, exist_ok=True)
+            readme = PLUGINS_DIR / "README.md"
+            if not readme.exists():
+                readme.write_text(PLUGIN_README, encoding="utf-8")
+        except Exception:
+            logging.exception("Не вдалося створити папку плагінів")
+
+        cfg = self.get_cfg() if self.get_cfg else {}
+        if not (cfg or {}).get("plugins_enabled", True):
+            return "Плагіни вимкнені в налаштуваннях."
+
+        try:
+            files = sorted(PLUGINS_DIR.glob("*.py"))
+        except OSError:
+            files = []
+        loaded = 0
+        for path in files:
+            if path.name.startswith("_"):
+                continue
+            try:
+                import importlib.util
+
+                module_name = f"jarvis_plugin_{path.stem}_{abs(hash(str(path))) % 100000}"
+                spec = importlib.util.spec_from_file_location(module_name, path)
+                if spec is None or spec.loader is None:
+                    continue
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)  # type: ignore[union-attr]
+                schemas = getattr(module, "TOOLS", []) or []
+                handler = getattr(module, "run", None) or getattr(module, "handle", None)
+                if not callable(handler):
+                    self.log(f"🔌 {path.name}: немає функції run(name, args, ctx) — пропущено.")
+                    continue
+                existing = {
+                    str(tool.get("function", {}).get("name") or "")
+                    for tool in TOOLS
+                }
+                added = 0
+                for schema in schemas:
+                    if not isinstance(schema, dict):
+                        continue
+                    function = schema.get("function")
+                    if not isinstance(function, dict):
+                        continue
+                    tool_name = str(function.get("name") or "").strip()
+                    if not tool_name or tool_name in existing:
+                        self.log(f"🔌 {path.name}: інструмент {tool_name} уже існує — пропущено.")
+                        continue
+                    function.setdefault("parameters", {"type": "object", "properties": {}})
+                    TOOLS.append(schema)
+                    self._plugin_tools[tool_name] = handler
+                    self._plugin_tool_names.add(tool_name)
+                    existing.add(tool_name)
+                    added += 1
+                self._plugin_files[path.name] = added
+                loaded += added
+                if added:
+                    self.log(f"🔌 Плагін {path.name}: {added} інструмент(ів).")
+            except Exception as exc:
+                logging.exception("Plugin %s failed", path.name)
+                self.log(f"🔌 Плагін {path.name} не завантажився: {exc}")
+        if loaded:
+            self.log(f"🔌 Плагінів активно: {len(self._plugin_files)}, інструментів: {loaded}.")
+        return self.plugin_summary()
+
+    def plugin_summary(self) -> str:
+        if not self._plugin_files:
+            return (
+                "Активних плагінів немає. Поклади .py-файл у "
+                f"{PLUGINS_DIR} — і він з'явиться після перезапуску або plugin_reload."
+            )
+        lines = [f"Плагіни в {PLUGINS_DIR}:"]
+        for name, count in sorted(self._plugin_files.items()):
+            lines.append(f"• {name} — {count} інструмент(ів)")
+        if self._plugin_tools:
+            lines.append("Інструменти: " + ", ".join(sorted(self._plugin_tools)))
+        return "\n".join(lines)
+
+    def _plugin_list(self) -> str:
+        return self.plugin_summary()
+
+    def _plugin_reload(self) -> str:
+        result = self.load_plugins()
+        return "Плагіни перезавантажено.\n" + result
 
     # ── сканер екрана ────────────────────────────────────────────────────────
     def _look_at_screen(self, question: str = "") -> str:
@@ -2162,59 +3040,28 @@ class PcTools:
         if not target:
             return "Не вказано, що відкривати."
 
-        low = target.lower().strip()
-        is_known = False
-        if low in self.SITE_ALIASES:
-            target = self.SITE_ALIASES[low]
-            is_known = True
-        elif low in self.APP_ALIASES:
-            target = self.APP_ALIASES[low]
-            is_known = True
-            if target == "chrome":
-                for candidate in self.CHROME_PATHS:
-                    if Path(candidate).exists():
-                        target = candidate
-                        break
-        elif re.fullmatch(r"(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:/\S*)?", low):
-            target = "https://" + target
-            is_known = True
-
-        if not is_known:
-            # Відомі системні програми (notepad.exe тощо) та URL-протоколи
-            # (discord://, steam://) не потребують зайвого діалогу.
-            if shutil.which(target):
-                is_known = True
-            elif (
-                not re.search(r"[\\/]", target)
-                and low in self.KNOWN_EXECUTABLES
-            ):
-                is_known = True
-            elif re.match(r"(?i)^[a-z][a-z0-9+.-]*:(?://|$)", low):
-                is_known = True
+        resolved = self.resolve_app(target)
+        if resolved:
+            launch, label, is_known = resolved
+        else:
+            launch, label, is_known = target, target, False
 
         if not is_known:
             # Довільний шлях або невідомий виконуваний файл — лише з дозволу.
             if not self.confirm(
                 "Відкрити файл або програму?",
-                f"{target}\n\nЦе не відомий Jarvis додаток чи сайт.",
+                f"{launch}\n\nЦе не відомий Jarvis додаток чи сайт.",
             ):
                 return "Користувач відмовився відкривати цей об'єкт, сер."
 
-        self.log(f"⚙ Відкриваю: {target}")
+        self.log(f"⚙ Відкриваю: {label} ({launch})")
         try:
-            if target.lower().startswith(("http://", "https://")):
-                import webbrowser
-                webbrowser.open(target)
-                return f"Відкрив: {target}"
-            if os.name == "nt":
-                os.startfile(target)  # type: ignore[attr-defined]
-            elif sys.platform == "darwin":
-                subprocess.Popen(["open", target])
-            else:
-                subprocess.Popen(["xdg-open", target])
-            return f"Відкрив: {target}"
+            self._launch_target(launch)
+            if launch.lower().startswith(("http://", "https://")):
+                return f"Відкрив: {launch}"
+            return f"Відкрив: {label}"
         except (OSError, AttributeError):
-            exe = shutil.which(target)
+            exe = shutil.which(launch)
             if not exe:
                 return f"Не знайшов програму або файл: {target}"
             try:
@@ -2222,6 +3069,417 @@ class PcTools:
                 return f"Запустив: {exe}"
             except Exception as exc:
                 return f"Не вдалося запустити {target}: {exc}"
+
+    # ── системне керування, музика, розумний дім ─────────────────────────────
+    @staticmethod
+    def _press_vk(vk: int, times: int = 1) -> None:
+        try:
+            import ctypes
+
+            user32 = ctypes.windll.user32
+            for _ in range(max(1, min(100, int(times)))):
+                user32.keybd_event(vk, 0, 0, 0)
+                time.sleep(0.012)
+                user32.keybd_event(vk, 0, 0x0002, 0)
+                time.sleep(0.012)
+        except Exception:
+            logging.exception("keybd_event failed")
+
+    def _volume_action(self, action: str, value: int | None = None) -> str:
+        level = 5 if value is None else max(0, min(100, int(value)))
+        try:
+            from pycaw.pycaw import AudioUtilities
+
+            device = AudioUtilities.GetSpeakers()
+            endpoint = device.EndpointVolume
+            current = float(device.volume_percent)
+            if action == "set_volume":
+                new_level = max(0.0, min(100.0, float(level)))
+            elif action == "volume_up":
+                new_level = min(100.0, current + level)
+            elif action == "volume_down":
+                new_level = max(0.0, current - level)
+            else:
+                new_level = current
+
+            if action == "mute":
+                endpoint.SetMute(1, None)
+                return "Звук вимкнено."
+            if action == "unmute":
+                endpoint.SetMute(0, None)
+                return "Звук увімкнено."
+            if action == "toggle_mute":
+                muted = bool(endpoint.GetMute())
+                endpoint.SetMute(0 if muted else 1, None)
+                return "Звук увімкнено." if muted else "Звук вимкнено."
+
+            device.volume_percent = new_level
+            return f"Гучність: {round(new_level)}%."
+        except Exception:
+            logging.debug("pycaw volume failed; fallback to media keys", exc_info=True)
+
+        if action == "set_volume":
+            self._press_vk(0xAE, 50)
+            self._press_vk(0xAF, max(1, round(level / 2)))
+            return f"Гучність приблизно {level}%."
+        if action == "volume_up":
+            self._press_vk(0xAF, max(1, round(level / 2)))
+            return f"Гучність додано приблизно на {level}%."
+        if action == "volume_down":
+            self._press_vk(0xAE, max(1, round(level / 2)))
+            return f"Гучність зменшено приблизно на {level}%."
+        if action in ("mute", "unmute", "toggle_mute"):
+            self._press_vk(0xAD)
+            return "Перемкнув звук."
+        return "Не вдалося змінити гучність."
+
+    def _brightness_action(self, action: str, value: int | None = None) -> str:
+        amount = max(1, min(100, int(value or 10)))
+        if action == "set_brightness":
+            body = (
+                f"$new=[Math]::Max(0,[Math]::Min(100,{amount}));"
+                "(Get-CimInstance -Namespace root/WMI -Class WmiMonitorBrightnessMethods)"
+                ".WmiSetBrightness(1,$new);Write-Output $new"
+            )
+        else:
+            delta = amount if action == "brightness_up" else -amount
+            body = (
+                "$cur=(Get-CimInstance -Namespace root/WMI -Class WmiMonitorBrightness)"
+                ".CurrentBrightness;"
+                f"$new=[Math]::Max(0,[Math]::Min(100,$cur+({delta})));"
+                "(Get-CimInstance -Namespace root/WMI -Class WmiMonitorBrightnessMethods)"
+                ".WmiSetBrightness(1,$new);Write-Output $new"
+            )
+        command = "$ErrorActionPreference='Stop';" + body
+        try:
+            proc = subprocess.run(
+                [
+                    "powershell", "-NoProfile", "-NonInteractive",
+                    "-ExecutionPolicy", "Bypass", "-Command", command,
+                ],
+                capture_output=True,
+                timeout=20,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            if proc.returncode != 0:
+                detail = proc.stderr.decode("utf-8", "replace").strip()[:200]
+                return (
+                    "Не вдалося змінити яскравість. На зовнішніх моніторах "
+                    "Windows WMI часто не підтримується."
+                    + (f" {detail}" if detail else "")
+                )
+            text = proc.stdout.decode("utf-8", "replace").strip().splitlines()
+            level_text = text[-1] if text else ""
+            return f"Яскравість: {level_text}%." if level_text.isdigit() else "Яскравість змінено."
+        except Exception as exc:
+            return f"Не вдалося змінити яскравість: {exc}"
+
+    def _screenshot(self) -> str:
+        try:
+            from PIL import ImageGrab
+
+            SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+            image = ImageGrab.grab(all_screens=True)
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path = SCREENSHOTS_DIR / f"shot_{stamp}.png"
+            image.save(path)
+            try:
+                files = sorted(SCREENSHOTS_DIR.glob("shot_*.png"), key=lambda p: p.stat().st_mtime)
+                for old in files[:-40]:
+                    old.unlink(missing_ok=True)
+            except OSError:
+                pass
+            return f"Знімок екрана збережено: {path}"
+        except Exception as exc:
+            return f"Не вдалося зробити знімок: {exc}"
+
+    def _system_control(self, action: str, value: int | str | None = None) -> str:
+        action = str(action or "").strip().lower().replace("-", "_")
+        try:
+            level = int(value) if value is not None and str(value).strip() != "" else None
+        except (TypeError, ValueError):
+            level = None
+
+        if action in ("volume_up", "volume_down", "set_volume", "mute", "unmute", "toggle_mute"):
+            return self._volume_action(action, level)
+        if action in ("brightness_up", "brightness_down", "set_brightness"):
+            return self._brightness_action(action, level)
+        if action == "screenshot":
+            return self._screenshot()
+        if action == "lock":
+            try:
+                ctypes.windll.user32.LockWorkStation()
+                return "Екран заблоковано."
+            except Exception as exc:
+                return f"Не вдалося заблокувати екран: {exc}"
+        if action in ("media_play_pause", "media_next", "media_prev", "media_stop"):
+            keys = {
+                "media_play_pause": 0xB3,
+                "media_next": 0xB0,
+                "media_prev": 0xB1,
+                "media_stop": 0xB2,
+            }
+            self._press_vk(keys[action])
+            return {
+                "media_play_pause": "Перемкнув відтворення.",
+                "media_next": "Наступний трек.",
+                "media_prev": "Попередній трек.",
+                "media_stop": "Зупинив відтворення.",
+            }[action]
+        if action == "cancel_shutdown":
+            try:
+                proc = subprocess.run(
+                    ["shutdown", "/a"], capture_output=True, timeout=10,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+                if proc.returncode == 0:
+                    return "Скасував заплановане вимкнення."
+                return "Немає запланованого вимкнення."
+            except Exception as exc:
+                return f"Не вдалося скасувати: {exc}"
+        if action in ("shutdown", "restart", "logoff", "sleep"):
+            labels = {
+                "shutdown": "вимкнути комп'ютер через 60 секунд",
+                "restart": "перезавантажити комп'ютер через 60 секунд",
+                "logoff": "вийти з облікового запису",
+                "sleep": "перевести комп'ютер у сон",
+            }
+            if not self.confirm("Підтвердити системну дію?", labels[action]):
+                return "Скасовано, сер."
+            try:
+                if action == "sleep":
+                    result = ctypes.windll.powrprof.SetSuspendState(0, 1, 0)
+                    if not result:
+                        subprocess.Popen(
+                            ["rundll32.exe", "powrprof.dll,SetSuspendState", "0,1,0"],
+                            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                        )
+                    return "Переходжу в сон."
+                if action == "logoff":
+                    subprocess.run(
+                        ["shutdown", "/l"], timeout=10,
+                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                    )
+                    return "Виходжу з облікового запису."
+                flag = "/s" if action == "shutdown" else "/r"
+                subprocess.run(
+                    ["shutdown", flag, "/t", "60", "/c", "JARVIS: requested by the user"],
+                    timeout=10,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+                return (
+                    "Заплановано вимкнення через 60 секунд. Скажи «скасуй вимкнення», "
+                    "щоб передумати."
+                    if action == "shutdown"
+                    else "Заплановано перезавантаження через 60 секунд."
+                )
+            except Exception as exc:
+                return f"Не вдалося виконати {action}: {exc}"
+        return f"Невідома системна дія: {action}"
+
+    def _play_media(self, query: str = "", platform: str = "youtube") -> str:
+        import webbrowser
+
+        value = str(query or "").strip()
+        platform = str(platform or "youtube").strip().lower()
+        moods = {
+            "гра": "gaming music mix", "ігри": "gaming music mix",
+            "gaming": "gaming music mix", "геймінг": "gaming music mix",
+            "chill": "chill music mix", "чил": "chill music mix",
+            "relax": "relaxing music", "спокій": "relaxing music",
+            "focus": "focus music", "робота": "focus music",
+            "workout": "workout music", "спорт": "workout music",
+            "sleep": "sleep music", "сон": "sleep music",
+            "lofi": "lofi hip hop radio", "лофай": "lofi hip hop radio",
+            "rock": "rock music mix", "рок": "rock music mix",
+            "rap": "rap music mix", "реп": "rap music mix",
+            "phonk": "phonk music mix", "фонк": "phonk music mix",
+            "класика": "classical music", "classical": "classical music",
+            "українська": "українська музика", "українське": "українська музика",
+        }
+        if not value:
+            value = "gaming music mix"
+        for key, replacement in moods.items():
+            if value.lower().strip() == key:
+                value = replacement
+                break
+
+        if platform == "auto":
+            platform = "spotify" if "spotify" in value.lower() or "спотіфай" in value.lower() else "youtube"
+        if value.lower().startswith(("http://", "https://")):
+            webbrowser.open(value)
+            return f"Відкрив: {value}"
+
+        if platform == "spotify":
+            try:
+                if value:
+                    os.startfile("spotify:search:" + quote_plus(value))
+                else:
+                    os.startfile("spotify:")
+                return f"Відкрив Spotify: {value or 'музика'}."
+            except Exception:
+                webbrowser.open("https://open.spotify.com/search/" + quote_plus(value))
+                return f"Відкрив Spotify у браузері: {value or 'музика'}."
+
+        search_url = "https://www.youtube.com/results?search_query=" + quote_plus(value)
+        try:
+            import requests
+
+            response = requests.get(
+                search_url,
+                headers={
+                    "User-Agent": (
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
+                    ),
+                    "Accept-Language": "uk-UA,uk;q=0.9,en;q=0.8",
+                },
+                timeout=(5, 12),
+            )
+            video_ids = []
+            for match in re.findall(r'"videoId":"([A-Za-z0-9_-]{11})"', response.text or ""):
+                if match not in video_ids:
+                    video_ids.append(match)
+            if video_ids:
+                watch_url = "https://www.youtube.com/watch?v=" + video_ids[0]
+                webbrowser.open(watch_url)
+                return f"Вмикаю на YouTube: {value}."
+        except Exception:
+            logging.debug("YouTube search failed", exc_info=True)
+
+        webbrowser.open(search_url)
+        return f"Відкрив пошук YouTube: {value}."
+
+    def _ha_config(self) -> tuple[str, str]:
+        cfg = self.get_cfg() if self.get_cfg else {}
+        base = str((cfg or {}).get("home_assistant_url") or "").strip().rstrip("/")
+        token = str((cfg or {}).get("home_assistant_token") or "").strip()
+        if base and not base.lower().startswith(("http://", "https://")):
+            base = "http://" + base
+        return base, token
+
+    def _smart_home(self, action: str = "status", entity: str = "", value: str = "") -> str:
+        import requests
+
+        action = str(action or "status").strip().lower()
+        base, token = self._ha_config()
+        if not base or not token:
+            return (
+                "Сер, спочатку додай URL і токен Home Assistant у Налаштуваннях Jarvis. "
+                "Наприклад: http://homeassistant.local:8123 і long-lived access token."
+            )
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        try:
+            if action in ("status", "ping"):
+                response = requests.get(base + "/api/", headers=headers, timeout=(5, 10))
+                if response.status_code == 401:
+                    return "Home Assistant відхилив токен (401). Перевір токен у налаштуваннях."
+                if response.status_code >= 400:
+                    return f"Home Assistant відповів HTTP {response.status_code}."
+                data = response.json()
+                return (
+                    f"Home Assistant на зв'язку: {data.get('location_name') or base} "
+                    f"({data.get('message') or 'OK'})."
+                )
+
+            if action in ("list", "entities", "states"):
+                response = requests.get(base + "/api/states", headers=headers, timeout=(5, 20))
+                if response.status_code == 401:
+                    return "Home Assistant відхилив токен (401)."
+                response.raise_for_status()
+                states = response.json()
+                needle = str(entity or "").strip().lower()
+                rows = []
+                for item in states if isinstance(states, list) else []:
+                    entity_id = str(item.get("entity_id") or "")
+                    friendly = str((item.get("attributes") or {}).get("friendly_name") or "")
+                    if needle and needle not in entity_id.lower() and needle not in friendly.lower():
+                        continue
+                    rows.append(f"• {entity_id} — {friendly or 'без назви'} = {item.get('state')}")
+                if not rows:
+                    return "Не знайшов таких пристроїв у Home Assistant."
+                return f"Пристрої Home Assistant ({len(rows)}):\n" + "\n".join(rows[:70])
+
+            if not str(entity or "").strip():
+                return "Вкажи пристрій: entity_id (наприклад light.kitchen) або його назву."
+
+            response = requests.get(base + "/api/states", headers=headers, timeout=(5, 15))
+            if response.status_code == 401:
+                return "Home Assistant відхилив токен (401)."
+            response.raise_for_status()
+            states = response.json() if isinstance(response.json(), list) else []
+            wanted = str(entity).strip()
+            target = ""
+            if re.fullmatch(r"[a-z0-9_]+\.[a-z0-9_]+", wanted.lower()):
+                target = wanted.lower()
+            else:
+                ranked = []
+                for item in states:
+                    entity_id = str(item.get("entity_id") or "")
+                    friendly = str((item.get("attributes") or {}).get("friendly_name") or "")
+                    score = max(self._app_score(wanted, entity_id), self._app_score(wanted, friendly))
+                    if score >= 72:
+                        ranked.append((score, entity_id, friendly))
+                if not ranked:
+                    return f"Не знайшов пристрій «{wanted}». Спитай list, щоб побачити назви."
+                ranked.sort(reverse=True)
+                if len(ranked) > 1 and ranked[0][0] - ranked[1][0] < 5 and ranked[0][0] < 96:
+                    options = ", ".join(f"{item[1]} ({item[2]})" for item in ranked[:5])
+                    return f"Уточни пристрій: {options}."
+                target = ranked[0][1]
+
+            domain = target.split(".", 1)[0]
+            if action == "scene":
+                domain, service = "scene", "turn_on"
+            elif action == "script":
+                domain, service = "script", "turn_on"
+            elif action == "brightness":
+                service = "turn_on"
+            else:
+                service = {"on": "turn_on", "off": "turn_off", "toggle": "toggle"}.get(action, "")
+            if not service:
+                return f"Невідома дія для розумного дому: {action}"
+            payload: dict = {"entity_id": target}
+            if action == "brightness":
+                try:
+                    payload["brightness_pct"] = max(0, min(100, int(str(value or "60"))))
+                except ValueError:
+                    payload["brightness_pct"] = 60
+            response = requests.post(
+                f"{base}/api/services/{domain}/{service}",
+                headers=headers,
+                json=payload,
+                timeout=(5, 15),
+            )
+            if response.status_code in (200, 201):
+                return f"Готово: {target} — {action}."
+            if response.status_code == 401:
+                return "Home Assistant відхилив токен (401)."
+            return f"Home Assistant відповів HTTP {response.status_code}: {response.text[:200]}"
+        except requests.exceptions.ConnectionError:
+            return f"Не можу підключитися до Home Assistant за адресою {base}. Перевір URL і мережу."
+        except requests.exceptions.Timeout:
+            return "Home Assistant не відповів вчасно."
+        except Exception as exc:
+            return f"Помилка Home Assistant: {exc}"
+
+    def _gaming_mode(self, action: str = "status") -> str:
+        cfg = self.get_cfg() if self.get_cfg else {}
+        action = str(action or "status").strip().lower()
+        if action == "on":
+            cfg["gaming_mode"] = True
+            save_config(cfg)
+            return "Режим ґеймера увімкнено. Сповіщення будуть тихішими, підказки — поверх гри."
+        if action == "off":
+            cfg["gaming_mode"] = False
+            save_config(cfg)
+            return "Режим ґеймера вимкнено."
+        name, path = _foreground_process_info()
+        active = "гра активна" if _is_game_process(name, path) else "гра не виявлена"
+        return (
+            f"Режим ґеймера: {'увімкнено' if cfg.get('gaming_mode') else 'вимкнено'}; "
+            f"{active}{(' (' + name + ')') if name else ''}."
+        )
 
     def _find_files(self, pattern: str, root: str = "", limit: int = 20) -> str:
         pattern = (pattern or "").strip() or "*"
@@ -2888,12 +4146,19 @@ class Ears:
 class JarvisApp:
     def __init__(self, root: tk.Tk):
         self.root = root
+        self._ui_queue: queue.Queue = queue.Queue()
         self.cfg = load_config()
         self.brain = Brain(self.cfg)
         self.brain.notify = self._tool_log
-        from modules.mobile_bridge import MobileBridge
-        self.mobile_brain = Brain(dict(self.cfg))
-        self.mobile_bridge = MobileBridge(self._answer_mobile_bridge)
+        try:
+            from modules.mobile_bridge import MobileBridge
+
+            self.mobile_brain = Brain(dict(self.cfg))
+            self.mobile_bridge = MobileBridge(self._answer_mobile_bridge)
+        except Exception:
+            logging.exception("Android bridge unavailable")
+            self.mobile_brain = None
+            self.mobile_bridge = None
         self.voice = Voice(self.cfg)
         self.ears = Ears(self.cfg)
         self.vision = Vision(self.cfg, self._tool_log)
@@ -2904,10 +4169,11 @@ class JarvisApp:
             vision_runner=self._vision_tool,
             translate_runner=self._translate_tool,
         )
+        self.gaming_active = False
+        self._game_hint_window = None
         self._log_images: list = []
         self.busy = threading.Event()
         self.cancel = threading.Event()
-        self._ui_queue: queue.Queue = queue.Queue()
         self._t = 0.0
         self._hotkey_stop = threading.Event()
         self._hotkey_thread: threading.Thread | None = None
@@ -2924,6 +4190,7 @@ class JarvisApp:
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self.root.after(250, self._configure_hotkey)
         self.root.after(10000, self._check_reminders)
+        self.root.after(4500, self._check_gaming_mode)
 
         if self.cfg.get("greet") and not self.cfg.get("mute"):
             self.root.after(1000, lambda: threading.Thread(target=self._greet, daemon=True).start())
@@ -3014,6 +4281,13 @@ class JarvisApp:
             relief="flat", bd=0, anchor="w", font=("Segoe UI", 10),
             padx=12, pady=10, cursor="hand2",
         ).pack(fill="x", padx=8)
+        self.gaming_btn = tk.Button(
+            sidebar, text="🎮   Режим ґеймера", command=self._toggle_gaming_mode,
+            bg=SIDEBAR, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
+            relief="flat", bd=0, anchor="w", font=("Segoe UI", 10),
+            padx=12, pady=10, cursor="hand2",
+        )
+        self.gaming_btn.pack(fill="x", padx=8)
 
         tk.Label(
             sidebar, text="ІСТОРІЯ", bg=SIDEBAR, fg=MUTED,
@@ -3320,6 +4594,93 @@ class JarvisApp:
             pass
         self.root.after(40, self._drain_ui)
 
+    def _toggle_gaming_mode(self) -> None:
+        enabled = not bool(self.cfg.get("gaming_mode"))
+        self.cfg["gaming_mode"] = enabled
+        save_config(self.cfg)
+        self._update_gaming_label()
+        if enabled:
+            self.set_status("Режим ґеймера увімкнено", CYAN)
+            self._log("sys", "🎮 Режим ґеймера увімкнено: тихі сповіщення, підказки поверх гри.")
+        else:
+            self.set_status("Готовий, сер.", MUTED)
+            self._log("sys", "🎮 Режим ґеймера вимкнено.")
+        self._check_gaming_mode()
+
+    def _update_gaming_label(self) -> None:
+        if not hasattr(self, "gaming_btn"):
+            return
+        enabled = bool(self.cfg.get("gaming_mode"))
+        self.gaming_btn.config(
+            text="🎮   Ґеймер: увімкнено" if enabled else "🎮   Режим ґеймера",
+            fg=CYAN if enabled else TEXT,
+        )
+
+    def _check_gaming_mode(self) -> None:
+        try:
+            enabled = bool(self.cfg.get("gaming_mode"))
+            name, path = _foreground_process_info()
+            active = enabled and _is_game_process(name, path)
+            if active != self.gaming_active:
+                self.gaming_active = active
+                if active:
+                    self.set_status("Гра · тихий режим", CYAN)
+                    self._log("sys", f"🎮 Режим ґеймера: активна гра {name}.")
+                elif enabled:
+                    self.set_status("Готовий, сер.", MUTED)
+                    self._log("sys", "🎮 Режим ґеймера: гра неактивна.")
+            self._update_gaming_label()
+        except Exception:
+            logging.debug("Gaming mode check failed", exc_info=True)
+        finally:
+            try:
+                self.root.after(5000, self._check_gaming_mode)
+            except Exception:
+                pass
+
+    def _game_hint(self, text: str) -> None:
+        """Маленька підказка поверх гри, без згортання вікна."""
+        message = str(text or "").strip()
+        if not message:
+            return
+        try:
+            if self._game_hint_window is not None:
+                try:
+                    self._game_hint_window.destroy()
+                except Exception:
+                    pass
+            win = tk.Toplevel(self.root)
+            win.overrideredirect(True)
+            win.attributes("-topmost", True)
+            win.attributes("-alpha", 0.94)
+            win.configure(bg=LINE)
+            width = 430
+            x = max(20, win.winfo_screenwidth() - width - 34)
+            win.geometry(f"{width}x110+{x}+32")
+            panel = tk.Frame(win, bg=PANEL)
+            panel.pack(fill="both", expand=True, padx=1, pady=1)
+            tk.Label(
+                panel, text="J.A.R.V.I.S.  ·  ГРА", bg=PANEL, fg=CYAN,
+                font=("Consolas", 8, "bold"), anchor="w",
+            ).pack(fill="x", padx=14, pady=(9, 0))
+            tk.Label(
+                panel, text=message[:260], bg=PANEL, fg=TEXT,
+                font=("Segoe UI", 9), wraplength=width - 30,
+                justify="left", anchor="w",
+            ).pack(fill="both", expand=True, padx=14, pady=(2, 8))
+            self._game_hint_window = win
+            win.after(6500, lambda: self._close_game_hint(win))
+        except Exception:
+            logging.debug("Game hint failed", exc_info=True)
+
+    def _close_game_hint(self, win: tk.Toplevel) -> None:
+        try:
+            win.destroy()
+        except Exception:
+            pass
+        if self._game_hint_window is win:
+            self._game_hint_window = None
+
     def _ready_later(self, delay_ms: int = 2200) -> None:
         def go() -> None:
             if not self.busy.is_set():
@@ -3339,6 +4700,8 @@ class JarvisApp:
             logging.info("%s: %s", who.upper(), text)
         self._append_log_widget(who, text, image)
         self._remember_message(who, text, image, title)
+        if who == "jarvis" and getattr(self, "gaming_active", False) and self.busy.is_set():
+            self._game_hint(text)
 
     def _append_log_widget(self, who: str, text: str, image: str | None = None) -> None:
         prefix = {"you": "ВИ:  ", "jarvis": "JARVIS:  "}.get(who, "·  ")
@@ -3829,12 +5192,22 @@ class JarvisApp:
 
     def _answer_mobile_bridge(self, text: str, mode: str, history: list[dict]) -> str:
         # Android receives chat answers only; no desktop tools are passed to Brain.ask.
+        if self.mobile_brain is None:
+            return "Android-міст недоступний на цій системі."
         self.mobile_brain.cfg = dict(self.cfg)
         self.mobile_brain.cfg["response_mode"] = "coder" if mode == "coder" else "natural"
         self.mobile_brain.history = list(history[-30:])
         return self.mobile_brain.ask(text, tool_runner=None)
 
     def _toggle_mobile_bridge(self) -> None:
+        if self.mobile_bridge is None:
+            messagebox.showerror(
+                "Android-підключення",
+                "Android-міст недоступний: не вистачає модуля cryptography "
+                "або модуль mobile_bridge не завантажився.",
+                parent=self.root,
+            )
+            return
         try:
             if not self.mobile_bridge.is_running:
                 self.mobile_bridge.start()
@@ -3849,6 +5222,8 @@ class JarvisApp:
             )
 
     def _show_mobile_bridge_details(self) -> None:
+        if self.mobile_bridge is None:
+            return
         credentials = self.mobile_bridge.credentials()
         win = tk.Toplevel(self.root)
         win.title("J.A.R.V.I.S. · Android")
@@ -4252,6 +5627,49 @@ class JarvisApp:
             self.ui(self._log, "sys", "Повернувся до режиму розмови.")
             return "Повернувся до звичайного режиму розмови."
 
+        if re.fullmatch(
+            r"(?i)\s*(?:джарвіс[, ]*)?(?:увімкни|включи|активуй|enable|turn on)\s+"
+            r"(?:режим\s+)?(?:геймера|ґеймера|геймерський|ґеймерський|gaming)[.! ]*",
+            t,
+        ):
+            result = self.tools.run("gaming_mode", {"action": "on"})
+            self.ui(self._log, "sys", result)
+            return result
+
+        if re.fullmatch(
+            r"(?i)\s*(?:джарвіс[, ]*)?(?:вимкни|відключи|деактивуй|disable|turn off)\s+"
+            r"(?:режим\s+)?(?:геймера|ґеймера|геймерський|ґеймерський|gaming)[.! ]*",
+            t,
+        ):
+            result = self.tools.run("gaming_mode", {"action": "off"})
+            self.ui(self._log, "sys", result)
+            return result
+
+        music_match = re.fullmatch(
+            r"(?i)\s*(?:джарвіс[, ]*)?(?:увімкни|включи|постав|play)\s+"
+            r"(?:музику|музыку|music)(?:\s+(?:для|for|під|under)\s+(?P<mood>.+?))?[.!?]*\s*",
+            t,
+        )
+        if music_match:
+            mood = (music_match.group("mood") or "").strip()
+            query = mood if mood else "gaming music mix"
+            if mood and re.search(r"(?i)гр|game|gaming|roblox|роблокс", mood):
+                query = "gaming music mix"
+            result = self.tools.run("play_media", {"query": query, "platform": "youtube"})
+            self.ui(self._log, "sys", result)
+            return result
+
+        song_match = re.fullmatch(
+            r"(?i)\s*(?:джарвіс[, ]*)?(?:увімкни|включи|постав|play)\s+"
+            r"(?:пісню|песню|трек|song)\s+(?P<query>.+?)[.!?]*\s*",
+            t,
+        )
+        if song_match:
+            query = (song_match.group("query") or "").strip()
+            result = self.tools.run("play_media", {"query": query, "platform": "youtube"})
+            self.ui(self._log, "sys", result)
+            return result
+
         project_match = re.fullmatch(
             r"(?i)\s*(?:джарвіс[, ]*)?(?:відкрий|відкрити|запусти|open)\s+(?:мій\s+)?(?:проєкт|проект)(?:\s+(.+?))?[.! ]*",
             t,
@@ -4293,32 +5711,22 @@ class JarvisApp:
             return None
 
         low = what.lower()
-        norm = self._norm_alias(low)
-
-        site = {self._norm_alias(k): v for k, v in self.tools.SITE_ALIASES.items()}
-        apps = {self._norm_alias(k): v for k, v in self.tools.APP_ALIASES.items()}
-
-        target = site.get(norm)
-        is_desktop_app = False
-        if not target:
-            target = apps.get(norm)
-            is_desktop_app = True
-
-        if target is None and re.fullmatch(
+        resolved = self.tools.resolve_app(what)
+        if resolved:
+            target, name, _known = resolved
+        elif re.fullmatch(
             r"(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:/\S*)?", low
         ):
-            target = "https://" + low
-            is_desktop_app = False
-
-        if target is None:
+            target, name = "https://" + low, low
+        elif len(what) <= 80 and not re.search(r"[\\/:]", what):
             # Explicit voice commands may name any installed program. Pass the
             # name to the controller; unknown executables still require its
             # normal confirmation dialog before Windows opens them.
-            if len(what) <= 80 and not re.search(r"[\\/:]", what):
-                target = what
-                is_desktop_app = True
-            else:
-                return None
+            target, name = what, what
+        else:
+            return None
+
+        is_desktop_app = not str(target).lower().startswith(("http://", "https://"))
 
         # Якщо відкривається десктопна програма, а режим повного доступу вимкнено — попереджаємо
         if is_desktop_app and not self.cfg.get("full_access", True):
@@ -4327,15 +5735,8 @@ class JarvisApp:
         self.ui(self.set_status, "Виконую, сер…", GOLD)
         result = self.tools.run("open_app", {"target": target})
 
-        if "youtube" in target.lower():
-            name = "YouTube"
-        elif target.lower().startswith("http"):
-            name = re.sub(r"^https?://(?:www\.)?", "", target).split("/")[0]
-        else:
-            name = what
-
         if str(result).startswith(("Відкрив", "Запустив")):
-            return f"Готово, сер. {name} уже відкрито."
+            return f"Готово, сер. {name} відкрито."
         logging.warning("Quick open failed: %s -> %s", target, result)
         return f"Сер, не вдалося відкрити {name}."
 
@@ -4734,7 +6135,7 @@ class JarvisApp:
             steps = max(18, duration_ms // 16)
 
             def step(index: int = 0) -> None:
-                if not win.winfo_exists():
+                if not dialog.winfo_exists():
                     return
                 progress = min(1.0, index / steps)
                 y = int((height + 30) * progress)
@@ -5122,15 +6523,47 @@ class JarvisApp:
 
     # ── налаштування ─────────────────────────────────────────────────────────
     def open_settings(self) -> None:
-        win = tk.Toplevel(self.root)
-        win.title("Налаштування J.A.R.V.I.S.")
-        win.configure(bg=BG)
-        win.geometry("640x880")
-        win.resizable(True, True)
-        win.transient(self.root)
-        win.grab_set()
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Налаштування J.A.R.V.I.S.")
+        dialog.configure(bg=BG)
+        dialog.geometry("700x980")
+        dialog.minsize(560, 480)
+        dialog.resizable(True, True)
+        dialog.transient(self.root)
+        dialog.grab_set()
 
-        paste_status = tk.Label(win, text="", bg=BG, fg=MUTED,
+        footer = tk.Frame(dialog, bg=BG)
+        footer.pack(side="bottom", fill="x")
+        tk.Frame(footer, bg=LINE, height=1).pack(fill="x")
+
+        shell = tk.Frame(dialog, bg=BG)
+        shell.pack(fill="both", expand=True)
+        canvas = tk.Canvas(shell, bg=BG, highlightthickness=0, bd=0)
+        scrollbar = ttk.Scrollbar(shell, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        win = tk.Frame(canvas, bg=BG)
+        content_id = canvas.create_window((0, 0), window=win, anchor="nw")
+
+        def sync_scroll(_event=None):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            canvas.itemconfigure(content_id, width=canvas.winfo_width())
+
+        def on_wheel(event):
+            canvas.yview_scroll(-3 if event.delta > 0 else 3, "units")
+
+        win.bind("<Configure>", sync_scroll)
+        canvas.bind("<Configure>", sync_scroll)
+        canvas.bind("<Enter>", lambda _e: canvas.bind_all("<MouseWheel>", on_wheel))
+        canvas.bind("<Leave>", lambda _e: canvas.unbind_all("<MouseWheel>"))
+        dialog.bind(
+            "<Destroy>",
+            lambda _e: canvas.unbind_all("<MouseWheel>"),
+            add="+",
+        )
+
+        paste_status = tk.Label(footer, text="", bg=BG, fg=MUTED,
                                 font=("Segoe UI", 8))
 
         def paste_api_key(entry: tk.Entry) -> None:
@@ -5326,7 +6759,7 @@ class JarvisApp:
         connection_status.pack(side="left", fill="x", expand=True)
 
         def finish_connection(message: str, ok: bool) -> None:
-            if not win.winfo_exists():
+            if not dialog.winfo_exists():
                 return
             connection_button.config(state="normal")
             connection_status.config(text=message, fg=CYAN_DIM if ok else GOLD)
@@ -5364,7 +6797,7 @@ class JarvisApp:
         connection_button.pack(side="right", padx=(8, 0))
 
         def apply_free_models(models: list[str], error: str = "") -> None:
-            if not win.winfo_exists():
+            if not dialog.winfo_exists():
                 return
             refresh_free_button.config(state="normal")
             if error:
@@ -5404,7 +6837,7 @@ class JarvisApp:
             padx=8, pady=5,
         )
         refresh_free_button.pack(side="left", padx=(6, 0))
-        win.after(100, refresh_free_models)
+        dialog.after(100, refresh_free_models)
 
         tk.Label(win, text="ПОСИЛАННЯ НА ТВОЮ СТОРІНКУ PRIVATE SERVER", bg=BG,
                  fg=CYAN_DIM, font=("Consolas", 9)).pack(anchor="w", padx=18,
@@ -5496,6 +6929,44 @@ class JarvisApp:
             font=("Segoe UI", 8),
         ).pack(anchor="w", padx=26)
 
+        extras = tk.Frame(win, bg=BG)
+        extras.pack(fill="x", padx=18, pady=(12, 0))
+        gaming_var = tk.BooleanVar(value=bool(self.cfg.get("gaming_mode")))
+        plugins_var = tk.BooleanVar(value=bool(self.cfg.get("plugins_enabled", True)))
+        tk.Checkbutton(
+            extras, text="Режим ґеймера (тихі підказки поверх гри)",
+            variable=gaming_var, bg=BG, fg=TEXT, selectcolor=PANEL,
+            activebackground=BG, activeforeground=CYAN,
+            font=("Segoe UI", 10),
+        ).pack(anchor="w")
+        tk.Checkbutton(
+            extras, text="Локальні плагіни з %APPDATA%\\Jarvis\\plugins",
+            variable=plugins_var, bg=BG, fg=TEXT, selectcolor=PANEL,
+            activebackground=BG, activeforeground=CYAN,
+            font=("Segoe UI", 10),
+        ).pack(anchor="w", pady=(4, 0))
+
+        tk.Label(win, text="HOME ASSISTANT · URL", bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+        ha_url_var = tk.StringVar(value=self.cfg.get("home_assistant_url", ""))
+        ha_url_entry = tk.Entry(
+            win, textvariable=ha_url_var, bg=PANEL, fg=TEXT,
+            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+        )
+        ha_url_entry.pack(fill="x", padx=18, ipady=6)
+        self._bind_clipboard_shortcuts(ha_url_entry)
+
+        tk.Label(win, text="HOME ASSISTANT · ДОВГОСТРОКОВИЙ ТОКЕН", bg=BG,
+                 fg=CYAN_DIM, font=("Consolas", 9)).pack(anchor="w", padx=18,
+                                                          pady=(8, 2))
+        ha_token_var = tk.StringVar(value=self.cfg.get("home_assistant_token", ""))
+        ha_token_entry = tk.Entry(
+            win, textvariable=ha_token_var, bg=PANEL, fg=TEXT, show="•",
+            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+        )
+        ha_token_entry.pack(fill="x", padx=18, ipady=6)
+        self._bind_clipboard_shortcuts(ha_token_entry)
+
         def save():
             self.cfg["openrouter_key"] = key_var.get().strip()
             self.cfg["gemini_api_key"] = gemini_key_var.get().strip()
@@ -5515,6 +6986,10 @@ class JarvisApp:
             self.cfg["always_on_top"] = bool(top_var.get())
             self.cfg["full_access"] = bool(access_var.get())
             self.cfg["voice_hotkey"] = bool(hotkey_var.get())
+            self.cfg["gaming_mode"] = bool(gaming_var.get())
+            self.cfg["plugins_enabled"] = bool(plugins_var.get())
+            self.cfg["home_assistant_url"] = ha_url_var.get().strip()
+            self.cfg["home_assistant_token"] = ha_token_var.get().strip()
             save_config(self.cfg)
             self.brain.cfg = self.cfg
             self.voice.cfg = self.cfg
@@ -5524,14 +6999,19 @@ class JarvisApp:
             self._update_access_label()
             self._update_provider_chip()
             self._configure_hotkey()
-            win.destroy()
+            self._update_gaming_label()
+            try:
+                self.tools.load_plugins()
+            except Exception:
+                logging.exception("Plugin reload after settings failed")
+            dialog.destroy()
 
-        btns = tk.Frame(win, bg=BG)
-        btns.pack(fill="x", padx=18, pady=(18, 8))
+        btns = tk.Frame(footer, bg=BG)
+        btns.pack(fill="x", padx=18, pady=(6, 10))
         tk.Button(btns, text="ЗБЕРЕГТИ", command=save, bg="#4D6BFE", fg="#FFFFFF",
                   activebackground="#25304F", activeforeground=CYAN, relief="flat",
                   font=("Segoe UI", 10, "bold"), padx=18, pady=8).pack(side="right")
-        tk.Button(btns, text="СКАСУВАТИ", command=win.destroy, bg=PANEL, fg=MUTED,
+        tk.Button(btns, text="СКАСУВАТИ", command=dialog.destroy, bg=PANEL, fg=MUTED,
                   activebackground="#25304F", activeforeground=CYAN, relief="flat",
                   font=("Segoe UI", 10), padx=14, pady=8).pack(side="right", padx=(0, 8))
 
