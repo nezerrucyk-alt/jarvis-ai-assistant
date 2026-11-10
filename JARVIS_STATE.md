@@ -30,11 +30,18 @@
 
 ## Актуальний білд
 
+Windows (локальна збірка):
 - Файл: `C:\Users\nezer\Jarvis\dist\JARVIS.exe`
 - Розмір: **89 393 601 байт** (89.4 MB)
 - SHA256: **1465CCC7AFF82355953E47E319FCACE1FA512BD2358C3C82B71B771073A190DB**
 - Версія: 2.0.0 від 10.11.2026
 - Скопійований у `JARVIS.exe`, на робочий стіл і в `website\downloads\JARVIS.exe`.
+
+macOS і Linux (з GitHub Actions, реліз v2.0.0):
+- `JARVIS-macOS.zip` — 75 877 396 байт, SHA256 `C1349A2A1990F65802B36A9F118BEE9CEAEDB1C8ADD1B391403A65062FE387B7`
+- `JARVIS-Linux.tar.gz` — 105 176 023 байт, SHA256 `543687CD00A2B15D8119348DBCFE9A352BF544186C39C041DABA8D3C3B21AAA0`
+- macOS: тільки Apple Silicon (arm64, M1–M4), `.app` без підпису.
+- Linux: x86_64, один виконуваний файл `JARVIS`, потрібні X11/XWayland і аудіо-бібліотеки (`libportaudio2`, `libasound2`).
 
 ## Команда збірки
 
@@ -47,7 +54,7 @@ cd C:\Users\nezer\Jarvis
 1. Закрити всі `JARVIS.exe` (onefile = батько + дитина).
 2. Скопіювати `dist\JARVIS.exe` у `C:\Users\nezer\Jarvis\JARVIS.exe`, на робочий стіл і в `website\downloads\JARVIS.exe`.
 3. Запустити, почекати 10–15 с, перевірити хвіст `jarvis.log`.
-4. Оновити розмір і SHA256 на сайті (`website/index.html`, блок `download-info`).
+4. Оновити розмір і SHA256 у трьох картках завантаження на сайті (`website/index.html`, клас `platform-card`).
 
 ## Що вже зроблено
 
@@ -64,15 +71,20 @@ cd C:\Users\nezer\Jarvis
 - 5 локальних плагінів: `quick_notes.py`, `weather.py`, `currency.py`, `pc_stats.py`, `roblox_status.py` (9 інструментів).
 - Статус Roblox переведено на робочий status.io API.
 - Виправлено порядок ініціалізації `_ui_queue`, через який застосунок падав під час завантаження плагінів.
-- Сайт: темна тема, hero, можливості, провайдери, скріншоти, демо-відео, плагіни, changelog, інструкція, відгуки, FAQ, лічильник завантажень, UA/EN.
+- Сайт: темна тема, hero, можливості, провайдери, скріншоти, демо-відео, плагіни, changelog, інструкція, сценарії використання, FAQ, лічильник завантажень, UA/EN.
+- Встановлення на сайті розділене на вкладки Windows / macOS / Linux: 3 кроки для Windows, 4 для macOS і Linux, окремі застереження (SmartScreen, Gatekeeper, X11/Wayland).
+- Три картки завантаження з розмірами й копіюванням SHA256; посилання на релізні ассети підставляються з GitHub API, є fallback на `releases/latest/download/...`.
+- Секцію вигаданих відгуків замінено на чесні «Сценарії використання» з посиланням на GitHub issues.
 - Демо-відео: `website/assets/demo.mp4` (30 с, 1280×720, H.264, ~4.8 MB), постер `demo-poster.jpg`.
-- Локальна перевірка сайту через Playwright: 1440×7801, усі секції рендеряться, 0 console errors, 0 failed requests, відео `readyState=4`, мобільна ширина 390 без горизонтального скролу.
+- Локальна перевірка сайту через Playwright: 1440×7801, усі секції рендеряться, 0 console errors, 0 failed requests, відео `readyState=4`, мобільна ширина 390 без горизонтального скролу, перемикання трьох вкладок ОС і правильні посилання на всі три ассети.
 
 ## Що ще зробити
 
 1. Підключити Home Assistant (URL + токен) і протестувати на реальному інстансі.
 2. Відкликати/перегенерувати ключ Ashna, який був показаний у чаті.
-3. За бажанням: автооновлення exe, більше мов перекладу, Pro-сторінка.
+3. Додати Intel-збірку macOS (зараз лише Apple Silicon) або позначити це на сайті ще помітніше.
+4. Перевірити новий `release.yml` на наступному тегу: публікація має спрацьовувати навіть якщо Android падає.
+5. За бажанням: Pro-сторінка й автоматичні оновлення (у робочій копії є незакомічені зміни `jarvis.py` з апдейтером — не публікувати без тестів).
 
 ## Важливі нюанси
 
@@ -83,4 +95,7 @@ cd C:\Users\nezer\Jarvis
 - Для скріншотів використовувати `PrintWindow(hwnd, memdc, 1 | 2)`: `ImageGrab` ловить інші вікна, якщо Jarvis перекритий.
 - GitHub Pages workflow підставляє `__GITHUB_REPOSITORY__` в `index.html`; прямі посилання на релізи будуються з цього рядка, локально JS падає на `nezerrucyk-alt/jarvis-ai-assistant`.
 - `website/downloads/JARVIS.exe` ігнорується git (`.gitignore`), тому 89 MB не потраплять у репозиторій.
+- `.github/workflows/release.yml`: `publish` тепер має `if: always() && ... && needs.desktop.result == 'success'`, тому падіння Android не блокує публікацію desktop-ассетів.
+- `requirements.txt`: `pycaw` і `comtypes` позначені `; sys_platform == "win32"`, щоб не ламати Linux/macOS-збірки.
+- macOS і Linux не мають глобальних гарячих клавіш, повного керування ПК, ґеймерського оверлею та Roblox Studio — це лише Windows. Решта (чат, голос, плагіни, vision, переклад, Home Assistant) працює всюди.
 - Демо-відео згенеровано скриптом `make_demo.py` з реальних скріншотів; для перегенерації потрібні `imageio`, `imageio-ffmpeg`, `numpy`.

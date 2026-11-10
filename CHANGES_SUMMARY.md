@@ -22,13 +22,23 @@
 - Статус Roblox переведено з неіснуючого `status.roblox.com/api/v2` на `https://api.status.io/1.0/status/59db90dbcdeb2f04dadcf16d`.
 - У збірку додано `cryptography`, `psutil`, `pycaw`, `comtypes`.
 
+### Кросплатформність
+- Додано збірки для macOS (Apple Silicon, `.app` у `.zip`) і Linux (x86_64, один файл у `.tar.gz`).
+- macOS: дані в `~/Library/Application Support/Jarvis`; Linux: `~/.local/share/Jarvis` (або `$XDG_DATA_HOME`).
+- Глобальні гарячі клавіші, повне керування ПК, ґеймерський оверлей і Roblox Studio залишилися Windows-only; на macOS/Linux доступні чат, голос, плагіни, vision, переклад і Home Assistant.
+- Linux: потрібні X11/XWayland і `libportaudio2`/`libasound2`; macOS: непідписаний `.app`, Gatekeeper обходиться через «Open» або `xattr`.
+- `release.yml`: публікація релізу більше не блокується падінням Android; `pycaw`/`comtypes` стали Windows-only в `requirements.txt`.
+
 ### Сайт
 - Повністю переписаний `website/index.html` + `assets/styles.css` + `assets/app.js`.
-- Розділи: hero, статистика, можливості, провайдери, скріншоти, демо-відео, плагіни, changelog, встановлення, відгуки, завантаження/Pro, FAQ, footer, JSON-LD.
-- Перемикач UA/EN, мобільне меню, lightbox для скріншотів, копіювання SHA256.
+- Розділи: hero, статистика, можливості, провайдери, скріншоти, демо-відео, плагіни, changelog, встановлення, сценарії використання, завантаження/Pro, FAQ, footer, JSON-LD.
+- Встановлення розділене на вкладки Windows / macOS / Linux з покроковими інструкціями й застереженнями для кожної ОС.
+- Три картки завантаження з розмірами, SHA256 і копіюванням у буфер; посилання підтягуються з GitHub Releases API з fallback на `releases/latest/download/...`.
+- Перемикач UA/EN, мобільне меню, lightbox для скріншотів.
 - Лічильник завантажень через GitHub Releases API; локальний fallback — `downloads/JARVIS.exe`.
 - Демо-ролик 30 с, 1280×720, H.264: `website/assets/demo.mp4`, постер `demo-poster.jpg`.
 - Свіжі скріншоти головного вікна (1180×820) і налаштувань (700×980) з актуального білда.
+- Вигадані відгуки замінено на чесні «Сценарії використання».
 
 ### Збірка
 - `dist\JARVIS.exe`, `--onefile --windowed`.
@@ -46,9 +56,13 @@
 ## Що далі
 1. Підключити Home Assistant і протестувати на реальному інстансі.
 2. Відкликати старий ключ Ashna.
-3. За бажанням: автооновлення exe, більше мов, Pro-сторінка.
+3. Додати Intel-збірку macOS (зараз лише Apple Silicon).
+4. За бажанням: Pro-сторінка, автооновлення exe.
 
 ## Публікація
 - Сайт: https://nezerrucyk-alt.github.io/jarvis-ai-assistant/
 - Реліз: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.0.0
-- Ассет: `JARVIS.exe` (89 393 601 байт), прикріплений до релізу v2.0.0.
+- Ассети:
+  - `JARVIS.exe` — Windows 10/11 x64, 89 393 601 байт, SHA256 `1465CCC7AFF82355953E47E319FCACE1FA512BD2358C3C82B71B771073A190DB`.
+  - `JARVIS-macOS.zip` — macOS 11+ Apple Silicon, 75 877 396 байт, SHA256 `C1349A2A1990F65802B36A9F118BEE9CEAEDB1C8ADD1B391403A65062FE387B7`.
+  - `JARVIS-Linux.tar.gz` — Linux x86_64, 105 176 023 байт, SHA256 `543687CD00A2B15D8119348DBCFE9A352BF544186C39C041DABA8D3C3B21AAA0`.
