@@ -36,7 +36,7 @@
 - Три картки завантаження з розмірами, SHA256 і копіюванням у буфер; посилання підтягуються з GitHub Releases API з fallback на `releases/latest/download/...`.
 - Перемикач UA/EN, мобільне меню, lightbox для скріншотів.
 - Лічильник завантажень через GitHub Releases API; локальний fallback — `downloads/JARVIS.exe`.
-- Пояснювальне відео 2:03, 1920×1080, 30 fps, H.264/AAC: `website/assets/how-it-works.mp4`; постер `how-it-works-poster.jpg`.
+- Пояснювальне відео 2:02, 1920×1080, 30 fps, H.264/AAC: `website/assets/how-it-works.mp4`; постер `how-it-works-poster.jpg`.
 - Українська озвучка `uk-UA-OstapNeural`, тиха фонова музика, 10 сцен: голос і чат, фейловер провайдерів, керування ПК, Roblox Studio, зір екрана й переклад, плагіни, приватність, платформи, фінал.
 - Субтитри `how-it-works.uk.vtt` і `how-it-works.en.vtt` — окремі речення з пропорційним таймінгом; обидві доріжки підключені до `<video>`.
 - Старий 30-секундний `demo.mp4` / `demo-poster.jpg` лишилися в assets як архів, але сайт на них більше не посилається.
