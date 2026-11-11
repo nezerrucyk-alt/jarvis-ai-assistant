@@ -13,6 +13,9 @@
 - Додано `tests/test_17_providers_queue.py` (8 тестів). Повний прогін: 115 тестів, 2 давні failures у `test_15_security`, які відтворюються на HEAD `8d236b6`.
 - Сайт оновлено новими скріншотами (Command Deck 1240×860, налаштування 700×980), цифрами 78 моделей / 16 провайдерів і chips.
 - Windows-збірка: `dist/JARVIS.exe`, 89 567 989 байт, SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`.
+- macOS: `JARVIS-macOS.zip`, 75 728 703 байти, SHA256 `E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE`.
+- Linux: `JARVIS-Linux.tar.gz`, 105 274 532 байти, SHA256 `928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0`.
+- Реліз: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.1.0
 
 ## Попередній білд — 2.0.0
 

@@ -100,6 +100,10 @@ cd C:\Users\nezer\Jarvis
 - Додано `tests/test_17_providers_queue.py`: 8 тестів на провайдерів, Anthropic-конвертацію, vision/text-вкладення, чергу й модель/режим.
 - Сайт оновлено: нові скріншоти Command Deck і налаштувань, 78 моделей, 16 провайдерів, нові chips, changelog 2.1.0.
 - Windows-збірка: `dist/JARVIS.exe`, 89 567 989 байт, SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`. Версія `APP_VERSION = "2.1.0"`.
+- Реліз `v2.1.0`: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.1.0
+  - `JARVIS.exe` — 89 567 989 байт, SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`.
+  - `JARVIS-macOS.zip` — 75 728 703 байти, SHA256 `E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE`.
+  - `JARVIS-Linux.tar.gz` — 105 274 532 байти, SHA256 `928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0`.
 - Повний прогін тестів: 115 тестів, 2 давні failures у `test_15_security` (перевірки `os.startfile` і тексту відмови `_write_file`), які відтворюються на HEAD `8d236b6`. Тест версії `modules` оновлено під 2.1.0.
 
 ## Що ще зробити
@@ -109,7 +113,7 @@ cd C:\Users\nezer\Jarvis
 3. Додати Intel-збірку macOS (зараз лише Apple Silicon) або позначити це на сайті ще помітніше.
 4. Перевірити новий `release.yml` на наступному тегу: публікація має спрацьовувати навіть якщо Android падає.
 5. Апдейтер, трей, автоперевірка, мови й HA вже у зібраному білді (Windows). Для публікації релізу — перезібрати macOS/Linux через GitHub Actions і закомітити `jarvis.py` + тести.
-6. Windows exe 2.1.0 зібрано локально. Залишилось: закомітити, задеплоїти сайт, створити тег `v2.1.0`, дочекатись macOS/Linux-збірок, оновити їхні розміри/SHA256 і завантажити Windows-асет у реліз.
+6. Реліз `v2.1.0` створено, усі три ассети завантажено. Залишилось задеплоїти оновлений сайт (пуш `main`) і перевірити live-версію.
 
 ## Важливі нюанси
 
