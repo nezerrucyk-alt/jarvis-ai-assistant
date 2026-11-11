@@ -1,6 +1,6 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-10 (вечір)
+Оновлено: 2026-11-11 (Command Deck / провайдери / черга)
 
 ## Де що лежить
 
@@ -18,8 +18,8 @@
 | Плагіни | `C:\Users\nezer\AppData\Roaming\Jarvis\plugins\` |
 | Нотатки плагіна | `C:\Users\nezer\AppData\Roaming\Jarvis\notes.json` |
 | Сайт | `C:\Users\nezer\Jarvis\website\` |
-| Скріншоти й демо сайту | `C:\Users\nezer\Jarvis\website\assets\` |
-| Генератор демо-відео | `C:\Users\nezer\AppData\Local\Temp\opencode\make_demo.py` |
+| Скріншоти й відео сайту | `C:\Users\nezer\Jarvis\website\assets\` |
+| Генератор пояснювального відео | `C:\Users\nezer\AppData\Local\Temp\opencode\make_howto_video.py` (+ `howto_common.py`, `howto_scenes_a-d.py`) |
 | GitHub-репозиторій | `nezerrucyk-alt/jarvis-ai-assistant` |
 | GitHub Pages | `https://nezerrucyk-alt.github.io/jarvis-ai-assistant/` |
 | GitHub Release | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.0.0` |
@@ -32,10 +32,11 @@
 
 Windows (локальна збірка):
 - Файл: `C:\Users\nezer\Jarvis\dist\JARVIS.exe`
-- Розмір: **89 393 601 байт** (89.4 MB)
-- SHA256: **1465CCC7AFF82355953E47E319FCACE1FA512BD2358C3C82B71B771073A190DB**
-- Версія: 2.0.0 від 10.11.2026
-- Скопійований у `JARVIS.exe`, на робочий стіл і в `website\downloads\JARVIS.exe`.
+- Розмір: **89 523 472 байт** (85.4 MB)
+- SHA256: **0D2AC79E449A4A63E8CEEC175006AE148A13733B19566497B01649DDEBCD53FA**
+- Версія: 2.0.0 (з фічами оновлення/трею) від 10.11.2026
+- Скопійований у `JARVIS.exe`, на робочий стіл і в `website\downloads\JARVIS.exe` (усі хеші збігаються).
+- Запуск перевірено: 5 плагінів / 9 інструментів, трей активний, без traceback.
 
 macOS і Linux (з GitHub Actions, реліз v2.0.0):
 - `JARVIS-macOS.zip` — 75 877 396 байт, SHA256 `C1349A2A1990F65802B36A9F118BEE9CEAEDB1C8ADD1B391403A65062FE387B7`
@@ -47,7 +48,7 @@ macOS і Linux (з GitHub Actions, реліз v2.0.0):
 
 ```powershell
 cd C:\Users\nezer\Jarvis
-& ".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean --onefile --windowed --name JARVIS --icon "assets\jarvis.ico" --add-data "assets;assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all cryptography --collect-all psutil --collect-all pycaw --collect-all comtypes --hidden-import modules.mobile_bridge --hidden-import modules.coding_workspace jarvis.py
+& ".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean --onefile --windowed --name JARVIS --icon "assets\jarvis.ico" --add-data "assets;assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all cryptography --collect-all psutil --collect-all pycaw --collect-all comtypes --collect-all pystray --hidden-import PIL.Image --hidden-import pystray._win32 --hidden-import modules.mobile_bridge --hidden-import modules.coding_workspace jarvis.py
 ```
 
 Після збірки:
@@ -71,12 +72,35 @@ cd C:\Users\nezer\Jarvis
 - 5 локальних плагінів: `quick_notes.py`, `weather.py`, `currency.py`, `pc_stats.py`, `roblox_status.py` (9 інструментів).
 - Статус Roblox переведено на робочий status.io API.
 - Виправлено порядок ініціалізації `_ui_queue`, через який застосунок падав під час завантаження плагінів.
+- Інтерактивне оновлення: кнопка «⬆ Оновлення» / голос → перевірка GitHub Releases → діалог «Завантажити й перезавантажити?» → стрім-завантаження з перевіркою розміру/SHA256 → прихований PowerShell-updater (чекає виходу всіх `JARVIS.exe`, замінює exe з backup+rollback, запускає новий). Працює лише для exe; `.old` чиститься на старті.
+- Автоперевірка оновлень на старті (9 с) + клікабельний банер у вікні (конфіг `auto_update_check`).
+- Трей-іконка (pystray): закриття згортає у трей, меню «Відкрити / Перевірити оновлення / Вихід» (конфіг `minimize_to_tray`, graceful-fallback якщо pystray недоступний).
+- Переклад екрана: 19 мов (було 4) — додано FR/ES/IT/PT/CS/SK/RO/BG/TR/NL/ZH/JA/KO.
+- STT/TTS: 14 мов і 30 голосів edge_tts (було 3 мови / 8 голосів).
+- Home Assistant: крім on/off/toggle/brightness/scene/script — клімат (set_temp, hvac), cover open/close/stop, lock/unlock, media play/pause/next/previous, vacuum_start/dock, camera.
+- `check_update` інструмент для LLM + 27 регресійних тестів у `tests/test_16_updates_and_languages.py`.
 - Сайт: темна тема, hero, можливості, провайдери, скріншоти, демо-відео, плагіни, changelog, інструкція, сценарії використання, FAQ, лічильник завантажень, UA/EN.
 - Встановлення на сайті розділене на вкладки Windows / macOS / Linux: 3 кроки для Windows, 4 для macOS і Linux, окремі застереження (SmartScreen, Gatekeeper, X11/Wayland).
 - Три картки завантаження з розмірами й копіюванням SHA256; посилання на релізні ассети підставляються з GitHub API, є fallback на `releases/latest/download/...`.
 - Секцію вигаданих відгуків замінено на чесні «Сценарії використання» з посиланням на GitHub issues.
-- Демо-відео: `website/assets/demo.mp4` (30 с, 1280×720, H.264, ~4.8 MB), постер `demo-poster.jpg`.
+- Пояснювальне відео: `website/assets/how-it-works.mp4` (2:02, 1920×1080, 30 fps, H.264/AAC, ~7.4 MB, українська озвучка `uk-UA-OstapNeural`), постер `how-it-works-poster.jpg` (1920×1080, ~163 KB), субтитри `how-it-works.uk.vtt` / `how-it-works.en.vtt` (30/31 репліка, пропорційний таймінг).
+- Секція `#demo` використовує нове відео з двома доріжками субтитрів; старий 30-секундний `demo.mp4` більше не підключений.
 - Локальна перевірка сайту через Playwright: 1440×7801, усі секції рендеряться, 0 console errors, 0 failed requests, відео `readyState=4`, мобільна ширина 390 без горизонтального скролу, перемикання трьох вкладок ОС і правильні посилання на всі три ассети.
+- Відео опубліковано на GitHub Pages (коміти `5b76d12`, `8d236b6`); live-перевірка: `readyState=4`, 1920×1080, 122.97 с, 2 доріжки субтитрів, EN-перемикач, мобільна 390 без overflow, 0 console errors.
+
+## Command Deck / нові провайдери (2.1.0)
+
+- Новий UI «Command Deck»: темно-синій фон, бокова навігація 232 px, компактний reactor-hero, стрічка діалогу, черга завдань, нижній командний рядок. Мінімум 900×640, стандарт 1240×860.
+- Нижній composer: `+` (файл / скріншот / буфер), модель, режим (додано «Макс»), «У чергу», стрілка надсилання. Enter — надіслати, Shift+Enter — новий рядок, Ctrl+Enter — у чергу.
+- Вкладення: до 8 файлів; зображення стискаються в JPEG і йдуть як `image_url` (OpenAI) або base64-блок (Anthropic), текстові файли — у fenced-блок; назви зберігаються в історії чату.
+- Черга: in-memory, знімок тексту/вкладень/моделі/режиму/озвучення; запускається після завершення поточної відповіді.
+- Прямі провайдери: OpenAI (`gpt-6.1-sol`, `gpt-5.6-sol`, `gpt-5.3-codex`), Anthropic (`claude-opus-5.5`, `claude-sonnet-5.5`, `claude-haiku-5`, нативний Messages API + tool loop), xAI (`grok-4.7`, `grok-4.7-fast`), Moonshot (`kimi-k3`, `kimi-k2.7-code`), Qwen/DashScope (`qwen3.8-max`, `qwen3-coder-plus`, `qwen3-vl-plus`), Cursor (`composer-2.5`, експериментальний OpenAI-сумісний endpoint через `cursor_api_url`/`cursor_model`).
+- Налаштування: додано поля ключів усіх нових провайдерів, Cursor URL/model, оновлено `selftest` і тест з’єднання.
+- `core/config.py` і `core/model_router.py` синхронізовано: нові провайдери, `max` режим, Anthropic payload, Cursor endpoint/model.
+- Додано `tests/test_17_providers_queue.py`: 8 тестів на провайдерів, Anthropic-конвертацію, vision/text-вкладення, чергу й модель/режим.
+- Сайт оновлено: нові скріншоти Command Deck і налаштувань, 78 моделей, 16 провайдерів, нові chips, changelog 2.1.0.
+- Windows-збірка: `dist/JARVIS.exe`, 89 567 989 байт, SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`. Версія `APP_VERSION = "2.1.0"`.
+- Повний прогін тестів: 115 тестів, 2 давні failures у `test_15_security` (перевірки `os.startfile` і тексту відмови `_write_file`), які відтворюються на HEAD `8d236b6`. Тест версії `modules` оновлено під 2.1.0.
 
 ## Що ще зробити
 
@@ -84,7 +108,8 @@ cd C:\Users\nezer\Jarvis
 2. Відкликати/перегенерувати ключ Ashna, який був показаний у чаті.
 3. Додати Intel-збірку macOS (зараз лише Apple Silicon) або позначити це на сайті ще помітніше.
 4. Перевірити новий `release.yml` на наступному тегу: публікація має спрацьовувати навіть якщо Android падає.
-5. За бажанням: Pro-сторінка й автоматичні оновлення (у робочій копії є незакомічені зміни `jarvis.py` з апдейтером — не публікувати без тестів).
+5. Апдейтер, трей, автоперевірка, мови й HA вже у зібраному білді (Windows). Для публікації релізу — перезібрати macOS/Linux через GitHub Actions і закомітити `jarvis.py` + тести.
+6. Windows exe 2.1.0 зібрано локально. Залишилось: закомітити, задеплоїти сайт, створити тег `v2.1.0`, дочекатись macOS/Linux-збірок, оновити їхні розміри/SHA256 і завантажити Windows-асет у реліз.
 
 ## Важливі нюанси
 
@@ -98,4 +123,4 @@ cd C:\Users\nezer\Jarvis
 - `.github/workflows/release.yml`: `publish` тепер має `if: always() && ... && needs.desktop.result == 'success'`, тому падіння Android не блокує публікацію desktop-ассетів.
 - `requirements.txt`: `pycaw` і `comtypes` позначені `; sys_platform == "win32"`, щоб не ламати Linux/macOS-збірки.
 - macOS і Linux не мають глобальних гарячих клавіш, повного керування ПК, ґеймерського оверлею та Roblox Studio — це лише Windows. Решта (чат, голос, плагіни, vision, переклад, Home Assistant) працює всюди.
-- Демо-відео згенеровано скриптом `make_demo.py` з реальних скріншотів; для перегенерації потрібні `imageio`, `imageio-ffmpeg`, `numpy`.
+- Пояснювальне відео генерується скриптами `make_howto_video.py` + `howto_common.py` + `howto_scenes_a-d.py`; потрібні `edge-tts`, `imageio-ffmpeg`, `Pillow`, `numpy`. TTS кешується в `howto_build\voice_*.mp3`, запускати треба з `C:\Users\nezer\AppData\Local\Temp\opencode`, щоб знайшлися сусідні модулі.

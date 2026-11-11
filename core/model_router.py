@@ -54,6 +54,33 @@ class ModelRouter:
             "url": "https://api.ashna.ai/v1/api/chat/completions",
             "key_field": "ashna_api_key",
         },
+        "openai-direct": {
+            "url": "https://api.openai.com/v1/chat/completions",
+            "key_field": "openai_api_key",
+        },
+        "anthropic-direct": {
+            "url": "https://api.anthropic.com/v1/messages",
+            "key_field": "anthropic_api_key",
+            "api_style": "anthropic",
+        },
+        "xai-direct": {
+            "url": "https://api.x.ai/v1/chat/completions",
+            "key_field": "xai_api_key",
+        },
+        "moonshot-direct": {
+            "url": "https://api.moonshot.ai/v1/chat/completions",
+            "key_field": "moonshot_api_key",
+        },
+        "qwen-direct": {
+            "url": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+            "key_field": "qwen_api_key",
+        },
+        "cursor": {
+            "url": "https://api.cursor.com/v1/chat/completions",
+            "key_field": "cursor_api_key",
+            "url_field": "cursor_api_url",
+            "model_field": "cursor_model",
+        },
         "openrouter": {
             "url": "https://openrouter.ai/api/v1/chat/completions",
             "key_field": "openrouter_key",
@@ -65,10 +92,35 @@ class ModelRouter:
     }
 
     TASK_PROFILES = {
-        "chat": ["xkiro/qwen/qwen3.7-flash:free", "groq-direct/openai/gpt-oss-20b", "gemini-direct/gemini-3.8-flash"],
-        "coding": ["xkiro/qwen/qwen3-coder-plus:free", "gemini-direct/gemini-3.8-flash", "groq-direct/openai/gpt-oss-20b"],
-        "reasoning": ["xkiro/qwen/qwen3.8-max:free", "gemini-direct/gemini-3.8-flash", "groq-direct/openai/gpt-oss-120b"],
-        "fast": ["xkiro/qwen/qwen3.7-flash:free", "groq-direct/openai/gpt-oss-20b", "gemini-direct/gemini-3.5-flash-lite"],
+        "chat": [
+            "openai-direct/gpt-5.6-sol",
+            "anthropic-direct/claude-sonnet-5.5",
+            "xkiro/qwen/qwen3.7-flash:free",
+            "groq-direct/openai/gpt-oss-20b",
+            "gemini-direct/gemini-3.8-flash",
+        ],
+        "coding": [
+            "openai-direct/gpt-5.3-codex",
+            "anthropic-direct/claude-sonnet-5.5",
+            "moonshot-direct/kimi-k2.7-code",
+            "qwen-direct/qwen3-coder-plus",
+            "xkiro/qwen/qwen3-coder-plus:free",
+            "gemini-direct/gemini-3.8-flash",
+        ],
+        "reasoning": [
+            "anthropic-direct/claude-opus-5.5",
+            "openai-direct/gpt-6.1-sol",
+            "xai-direct/grok-4.7",
+            "xkiro/qwen/qwen3.8-max:free",
+            "gemini-direct/gemini-3.8-flash",
+        ],
+        "fast": [
+            "xai-direct/grok-4.7-fast",
+            "anthropic-direct/claude-haiku-5",
+            "xkiro/qwen/qwen3.7-flash:free",
+            "groq-direct/openai/gpt-oss-20b",
+            "gemini-direct/gemini-3.5-flash-lite",
+        ],
     }
 
     def __init__(self, config: dict):
@@ -110,10 +162,21 @@ class ModelRouter:
             if prefix == "openrouter" or not model_id.startswith(prefix + "/"):
                 continue
             api_model = model_id.split("/", 1)[1]
+            url = str(provider.get("url") or "")
+            url_field = provider.get("url_field")
+            if url_field:
+                custom_url = str(self.config.get(url_field) or "").strip()
+                if custom_url:
+                    url = custom_url
+            model_field = provider.get("model_field")
+            if model_field:
+                custom_model = str(self.config.get(model_field) or "").strip()
+                if custom_model:
+                    api_model = custom_model
             if not provider["key_field"]:
-                return [(provider["url"], api_model, "ollama")]
+                return [(url, api_model, "ollama")]
             return [
-                (provider["url"], api_model, key)
+                (url, api_model, key)
                 for key in self._keys_for(provider["key_field"])
             ]
         return [
@@ -135,6 +198,79 @@ class ModelRouter:
                     return candidate
 
         return "groq-direct/openai/gpt-oss-20b"
+
+    @staticmethod
+    def _anthropic_payload(
+        model: str,
+        messages: list[dict],
+        tools: Optional[list[dict]],
+        max_tokens: int,
+        temperature: float,
+    ) -> dict[str, Any]:
+        """Перетворює OpenAI-style запит у формат Anthropic Messages API."""
+        system_parts: list[str] = []
+        converted: list[dict] = []
+        for message in messages or []:
+            role = str(message.get("role") or "")
+            content = message.get("content")
+            if role == "system":
+                system_parts.append(str(content or ""))
+                continue
+            if role not in ("user", "assistant"):
+                continue
+            blocks: list[dict] = []
+            if isinstance(content, str):
+                if content:
+                    blocks.append({"type": "text", "text": content})
+            elif isinstance(content, list):
+                for part in content:
+                    if not isinstance(part, dict):
+                        continue
+                    if part.get("type") == "text" and part.get("text"):
+                        blocks.append({"type": "text", "text": str(part["text"])})
+                    elif part.get("type") == "image_url":
+                        url = str((part.get("image_url") or {}).get("url") or "")
+                        if url.startswith("data:") and "," in url:
+                            header, data = url.split(",", 1)
+                            media_type = header[5:].split(";", 1)[0] or "image/jpeg"
+                            blocks.append({
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": media_type,
+                                    "data": data,
+                                },
+                            })
+            if not blocks:
+                continue
+            if converted and converted[-1]["role"] == role:
+                converted[-1]["content"].extend(blocks)
+            else:
+                converted.append({"role": role, "content": blocks})
+        while converted and converted[0]["role"] != "user":
+            converted.pop(0)
+        payload: dict[str, Any] = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "messages": converted,
+        }
+        if system_parts:
+            payload["system"] = "\n\n".join(system_parts)
+        if tools:
+            payload["tools"] = [
+                {
+                    "name": str((item.get("function") or {}).get("name") or ""),
+                    "description": str(
+                        (item.get("function") or {}).get("description") or ""
+                    ),
+                    "input_schema": (item.get("function") or {}).get("parameters")
+                    or {"type": "object", "properties": {}},
+                }
+                for item in tools
+                if str((item.get("function") or {}).get("name") or "").strip()
+            ]
+        return payload
 
     def complete(
         self,
@@ -166,22 +302,31 @@ class ModelRouter:
                 if not api_key and not model.startswith("ollama/"):
                     continue
 
+                anthropic = model.startswith("anthropic-direct/")
                 headers = {
                     "Content-Type": "application/json",
-                    "User-Agent": "JarvisUltimate/2.0",
+                    "User-Agent": "JarvisUltimate/2.1",
                 }
-                if api_key and api_key != "ollama":
+                if anthropic:
+                    headers["x-api-key"] = api_key
+                    headers["anthropic-version"] = "2023-06-01"
+                elif api_key and api_key != "ollama":
                     headers["Authorization"] = f"Bearer {api_key}"
 
-                body: dict[str, Any] = {
-                    "model": api_model,
-                    "messages": messages,
-                    "max_tokens": max_tokens,
-                    "temperature": temperature,
-                }
-                if tools:
-                    body["tools"] = tools
-                    body["tool_choice"] = "auto"
+                if anthropic:
+                    body = self._anthropic_payload(
+                        api_model, messages, tools, max_tokens, temperature
+                    )
+                else:
+                    body = {
+                        "model": api_model,
+                        "messages": messages,
+                        "max_tokens": max_tokens,
+                        "temperature": temperature,
+                    }
+                    if tools:
+                        body["tools"] = tools
+                        body["tool_choice"] = "auto"
 
                 try:
                     resp = requests.post(url, headers=headers, json=body, timeout=45)
@@ -190,6 +335,23 @@ class ModelRouter:
                             logger.info("Backup xKiro key promoted to primary.")
                             self.config["xkiro_api_key"] = api_key
                         data = resp.json()
+                        if anthropic:
+                            blocks = data.get("content") or []
+                            text = "".join(
+                                str(block.get("text") or "")
+                                for block in blocks
+                                if isinstance(block, dict)
+                                and block.get("type") == "text"
+                            ).strip()
+                            return {
+                                "content": text,
+                                "tool_calls": [
+                                    block for block in blocks
+                                    if isinstance(block, dict)
+                                    and block.get("type") == "tool_use"
+                                ],
+                                "model": model,
+                            }
                         choice = data.get("choices", [{}])[0]
                         msg = choice.get("message", {})
                         return {

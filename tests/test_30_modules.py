@@ -13,7 +13,7 @@ HEAVY_MODULES = ("pygame", "sounddevice", "edge_tts", "pyautogui", "pygetwindow"
 
 class ModulesImportTests(unittest.TestCase):
     def test_modules_package(self) -> None:
-        self.assertEqual(modules.__version__, "2.0.0")
+        self.assertEqual(modules.__version__, "2.1.0")
 
     def test_voice_exports(self) -> None:
         from modules.voice import (

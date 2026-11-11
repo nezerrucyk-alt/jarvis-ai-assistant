@@ -18,4 +18,4 @@ pygetwindow) імпортуються ліниво — усередині від
 from __future__ import annotations
 
 __all__ = ["computer_control", "voice"]
-__version__ = "2.0.0"
+__version__ = "2.1.0"

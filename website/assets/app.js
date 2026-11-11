@@ -19,7 +19,7 @@
   const descMeta = document.querySelector('meta[name="description"]');
   const descUk = descMeta ? descMeta.content : "";
   const descEn =
-    "J.A.R.V.I.S. is a desktop voice AI assistant for Windows, macOS and Linux: chat, voice, plugins, screen vision, translation and 67 models.";
+    "J.A.R.V.I.S. is a desktop voice AI assistant for Windows, macOS and Linux: chat, voice, plugins, screen vision, translation and 78 models.";
 
   function setLanguage(lang) {
     const isEn = lang === "en";
