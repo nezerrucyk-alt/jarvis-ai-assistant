@@ -99,6 +99,9 @@ cd C:\Users\nezer\Jarvis
 - `core/config.py` і `core/model_router.py` синхронізовано: нові провайдери, `max` режим, Anthropic payload, Cursor endpoint/model.
 - Додано `tests/test_17_providers_queue.py`: 8 тестів на провайдерів, Anthropic-конвертацію, vision/text-вкладення, чергу й модель/режим.
 - Сайт оновлено: нові скріншоти Command Deck і налаштувань, 78 моделей, 16 провайдерів, нові chips, changelog 2.1.0.
+- Сайт передизайнено (коміт `a39ed1f`): aurora-фон, скляна навігація, hero з tilt-мокапом і orbit-кільцями, секція `#deck` з макетом Command Deck (черга + composer), scroll-reveal, spotlight-картки, анімовані лічильники, рекомендована ОС, копіювання коду плагіна, прогрес скролу й кнопка «вгору».
+- У футері — блок «Соцмережі творця» з TikTok `https://www.tiktok.com/@nezer_kicc` (`target="_blank"`, `rel="noopener"`), також доданий у JSON-LD `sameAs`.
+- Перевірка редизайну Playwright/Edge: 0 console errors, 0 failed requests, 0 горизонтального overflow на 1440 і 390, UA/EN, мобільне меню, копіювання коду, відео `readyState=4`.
 - Windows-збірка: `dist/JARVIS.exe`, 89 567 989 байт, SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`. Версія `APP_VERSION = "2.1.0"`.
 - Реліз `v2.1.0`: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.1.0
   - `JARVIS.exe` — 89 567 989 байт, SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`.
