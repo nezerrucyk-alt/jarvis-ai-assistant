@@ -151,10 +151,18 @@ class FileToolSafetyTests(unittest.TestCase):
 
     def test_known_site_alias_opens_without_confirmation(self) -> None:
         tools, calls = _tools(confirm_result=False)
-        with mock.patch("jarvis.os.startfile", create=True) as startfile_mock:
+        # Ізолюємо від реального Start Menu: на машині може бути PWA «YouTube»,
+        # і тоді відкриється застосунок, а не сайт.
+        with (
+            mock.patch.object(jarvis.PcTools, "_get_start_apps", return_value=[]),
+            mock.patch.object(jarvis.PcTools, "_get_registry_apps", return_value=[]),
+            mock.patch.object(jarvis.PcTools, "_common_app_paths", return_value=""),
+            mock.patch("jarvis.shutil.which", return_value=None),
+            mock.patch("webbrowser.open") as browser_mock,
+        ):
             result = tools._open_app("youtube")
         self.assertEqual(calls, [])
-        startfile_mock.assert_called_once()
+        browser_mock.assert_called_once_with("https://www.youtube.com")
         self.assertIn("Відкрив", result)
 
     def test_write_file_requires_confirmation(self) -> None:
@@ -163,7 +171,7 @@ class FileToolSafetyTests(unittest.TestCase):
         result = denied._write_file(str(target), "дані")
         self.assertTrue(denied_calls)
         self.assertFalse(target.exists())
-        self.assertIn("відмовився", result.lower())
+        self.assertIn("скасовано", result.lower())
 
         allowed, allowed_calls = _tools(confirm_result=True)
         result_ok = allowed._write_file(str(target), "дані")
