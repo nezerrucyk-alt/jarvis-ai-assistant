@@ -260,4 +260,163 @@
       }
     });
   });
+
+  /* ── scroll progress, sticky nav, back to top ───────── */
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const progressBar = document.getElementById("scrollProgress");
+  const navBar = document.querySelector(".nav");
+  const toTop = document.getElementById("toTop");
+
+  function onScroll() {
+    const root = document.documentElement;
+    const max = root.scrollHeight - window.innerHeight;
+    const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+    if (progressBar) progressBar.style.transform = `scaleX(${ratio})`;
+    if (navBar) navBar.classList.toggle("scrolled", window.scrollY > 12);
+    if (toTop) toTop.classList.toggle("show", window.scrollY > 720);
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+  onScroll();
+
+  toTop?.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  });
+
+  /* ── reveal on scroll ───────────────────────────────── */
+  const revealTargets = document.querySelectorAll("[data-reveal], [data-stagger]");
+  if ("IntersectionObserver" in window && !reduceMotion) {
+    const revealObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("in");
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    );
+    revealTargets.forEach((node) => revealObserver.observe(node));
+  } else {
+    revealTargets.forEach((node) => node.classList.add("in"));
+  }
+
+  /* ── animated counters ──────────────────────────────── */
+  function animateCounter(node) {
+    const target = Number(node.dataset.count || 0);
+    if (!Number.isFinite(target)) return;
+    if (reduceMotion) {
+      node.textContent = String(target);
+      return;
+    }
+    const duration = 1100;
+    let started = null;
+    function frame(timestamp) {
+      if (started === null) started = timestamp;
+      const progress = Math.min(1, (timestamp - started) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      node.textContent = String(Math.round(target * eased));
+      if (progress < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  const counters = Array.from(document.querySelectorAll("[data-count]"));
+  if ("IntersectionObserver" in window && !reduceMotion) {
+    const counterObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          animateCounter(entry.target);
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.5 }
+    );
+    counters.forEach((node) => counterObserver.observe(node));
+  } else {
+    counters.forEach(animateCounter);
+  }
+
+  /* ── active nav link ────────────────────────────────── */
+  const navAnchors = Array.from(document.querySelectorAll('.nav-links a[href^="#"]'));
+  const trackedSections = ["features", "deck", "shots", "demo", "plugins", "changelog", "install"]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+
+  if ("IntersectionObserver" in window) {
+    const navObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const hash = `#${entry.target.id}`;
+          navAnchors.forEach((anchor) => {
+            anchor.classList.toggle("active", anchor.getAttribute("href") === hash);
+          });
+        });
+      },
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
+    );
+    trackedSections.forEach((section) => navObserver.observe(section));
+  }
+
+  /* ── pointer spotlight + hero tilt ──────────────────── */
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  if (finePointer) {
+    document.querySelectorAll(".feature, .platform-card, .step, .review").forEach((card) => {
+      card.addEventListener("pointermove", (event) => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+        card.style.setProperty("--my", `${event.clientY - rect.top}px`);
+      });
+    });
+
+    const appFrame = document.querySelector(".app-frame");
+    const heroVisual = document.querySelector(".hero-visual");
+    if (appFrame && heroVisual && !reduceMotion) {
+      heroVisual.addEventListener("pointermove", (event) => {
+        const rect = heroVisual.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        appFrame.style.setProperty("--ry", `${-3 + x * 4.5}deg`);
+        appFrame.style.setProperty("--rx", `${1.2 - y * 3.5}deg`);
+      });
+      heroVisual.addEventListener("pointerleave", () => {
+        appFrame.style.removeProperty("--ry");
+        appFrame.style.removeProperty("--rx");
+      });
+    }
+  }
+
+  /* ── recommend the visitor's platform ───────────────── */
+  const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+  if (!isMobile) {
+    const recommendedOS = detectOS();
+    document.querySelector(`[data-os-tab="${recommendedOS}"]`)?.classList.add("recommended");
+    const recommendedCard = document.querySelector(
+      `.platform-card [data-download="${recommendedOS}"]`
+    )?.closest(".platform-card");
+    recommendedCard?.classList.add("recommended");
+  }
+
+  /* ── copy plugin code ───────────────────────────────── */
+  document.querySelectorAll("[data-copy]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const target = document.getElementById(button.dataset.copy || "");
+      if (!target) return;
+      const original = button.textContent;
+      const english = document.documentElement.lang === "en";
+      try {
+        await navigator.clipboard.writeText(target.textContent || "");
+        button.textContent = english ? "Copied ✓" : "Скопійовано ✓";
+      } catch (_) {
+        button.textContent = english ? "Press Ctrl+C" : "Натисни Ctrl+C";
+      }
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1600);
+    });
+  });
 })();
