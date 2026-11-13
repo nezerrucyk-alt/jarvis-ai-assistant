@@ -67,6 +67,7 @@ from core.customization import (
     render_custom_code,
     save_customization,
 )
+from modules.voice.wake import WakeWordListener
 
 APP_NAME = "Jarvis"
 APP_VERSION = "2.2.0"
@@ -874,6 +875,11 @@ DEFAULT_CONFIG = {
     "response_mode": "natural",
     "use_memory": False,
     "voice_hotkey": False,
+    "wake_word": False,
+    "wake_word_continuous": True,
+    "wake_word_model": "hey_jarvis",
+    "wake_word_threshold": 0.5,
+    "wake_word_cooldown": 2.0,
     "home_assistant_url": "",
     "home_assistant_token": "",
     "gaming_mode": False,
@@ -5008,6 +5014,8 @@ class JarvisApp:
         self._t = 0.0
         self._hotkey_stop = threading.Event()
         self._hotkey_thread: threading.Thread | None = None
+        self._wake_listener: WakeWordListener | None = None
+        self._wake_followups = 0
         self.chats: list[dict] = load_local_records(CHATS_PATH)
         self.current_chat: dict | None = None
         self._chats_lock = threading.RLock()
@@ -5023,6 +5031,7 @@ class JarvisApp:
         self.root.after(20, self._drain_ui)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self.root.after(250, self._configure_hotkey)
+        self.root.after(900, self._configure_wake_word)
         self.root.after(1500, self._setup_tray)
         self.root.after(10000, self._check_reminders)
         self.root.after(4500, self._check_gaming_mode)
@@ -7025,6 +7034,36 @@ class JarvisApp:
             self.mode_var.set(RESPONSE_MODES[mode]["label"])
         self._log("sys", f"Режим відповіді: {label}.")
 
+    def _configure_wake_word(self) -> None:
+        self._stop_wake_word()
+        if not self.cfg.get("wake_word"):
+            return
+        listener = WakeWordListener(
+            self.cfg,
+            on_wake=lambda: self.ui(self._on_wake_word),
+            should_pause=lambda: self.busy.is_set(),
+            log=lambda message: self.ui(self._tool_log, message),
+            model_dir=DATA_DIR / "wakeword",
+        )
+        self._wake_listener = listener
+        listener.start()
+
+    def _stop_wake_word(self) -> None:
+        listener, self._wake_listener = self._wake_listener, None
+        if listener is None:
+            return
+        try:
+            listener.stop()
+        except Exception:
+            logging.exception("Не вдалося зупинити wake word")
+
+    def _on_wake_word(self) -> None:
+        if self.busy.is_set():
+            return
+        self._wake_followups = 0
+        self._log("sys", "«Hey Jarvis» — слухаю команду.")
+        threading.Thread(target=self._cycle, args=(False,), daemon=True).start()
+
     def _configure_hotkey(self) -> None:
         self._stop_global_hotkey()
         if os.name != "nt":
@@ -7112,6 +7151,7 @@ class JarvisApp:
         except Exception:
             logging.exception("Не вдалося вимкнути Android-підключення")
         self._stop_global_hotkey()
+        self._stop_wake_word()
         try:
             self._prune_empty_chats(keep=self.current_chat if not self._chat_is_empty(self.current_chat or {}) else None)
             self._save_chats()
@@ -7653,7 +7693,8 @@ class JarvisApp:
             self.voice.stop()
             self.set_status("Скасовано, сер.", MUTED)
             return
-        threading.Thread(target=self._cycle, daemon=True).start()
+        self._wake_followups = 0
+        threading.Thread(target=self._cycle, args=(False,), daemon=True).start()
 
     def _mic_busy(self, busy: bool) -> None:
         if busy:
@@ -8502,7 +8543,7 @@ class JarvisApp:
             self.ui(self.set_status, "Говорю…", CYAN)
             self.voice.speak(reply)
 
-    def _cycle(self) -> None:
+    def _cycle(self, followup: bool = False) -> None:
         self.busy.set()
         self.cancel.clear()
         self.ui(self._mic_busy, True)
@@ -8512,7 +8553,11 @@ class JarvisApp:
             if self.cancel.is_set():
                 return
             if not raw:
-                self.ui(self.set_status, "Тиша. Скажіть щось, сер.", MUTED)
+                if followup:
+                    self._wake_followups = 0
+                    self.ui(self.set_status, "Готовий, сер.", MUTED)
+                else:
+                    self.ui(self.set_status, "Тиша. Скажіть щось, сер.", MUTED)
                 return
 
             self.ui(self.set_status, "Розпізнаю…", CYAN)
@@ -8524,11 +8569,16 @@ class JarvisApp:
                 return
 
             if not text:
-                self.ui(self.set_status, "Не розібрав. Ще раз, сер.", MUTED)
+                if followup:
+                    self._wake_followups = 0
+                    self.ui(self.set_status, "Готовий, сер.", MUTED)
+                else:
+                    self.ui(self.set_status, "Не розібрав. Ще раз, сер.", MUTED)
                 return
 
             self.ui(self._log, "you", text)
             self._answer(text, speak=True)
+            self._schedule_wake_followup()
 
         except Exception:
             logging.exception("Main cycle failed")
@@ -8538,6 +8588,26 @@ class JarvisApp:
             self.cancel.clear()
             self.ui(self._mic_busy, False)
             self.ui(self._ready_later)
+            self.ui(self._process_next_queued)
+
+    def _schedule_wake_followup(self) -> None:
+        if self.cancel.is_set():
+            return
+        if not self.cfg.get("wake_word"):
+            return
+        if not self.cfg.get("wake_word_continuous", True):
+            return
+        if self._wake_followups >= 3:
+            return
+        self._wake_followups += 1
+        self.ui(self.root.after, 500, self._queue_wake_followup)
+
+    def _queue_wake_followup(self) -> None:
+        if self.busy.is_set() or self.cancel.is_set():
+            return
+        if not self.cfg.get("wake_word"):
+            return
+        threading.Thread(target=self._cycle, args=(True,), daemon=True).start()
 
     def open_memory_manager(self) -> None:
         win = tk.Toplevel(self.root)
@@ -9282,6 +9352,30 @@ class JarvisApp:
             font=("Segoe UI", 10),
         ).pack(anchor="w", padx=18, pady=(10, 0))
 
+        wake_var = tk.BooleanVar(value=bool(self.cfg.get("wake_word")))
+        wake_cont_var = tk.BooleanVar(
+            value=bool(self.cfg.get("wake_word_continuous", True))
+        )
+        wake = tk.Frame(win, bg=BG)
+        wake.pack(fill="x", padx=18, pady=(8, 0))
+        tk.Checkbutton(
+            wake, text="Слухати «Hey Jarvis» без кнопки (wake word)",
+            variable=wake_var, bg=BG, fg=TEXT, selectcolor=PANEL,
+            activebackground=BG, activeforeground=CYAN,
+            font=("Segoe UI", 10),
+        ).pack(anchor="w")
+        tk.Checkbutton(
+            wake, text="Продовжувати діалог після відповіді",
+            variable=wake_cont_var, bg=BG, fg=TEXT, selectcolor=PANEL,
+            activebackground=BG, activeforeground=CYAN,
+            font=("Segoe UI", 9),
+        ).pack(anchor="w", padx=26)
+        tk.Label(
+            wake,
+            text="openWakeWord — офлайн; без нього резервний STT потребує інтернету.",
+            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+        ).pack(anchor="w", padx=26)
+
         access_var = tk.BooleanVar(value=bool(self.cfg.get("full_access", True)))
         access = tk.Frame(win, bg=BG)
         access.pack(fill="x", padx=18, pady=(10, 0))
@@ -9361,6 +9455,8 @@ class JarvisApp:
             self.cfg["always_on_top"] = bool(top_var.get())
             self.cfg["full_access"] = bool(access_var.get())
             self.cfg["voice_hotkey"] = bool(hotkey_var.get())
+            self.cfg["wake_word"] = bool(wake_var.get())
+            self.cfg["wake_word_continuous"] = bool(wake_cont_var.get())
             self.cfg["gaming_mode"] = bool(gaming_var.get())
             self.cfg["plugins_enabled"] = bool(plugins_var.get())
             self.cfg["home_assistant_url"] = ha_url_var.get().strip()
@@ -9374,6 +9470,7 @@ class JarvisApp:
             self._update_access_label()
             self._update_provider_chip()
             self._configure_hotkey()
+            self._configure_wake_word()
             self._update_gaming_label()
             try:
                 self.tools.load_plugins()

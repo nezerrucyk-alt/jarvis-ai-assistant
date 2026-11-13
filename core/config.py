@@ -67,6 +67,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "response_mode": "natural",
     "use_memory": False,
     "voice_hotkey": False,
+    "wake_word": False,
+    "wake_word_continuous": True,
+    "wake_word_model": "hey_jarvis",
+    "wake_word_threshold": 0.5,
+    "wake_word_cooldown": 2.0,
 }
 
 #: Мови інтерфейсу/розпізнавання, доступні в налаштуваннях.

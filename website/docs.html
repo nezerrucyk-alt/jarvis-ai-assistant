@@ -459,6 +459,10 @@ curl -k https://192.168.1.10:8765/api/chat \
         <h2 data-en="Troubleshooting">Що робити, якщо не працює</h2>
         <div class="docs-faq">
           <details>
+            <summary data-en="«Hey Jarvis» does not wake the assistant">«Hey Jarvis» не будить асистента</summary>
+            <p data-en="Enable wake word in Settings, allow microphone access and make sure no other app holds the mic. For offline detection install openwakeword: pip install -r requirements-wake.txt. Without it JARVIS uses Google STT and needs internet. A wake word only starts listening; the command is recorded after it.">Увімкни wake word у Налаштуваннях, дозволь доступ до мікрофона й перевір, чи його не займає інша програма. Для офлайн-детекції встанови openwakeword: pip install -r requirements-wake.txt. Без нього Джарвіс використовує Google STT і потребує інтернету. Wake word лише починає слухати; команда записується після нього.</p>
+          </details>
+          <details>
             <summary data-en="The plugin is not loading">Плагін не завантажується</summary>
             <p data-en="Check that the file ends in .py and does not start with an underscore. It must define TOOLS and a callable run() or handle(). Tool names must not collide with built-in tools. Enable plugins in Settings and run plugin_reload. The log shows the exact import error.">Перевір, що файл закінчується на .py і не починається з підкреслення. Він має визначати TOOLS і викличний run() або handle(). Назви інструментів не повинні збігатися з вбудованими. Увімкни плагіни в Налаштуваннях і виклич plugin_reload. Журнал покаже точну помилку імпорту.</p>
           </details>

@@ -159,7 +159,7 @@
         <article class="feature">
           <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
           <h3 data-en="Voice control">Голосове керування</h3>
-          <p data-en="Ukrainian and English speech recognition, natural neural voice, and a global Ctrl+Alt+J hotkey on Windows.">Розпізнавання української та англійської, природний нейроголос і глобальна клавіша Ctrl+Alt+J на Windows.</p>
+          <p data-en="Ukrainian and English speech recognition, natural neural voice, Ctrl+Alt+J on Windows, plus «Hey Jarvis» wake word and up to three follow-up phrases without pressing a button.">Розпізнавання української та англійської, природний нейроголос, Ctrl+Alt+J на Windows, а також wake word «Hey Jarvis» і до трьох реплік продовження діалогу без натискання кнопки.</p>
         </article>
         <article class="feature">
           <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
@@ -437,6 +437,7 @@
             <li data-en="New Customize tab: theme colors, presets, block order and visibility, fonts, animations and a live preview — all without editing code.">Нова вкладка «Кастомізація»: кольори теми, пресети, порядок і видимість блоків, шрифти, анімації та живе прев'ю — без редагування коду.</li>
             <li data-en="Custom code editor with a preview pane and an explicit enable switch; settings persist in %APPDATA%\Jarvis\customization.json and apply without a restart.">Редактор кастомного коду з вікном прев'ю й окремим перемикачем; налаштування зберігаються в %APPDATA%\Jarvis\customization.json і застосовуються без перезапуску.</li>
             <li data-en="The assistant now knows about the Customize tab and can point you to it instead of claiming the feature does not exist.">Асистент тепер знає про вкладку «Кастомізація» і може підказати її, замість того щоб казати, що такої функції немає.</li>
+            <li data-en="Wake word «Hey Jarvis» with a local openWakeWord backend, an STT fallback, cooldown and up to three follow-up phrases without pressing a button.">Wake word «Hey Jarvis» із локальним бекендом openWakeWord, резервним STT, затримкою від повторів і до трьох реплік продовження без натискання кнопки.</li>
             <li data-en="Windows, macOS and Linux builds are published after the release workflow finishes; this entry becomes the latest release then.">Збірки для Windows, macOS і Linux публікуються після завершення release-workflow; тоді цей запис стане останнім релізом.</li>
           </ul>
         </article>
@@ -860,6 +861,10 @@
           <p data-en="Yes, at least one. Gemini, Groq, OpenRouter and xKiro have free tiers. Add several keys and Jarvis will switch automatically when one fails.">Так, хоча б один. У Gemini, Groq, OpenRouter і xKiro є безкоштовні тарифи. Додай кілька ключів — і Джарвіс перемикатиметься автоматично, якщо один не працює.</p>
         </details>
         <details>
+          <summary data-en="Does «Hey Jarvis» work without a button?">Чи працює «Hey Jarvis» без кнопки?</summary>
+          <p data-en="Yes, enable it in Settings. With openWakeWord installed the wake word runs offline; without it Jarvis uses VAD + Google STT, which needs internet. After an answer it keeps listening for up to three follow-up phrases.">Так, увімкни в Налаштуваннях. З openWakeWord wake word працює офлайн; без нього Джарвіс використовує VAD + Google STT, потрібен інтернет. Після відповіді він слухає ще до трьох реплік.</p>
+        </details>
+        <details>
           <summary data-en="Does it run on macOS and Linux?">Чи працює на macOS і Linux?</summary>
           <p data-en="Yes. Chat, voice, plugins, screen vision, translation and Home Assistant work on all three systems. Full PC control, global hotkeys, gaming overlay and Roblox Studio are Windows-only. macOS builds are available for Apple Silicon and Intel; Linux builds are x86_64.">Так. Чат, голос, плагіни, зір екрана, переклад і Home Assistant працюють на всіх трьох системах. Повне керування ПК, глобальні гарячі клавіші, ґеймерський оверлей і Roblox Studio — лише Windows. macOS-збірки є для Apple Silicon і Intel, Linux — x86_64.</p>
         </details>
@@ -961,6 +966,11 @@
       "@type": "Question",
       "name": "Чи потрібен API-ключ?",
       "acceptedAnswer": {"@type": "Answer", "text": "Так, хоча б один. У Gemini, Groq, OpenRouter і xKiro є безкоштовні тарифи. Додай кілька ключів — і Джарвіс перемикатиметься автоматично, якщо один не працює."}
+    },
+    {
+      "@type": "Question",
+      "name": "Чи працює «Hey Jarvis» без кнопки?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Так, увімкни в Налаштуваннях. З openWakeWord wake word працює офлайн; без нього Джарвіс використовує VAD + Google STT, потрібен інтернет. Після відповіді він слухає ще до трьох реплік."}
     },
     {
       "@type": "Question",

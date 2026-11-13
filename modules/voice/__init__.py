@@ -31,6 +31,13 @@ from modules.voice.tts import (
     VoiceError,
     for_speech,
 )
+from modules.voice.wake import (
+    WAKE_PHRASES,
+    WakeGate,
+    WakeWordListener,
+    is_wake_phrase,
+    normalize_wake_text,
+)
 
 __all__ = [
     "Ears",
@@ -41,8 +48,13 @@ __all__ = [
     "VOICE_BY_LANG",
     "Voice",
     "VoiceError",
+    "WAKE_PHRASES",
+    "WakeGate",
+    "WakeWordListener",
     "for_speech",
     "has_input_device",
+    "is_wake_phrase",
     "list_input_devices",
+    "normalize_wake_text",
     "resolve_default_input",
 ]
