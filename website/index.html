@@ -16,6 +16,17 @@
 </head>
 <body>
 
+<div class="logo-intro" id="logoIntro" hidden>
+  <div class="logo-intro-stage">
+    <video class="logo-intro-video" id="logoIntroVideo" muted playsinline preload="auto" poster="assets/jarvis-logo-3d-poster.jpg" aria-label="Анімація логотипа J.A.R.V.I.S.">
+      <source src="assets/jarvis-logo-3d.mp4" type="video/mp4">
+    </video>
+  </div>
+  <button class="logo-intro-skip" id="logoIntroSkip" type="button">
+    <span data-en="Skip">Пропустити</span> <kbd>Esc</kbd>
+  </button>
+</div>
+
 <div class="bg-fx" aria-hidden="true">
   <span class="aurora a1"></span>
   <span class="aurora a2"></span>
@@ -26,15 +37,15 @@
 
 <header class="nav">
   <div class="wrap nav-inner">
-    <a class="brand" href="#top" aria-label="J.A.R.V.I.S. — на початок">
+    <a class="brand js-brand" href="#top" aria-label="J.A.R.V.I.S. — на початок">
       <span class="brand-mark">J</span>
       J.A.R.V.I.S. <span>for Desktop</span>
     </a>
     <nav class="nav-links" id="navLinks" aria-label="Головна навігація">
       <a href="#features" data-en="Features">Можливості</a>
-      <a href="#shots" data-en="Screenshots">Скріншоти</a>
-      <a href="#demo" data-en="How it works">Як працює</a>
       <a href="#plugins" data-en="Plugins">Плагіни</a>
+      <a href="#reviews" data-en="Reviews">Відгуки</a>
+      <a href="docs.html" data-en="Docs">Доки</a>
       <a href="#changelog" data-en="Changelog">Зміни</a>
       <a href="#install" data-en="Install">Встановлення</a>
       <a class="btn btn-primary btn-small nav-cta" href="#download" data-en="Download">Завантажити</a>
@@ -52,7 +63,7 @@
     <div class="wrap">
       <div class="hero-grid">
         <div>
-          <div class="badge"><span class="pulse"></span> <span data-en="Windows · macOS · Linux · version 2.1">Windows · macOS · Linux · версія 2.1</span></div>
+          <div class="badge"><span class="pulse"></span> <span data-en="Windows · macOS · Linux">Windows · macOS · Linux</span> · <span data-en="version">версія</span> <span data-release-version>2.1.0</span></div>
           <h1>
             <span data-en="Your voice.">Твій голос.</span><br>
             <span class="gradient-text" data-en="Your computer. One Jarvis.">Твій комп'ютер. Один Джарвіс.</span>
@@ -214,7 +225,7 @@
               <span class="deck-li-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
               <div>
                 <strong data-en="Model and mode, one click away">Модель і режим — один клік</strong>
-                <span data-en="78 models across 16 providers and three response modes, from fast to Max.">78 моделей у 16 провайдерів і три режими відповіді — від швидкого до «Макс».</span>
+                <span data-en="78 models across 16 providers and seven response modes, from short chat to Max and Coder.">78 моделей у 16 провайдерів і сім режимів відповіді — від короткого чату до «Макс» і «Кодер».</span>
               </div>
             </li>
           </ul>
@@ -396,6 +407,20 @@
             <li data-en="New Command Deck section with a mock of the task queue and composer.">Нова секція Command Deck із макетом черги завдань і composer.</li>
             <li data-en="Creator socials block with a TikTok link, also added to JSON-LD sameAs.">Блок «Соцмережі творця» з посиланням на TikTok, також доданий у JSON-LD sameAs.</li>
             <li data-en="Recommended platform detection, plugin code copy, scroll progress and back-to-top.">Визначення рекомендованої платформи, копіювання коду плагіна, прогрес скролу й кнопка «вгору».</li>
+            <li data-en="New 3D JARVIS logo animation: plays once when you land at the top, replays on logo click, can be skipped, and respects reduced-motion settings.">Нова 3D-анімація логотипа JARVIS: грає один раз під час входу на початок сторінки, повторюється кліком по логотипу, її можна пропустити, і вона поважає налаштування зменшення руху.</li>
+            <li data-en="Real user reviews via public GitHub issues: nickname, 1–5 stars, 5000-character limit, average rating and live list.">Реальні відгуки через публічні GitHub issues: нік, оцінка 1–5, ліміт 5000 символів, середній рейтинг і живий список.</li>
+            <li data-en="Separate developer docs page for the plugin API, Android bridge, AI providers, Roblox MCP and customization.">Окрема сторінка документації для API плагінів, Android-мосту, AI-провайдерів, Roblox MCP і кастомізації.</li>
+            <li data-en="Build verification section with SHA256 commands, SHA256SUMS.txt, GitHub attestations and an honest note about unsigned binaries.">Секція перевірки збірок із SHA256-командами, SHA256SUMS.txt, GitHub-атестаціями й чесною приміткою про непідписані бінарники.</li>
+            <li data-en="Version and last-update date now come from the latest GitHub release and are shown next to every download button.">Версія й дата останнього оновлення тепер беруться з останнього GitHub-релізу й показуються біля кожної кнопки завантаження.</li>
+          </ul>
+        </article>
+        <article class="release upcoming">
+          <div class="release-head"><strong>2.2.0</strong><time datetime="2026-11-12">12.11.2026</time><span class="release-badge" data-en="in progress">у підготовці</span></div>
+          <ul>
+            <li data-en="New Customize tab: theme colors, presets, block order and visibility, fonts, animations and a live preview — all without editing code.">Нова вкладка «Кастомізація»: кольори теми, пресети, порядок і видимість блоків, шрифти, анімації та живе прев'ю — без редагування коду.</li>
+            <li data-en="Custom code editor with a preview pane and an explicit enable switch; settings persist in %APPDATA%\Jarvis\customization.json and apply without a restart.">Редактор кастомного коду з вікном прев'ю й окремим перемикачем; налаштування зберігаються в %APPDATA%\Jarvis\customization.json і застосовуються без перезапуску.</li>
+            <li data-en="The assistant now knows about the Customize tab and can point you to it instead of claiming the feature does not exist.">Асистент тепер знає про вкладку «Кастомізація» і може підказати її, замість того щоб казати, що такої функції немає.</li>
+            <li data-en="Windows, macOS and Linux builds are published after the release workflow finishes; this entry becomes the latest release then.">Збірки для Windows, macOS і Linux публікуються після завершення release-workflow; тоді цей запис стане останнім релізом.</li>
           </ul>
         </article>
         <article class="release latest">
@@ -580,6 +605,85 @@
     </div>
   </section>
 
+  <section class="section" id="reviews">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <span class="kicker" data-en="Reviews">Відгуки</span>
+        <h2 data-en="Real people. Real builds.">Реальні люди. Реальні збірки.</h2>
+        <p data-en="Reviews are public GitHub issues. The site only reads what users posted — no fake testimonials and no silent editing.">Відгуки — це публічні GitHub issues. Сайт лише читає те, що написали користувачі: без вигаданих відгуків і тихого редагування.</p>
+      </div>
+
+      <div class="reviews-layout" data-reveal>
+        <form class="review-form" id="reviewForm" novalidate>
+          <div class="review-form-head">
+            <div>
+              <span class="review-form-kicker" data-en="Your turn">Твоя черга</span>
+              <h3 data-en="Leave a review">Залишити відгук</h3>
+            </div>
+            <div class="review-score">
+              <strong id="reviewAverage">—</strong>
+              <div>
+                <span class="review-score-stars" id="reviewAverageStars" aria-hidden="true">☆☆☆☆☆</span>
+                <span id="reviewSummary" data-en="Loading reviews…">Завантажую відгуки…</span>
+              </div>
+            </div>
+          </div>
+
+          <label class="review-field" for="reviewName">
+            <span data-en="Nickname">Нік</span>
+            <input id="reviewName" name="nickname" type="text" maxlength="40" autocomplete="nickname" placeholder="Наприклад, nezer" data-en-placeholder="For example, nezer" required>
+          </label>
+
+          <fieldset class="review-field review-rating">
+            <legend data-en="Rating">Оцінка</legend>
+            <div class="review-stars" id="reviewStars" role="radiogroup" aria-label="Оцінка від 1 до 5">
+              <button class="review-star" type="button" role="radio" data-star="1" aria-label="1 з 5" aria-checked="false">★</button>
+              <button class="review-star" type="button" role="radio" data-star="2" aria-label="2 з 5" aria-checked="false">★</button>
+              <button class="review-star" type="button" role="radio" data-star="3" aria-label="3 з 5" aria-checked="false">★</button>
+              <button class="review-star" type="button" role="radio" data-star="4" aria-label="4 з 5" aria-checked="false">★</button>
+              <button class="review-star" type="button" role="radio" data-star="5" aria-label="5 з 5" aria-checked="false">★</button>
+            </div>
+            <span class="review-rating-label" id="reviewRatingLabel" data-en="Pick a rating">Обери оцінку</span>
+          </fieldset>
+
+          <label class="review-field" for="reviewText">
+            <span data-en="Review">Відгук</span>
+            <textarea id="reviewText" name="review" rows="6" maxlength="5000" placeholder="Що сподобалось, що ні, на якій системі запускав…" data-en-placeholder="What worked, what did not, which system you used…" required></textarea>
+          </label>
+
+          <div class="review-form-foot">
+            <span class="review-counter" id="reviewCounter">0 / 5000</span>
+            <button class="btn btn-primary" type="submit">
+              <span data-en="Publish review">Опублікувати відгук</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </button>
+          </div>
+          <p class="review-error" id="reviewError" role="alert" hidden></p>
+          <p class="review-status" id="reviewStatus" role="status"></p>
+          <p class="review-hint" data-en="The button opens a prefilled GitHub issue. You need a GitHub account and one click on «Submit new issue» — that is how the review gets published without a server.">Кнопка відкриває заповнений GitHub issue. Потрібен GitHub-акаунт і один клік на «Submit new issue» — так відгук публікується без сервера.</p>
+        </form>
+
+        <div class="review-feed">
+          <div class="review-feed-head">
+            <h3 data-en="What people say">Що кажуть люди</h3>
+            <span class="review-count" id="reviewCount">—</span>
+          </div>
+          <div class="review-list" id="reviewList" aria-live="polite">
+            <div class="review-empty">
+              <span class="review-empty-icon">★</span>
+              <strong data-en="Loading reviews…">Завантажую відгуки…</strong>
+              <span data-en="This takes a second.">Це займе секунду.</span>
+            </div>
+          </div>
+          <a class="btn btn-ghost btn-small review-all" id="reviewAll" href="https://github.com/__GITHUB_REPOSITORY__/issues?q=is%3Aissue+jarvis-review" target="_blank" rel="noopener">
+            <span data-en="All reviews on GitHub">Усі відгуки на GitHub</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="download">
     <div class="wrap">
       <div class="download-panel" data-reveal>
@@ -590,8 +694,8 @@
             <p data-en="Pick your system. No installer, no account, no subscription. Keys and chats stay on your machine.">Обери свою систему. Без інсталятора, акаунта й підписки. Ключі та чати залишаються на твоєму ПК.</p>
           </div>
           <div class="download-info">
-            <div><span data-en="Version">Версія</span><strong>2.1.0</strong></div>
-            <div><span data-en="Build date">Дата збірки</span><strong>11.11.2026</strong></div>
+            <div><span data-en="Version">Версія</span><strong data-release-version>2.1.0</strong></div>
+            <div><span data-en="Last update">Оновлено</span><strong><time data-release-date datetime="2026-11-11">11.11.2026</time></strong></div>
             <div><span data-en="Downloads">Завантажень</span><strong id="downloadCount">—</strong></div>
           </div>
         </div>
@@ -605,6 +709,7 @@
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub">Windows 10/11 x64 · .exe</p>
             <div class="platform-meta"><span data-en="Size">Розмір</span><strong>89.6 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-11">11.11.2026</time></div>
             <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.1.0/JARVIS.exe">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-en="Download .exe">Завантажити .exe</span>
@@ -620,6 +725,7 @@
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub" data-en="macOS 11+ · Apple Silicon · .zip">macOS 11+ · Apple Silicon · .zip</p>
             <div class="platform-meta"><span data-en="Size">Розмір</span><strong>75.7 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-11">11.11.2026</time></div>
             <a class="btn btn-primary js-download" data-download="macos" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.1.0/JARVIS-macOS.zip">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-en="Download .zip">Завантажити .zip</span>
@@ -635,6 +741,7 @@
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub">Linux x86_64 · .tar.gz</p>
             <div class="platform-meta"><span data-en="Size">Розмір</span><strong>105.3 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-11">11.11.2026</time></div>
             <a class="btn btn-primary js-download" data-download="linux" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.1.0/JARVIS-Linux.tar.gz">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-en="Download .tar.gz">Завантажити .tar.gz</span>
@@ -657,6 +764,63 @@
           <p class="pro-tag"><strong>PRO</strong> <span data-en="Priority builds, custom plugins and personal setup — via GitHub issues.">Пріоритетні білди, кастомні плагіни й персональне налаштування — через GitHub issues.</span></p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="section" id="verify">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <span class="kicker" data-en="Build verification">Перевірка збірки</span>
+        <h2 data-en="Check the file before you run it.">Перевір файл до запуску.</h2>
+        <p data-en="The builds are not commercially code-signed. Every release publishes SHA256 hashes and GitHub build provenance, so you can verify that the file was built from this repository by GitHub Actions.">Збірки не мають комерційного підпису. Натомість кожен реліз публікує SHA256-хеші та GitHub build provenance — так можна перевірити, що файл зібраний із цього репозиторію в GitHub Actions.</p>
+      </div>
+
+      <div class="verify-grid" data-stagger>
+        <article class="verify-card">
+          <span class="verify-step">01</span>
+          <h3 data-en="Download SHA256SUMS.txt">Завантаж SHA256SUMS.txt</h3>
+          <p data-en="It lives in the same GitHub release as the build. Do not take hashes from third-party mirrors.">Він лежить у тому самому GitHub-релізі, що й збірка. Не бери хеші зі сторонніх дзеркал.</p>
+          <a class="btn btn-ghost btn-small" data-release-sums href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/latest/download/SHA256SUMS.txt" target="_blank" rel="noopener" data-en="Open SHA256SUMS.txt">Відкрити SHA256SUMS.txt</a>
+        </article>
+
+        <article class="verify-card">
+          <span class="verify-step">02</span>
+          <h3 data-en="Compute the hash">Порахуй хеш</h3>
+          <div class="verify-cmds">
+            <div class="verify-cmd"><span>Windows · PowerShell</span><code>Get-FileHash .\JARVIS.exe -Algorithm SHA256</code></div>
+            <div class="verify-cmd"><span>macOS</span><code>shasum -a 256 JARVIS-macOS.zip</code></div>
+            <div class="verify-cmd"><span>Linux</span><code>sha256sum JARVIS-Linux.tar.gz</code></div>
+          </div>
+        </article>
+
+        <article class="verify-card">
+          <span class="verify-step">03</span>
+          <h3 data-en="Check provenance">Перевір походження</h3>
+          <p data-en="With GitHub CLI, verify that the file was attested by this repository's release workflow:">Через GitHub CLI перевір, що файл атестований release-workflow цього репозиторію:</p>
+          <div class="verify-cmd"><code>gh attestation verify JARVIS.exe --repo __GITHUB_REPOSITORY__</code></div>
+        </article>
+      </div>
+
+      <div class="verify-hashes" data-reveal>
+        <div class="verify-hashes-head">
+          <h3 data-en="SHA256 for v2.1.0">SHA256 для v2.1.0</h3>
+          <span class="mono" data-en="Click to copy">Клікни, щоб скопіювати</span>
+        </div>
+        <div class="verify-hash-row">
+          <span>Windows · JARVIS.exe</span>
+          <button class="sha js-sha" type="button" data-sha="6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC">6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC</button>
+        </div>
+        <div class="verify-hash-row">
+          <span>macOS · JARVIS-macOS.zip</span>
+          <button class="sha js-sha" type="button" data-sha="E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE">E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE</button>
+        </div>
+        <div class="verify-hash-row">
+          <span>Linux · JARVIS-Linux.tar.gz</span>
+          <button class="sha js-sha" type="button" data-sha="928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0">928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0</button>
+        </div>
+      </div>
+
+      <div class="note verify-note" data-en="Honest limitation: hashes prove integrity and provenance, not that the app is harmless. The source is open — audit it, use an antivirus, and download only from the official GitHub release page. SmartScreen and Gatekeeper warnings are expected because there is no paid code-signing certificate.">Чесно про обмеження: хеші підтверджують цілісність і походження, але не гарантують безпечність застосунку. Код відкритий — перевіряй його, користуйся антивірусом і завантажуй лише з офіційної сторінки GitHub-релізу. Попередження SmartScreen і Gatekeeper очікувані, бо платного сертифіката підпису немає.</div>
     </div>
   </section>
 
@@ -713,13 +877,14 @@
   <div class="wrap">
     <div class="footer-grid">
       <div>
-        <a class="brand" href="#top"><span class="brand-mark">J</span> J.A.R.V.I.S.</a>
+        <a class="brand js-brand" href="#top"><span class="brand-mark">J</span> J.A.R.V.I.S.</a>
         <p class="small muted" style="margin:12px 0 0;max-width:320px" data-en="A local-first voice assistant for Windows, macOS and Linux. Built for people who want their computer to listen.">Локальний голосовий асистент для Windows, macOS і Linux. Для тих, хто хоче, щоб комп'ютер слухав.</p>
       </div>
       <div>
         <h4 data-en="Product">Продукт</h4>
         <a href="#features" data-en="Features">Можливості</a>
         <a href="#plugins" data-en="Plugins">Плагіни</a>
+        <a href="#reviews" data-en="Reviews">Відгуки</a>
         <a href="#changelog" data-en="Changelog">Зміни</a>
         <a href="#download" data-en="Download">Завантажити</a>
       </div>
@@ -727,13 +892,15 @@
         <h4 data-en="Resources">Ресурси</h4>
         <a href="https://github.com/__GITHUB_REPOSITORY__" target="_blank" rel="noopener">GitHub</a>
         <a href="https://github.com/__GITHUB_REPOSITORY__/issues" target="_blank" rel="noopener" data-en="Issues & support">Issues і підтримка</a>
+        <a href="docs.html" data-en="API & plugin docs">Документація API</a>
         <a href="#install" data-en="Install guide">Інструкція</a>
         <a href="#faq">FAQ</a>
       </div>
       <div>
         <h4 data-en="Status">Статус</h4>
         <a href="https://github.com/__GITHUB_REPOSITORY__/releases" target="_blank" rel="noopener" data-en="Latest release">Останній реліз</a>
-        <a href="docs/PLUGINS.md" data-en="Plugin docs">Документація плагінів</a>
+        <a href="docs.html#plugins" data-en="Plugin docs">Документація плагінів</a>
+        <a href="#verify" data-en="Verify a build">Перевірка збірки</a>
         <a href="https://github.com/__GITHUB_REPOSITORY__/blob/main/CHANGES_SUMMARY.md" target="_blank" rel="noopener" data-en="Full changelog">Повний changelog</a>
       </div>
     </div>
@@ -754,7 +921,7 @@
 
     <div class="footer-bottom">
       <span>© 2026 J.A.R.V.I.S. · <span data-en="Not affiliated with Microsoft or Roblox Corporation.">Не пов'язаний із Microsoft чи Roblox Corporation.</span></span>
-      <span class="mono">WINDOWS · MACOS · LINUX · V2.1.0 · <span id="footerDownloads">—</span> DOWNLOADS</span>
+      <span class="mono">WINDOWS · MACOS · LINUX · V<span data-release-version>2.1.0</span> · <span id="footerDownloads">—</span> DOWNLOADS</span>
     </div>
   </div>
 </footer>

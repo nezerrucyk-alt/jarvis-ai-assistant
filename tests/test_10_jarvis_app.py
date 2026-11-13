@@ -2,6 +2,7 @@
 """Headless-конструкція JarvisApp: withdrawn Tk-root + тимчасові шляхи даних."""
 from __future__ import annotations
 
+from core.customization import load_customization
 from tests.helpers import JarvisAppEnv, pump
 
 
@@ -17,6 +18,24 @@ class JarvisAppConstructTests(JarvisAppEnv):
         app = self.make_app()
         self.assertEqual(app.root.state(), "withdrawn")
         self.assertFalse(app.root.winfo_ismapped())
+
+    def test_customization_applies_and_persists(self) -> None:
+        app = self.make_app()
+        data = dict(app.customization)
+        data["theme"] = dict(data["theme"])
+        data["theme"]["bg"] = "#010203"
+        data["theme"]["sidebar"] = "#040506"
+        data["layout"] = dict(data["layout"])
+        data["layout"]["sidebar_enabled"] = False
+        saved = app.apply_customization_data(data, persist=True)
+        self.assertEqual(saved["theme"]["bg"], "#010203")
+        self.assertEqual(app.theme["bg"], "#010203")
+        self.assertEqual(app.sidebar.cget("bg"), "#040506")
+        self.assertEqual(app.sidebar.winfo_manager(), "")
+        self.assertTrue(self.jarvis.CUSTOMIZATION_PATH.is_file())
+        loaded = load_customization(self.jarvis.CUSTOMIZATION_PATH)
+        self.assertEqual(loaded["theme"]["bg"], "#010203")
+        self.assertFalse(loaded["layout"]["sidebar_enabled"])
 
     def test_expected_widgets_exist(self) -> None:
         app = self.make_app()

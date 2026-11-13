@@ -33,8 +33,13 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import os
-          page = Path("website/index.html")
-          page.write_text(page.read_text(encoding="utf-8").replace("__GITHUB_REPOSITORY__", os.environ["REPOSITORY"]), encoding="utf-8")
+          for page in Path("website").rglob("*.html"):
+              page.write_text(
+                  page.read_text(encoding="utf-8").replace(
+                      "__GITHUB_REPOSITORY__", os.environ["REPOSITORY"]
+                  ),
+                  encoding="utf-8",
+              )
           PY
       - uses: actions/upload-pages-artifact@v3
         with:

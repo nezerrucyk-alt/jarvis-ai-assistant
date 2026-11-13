@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="J.A.R.V.I.S. developer docs: plugin API, Android bridge, AI providers, Roblox Studio MCP, customization and security.">
+<meta name="theme-color" content="#0F1115">
+<title>J.A.R.V.I.S. — API та плагіни</title>
+<link rel="icon" href="assets/favicon.png" type="image/png">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body class="docs-page">
+
+<div class="bg-fx" aria-hidden="true">
+  <span class="aurora a1"></span>
+  <span class="aurora a2"></span>
+  <span class="aurora a3"></span>
+  <span class="bg-grid"></span>
+</div>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="J.A.R.V.I.S. — на головну">
+      <span class="brand-mark">J</span>
+      J.A.R.V.I.S. <span>Docs</span>
+    </a>
+    <nav class="nav-links" id="navLinks" aria-label="Головна навігація">
+      <a href="index.html#features" data-en="Features">Можливості</a>
+      <a href="index.html#plugins" data-en="Plugins">Плагіни</a>
+      <a href="index.html#reviews" data-en="Reviews">Відгуки</a>
+      <a href="docs.html" class="active" data-en="Docs">Доки</a>
+      <a class="btn btn-primary btn-small nav-cta" href="index.html#download" data-en="Download">Завантажити</a>
+    </nav>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button type="button" data-lang="uk" class="active">UA</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Меню" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main class="docs-main" id="top">
+  <section class="docs-hero">
+    <div class="wrap">
+      <div class="docs-hero-grid">
+        <div>
+          <span class="kicker" data-en="Developer docs">Документація для розробників</span>
+          <h1 data-en="J.A.R.V.I.S. API &amp; plugins">J.A.R.V.I.S. API та плагіни</h1>
+          <p class="docs-lead" data-en="Everything you need to write a plugin, connect the Android bridge, understand model failover, control Roblox Studio and customize the interface. Code examples are Python and HTTP.">Усе, що потрібно, щоб написати плагін, підключити Android-міст, зрозуміти failover моделей, керувати Roblox Studio й кастомізувати інтерфейс. Приклади — Python і HTTP.</p>
+          <div class="docs-chips">
+            <span class="chip hot">Plugin API</span>
+            <span class="chip">Mobile bridge</span>
+            <span class="chip">AI providers</span>
+            <span class="chip">Roblox MCP</span>
+            <span class="chip">Customize</span>
+          </div>
+        </div>
+        <aside class="docs-hero-card">
+          <span class="mono">QUICK START</span>
+          <ol>
+            <li data-en="Drop a .py file into the plugins folder.">Кинь .py-файл у папку плагінів.</li>
+            <li data-en="Declare TOOLS and implement run(name, args, ctx).">Оголоси TOOLS і реалізуй run(name, args, ctx).</li>
+            <li data-en="Say «перезавантаж плагіни» or restart Jarvis.">Скажи «перезавантаж плагіни» або перезапусти Jarvis.</li>
+          </ol>
+          <a class="btn btn-ghost btn-small" href="#plugins" data-en="Open the plugin guide">Відкрити гайд плагінів</a>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap docs-layout">
+    <aside class="docs-sidebar" aria-label="Зміст документації">
+      <span class="docs-sidebar-title" data-en="On this page">На цій сторінці</span>
+      <nav class="docs-toc">
+        <a href="#quickstart" data-en="Quick start">Швидкий старт</a>
+        <a href="#plugins" data-en="Plugin API">Plugin API</a>
+        <a href="#bridge" data-en="Mobile bridge">Mobile bridge</a>
+        <a href="#providers" data-en="AI providers">AI-провайдери</a>
+        <a href="#roblox" data-en="Roblox MCP">Roblox MCP</a>
+        <a href="#customize" data-en="Customize">Кастомізація</a>
+        <a href="#security" data-en="Security">Безпека</a>
+        <a href="#troubleshooting" data-en="Troubleshooting">Проблеми</a>
+      </nav>
+      <div class="docs-sidebar-note">
+        <span class="mono">v2.2</span>
+        <p data-en="Docs match the 2.2 codebase. For older builds, check the repository tag.">Документація відповідає коду 2.2. Для старіших збірок дивись тег у репозиторії.</p>
+        <a href="https://github.com/__GITHUB_REPOSITORY__" target="_blank" rel="noopener" data-en="Source on GitHub">Код на GitHub</a>
+      </div>
+    </aside>
+
+    <div class="docs-content">
+      <section id="quickstart" class="docs-section">
+        <span class="docs-kicker" data-en="01 · Overview">01 · Огляд</span>
+        <h2 data-en="Three ways to extend Jarvis">Три способи розширити Jarvis</h2>
+        <p data-en="Jarvis is a local Python desktop app. There is no Jarvis cloud: plugins run on your machine, and the Android bridge talks directly to your PC over HTTPS. Your API keys are stored locally and sent only to the provider you choose.">Jarvis — локальний Python-застосунок. Хмари Jarvis не існує: плагіни виконуються на твоїй машині, а Android-міст говорить із ПК напряму через HTTPS. API-ключі зберігаються локально й надсилаються лише обраному провайдеру.</p>
+        <div class="docs-cards">
+          <article class="docs-card">
+            <span class="docs-card-num">01</span>
+            <h3 data-en="Write a plugin">Написати плагін</h3>
+            <p data-en="One .py file, a TOOLS list and a run() function. The model sees the new tool immediately after reload.">Один .py-файл, список TOOLS і функція run(). Після перезавантаження модель одразу бачить новий інструмент.</p>
+            <a href="#plugins" data-en="Plugin API →">Plugin API →</a>
+          </article>
+          <article class="docs-card">
+            <span class="docs-card-num">02</span>
+            <h3 data-en="Connect Android">Підключити Android</h3>
+            <p data-en="Enable the bridge, copy the token and call the HTTPS endpoint from your phone or a script.">Увімкни міст, скопіюй токен і викликай HTTPS-endpoint із телефона або скрипта.</p>
+            <a href="#bridge" data-en="Bridge API →">Bridge API →</a>
+          </article>
+          <article class="docs-card">
+            <span class="docs-card-num">03</span>
+            <h3 data-en="Add a provider">Додати провайдера</h3>
+            <p data-en="Paste a key in Settings and pick a model. If one provider fails, Jarvis switches to the next configured one.">Встав ключ у Налаштуваннях і обери модель. Якщо провайдер падає, Jarvis перемикається на наступний налаштований.</p>
+            <a href="#providers" data-en="Providers →">Провайдери →</a>
+          </article>
+        </div>
+      </section>
+
+      <section id="plugins" class="docs-section">
+        <span class="docs-kicker" data-en="02 · Plugin API">02 · Plugin API</span>
+        <h2 data-en="Plugin API">API плагінів</h2>
+        <p data-en="A plugin is a plain Python file. Jarvis imports it, reads its TOOLS list and registers every tool with the model. There is no manifest and no build step.">Плагін — це звичайний Python-файл. Jarvis імпортує його, читає список TOOLS і реєструє кожен інструмент для моделі. Маніфесту й збірки немає.</p>
+
+        <h3 data-en="Where plugins live">Де лежать плагіни</h3>
+        <div class="docs-paths">
+          <div><span>Windows</span><code>%APPDATA%\Jarvis\plugins</code></div>
+          <div><span>macOS</span><code>~/Library/Application Support/Jarvis/plugins</code></div>
+          <div><span>Linux</span><code>~/.local/share/Jarvis/plugins</code></div>
+        </div>
+        <p data-en="Files ending in .py are loaded. Files whose names start with an underscore are skipped. Top-level code runs at import time, so keep it light and do not open network connections there.">Завантажуються файли з розширенням .py. Файли, назви яких починаються з підкреслення, пропускаються. Код верхнього рівня виконується під час імпорту, тому тримай його легким і не відкривай мережеві з'єднання там.</p>
+
+        <div class="docs-code">
+          <div class="code-head">
+            <span class="frame-dot red"></span><span class="frame-dot yellow"></span><span class="frame-dot green"></span>
+            plugins/notes.py
+            <button class="code-copy" type="button" data-copy="pluginExample" data-en="Copy">Копіювати</button>
+          </div>
+<pre><code id="pluginExample"><span class="c"># A minimal plugin: one tool, one file.</span>
+<span class="k">TOOLS</span> = [{
+    <span class="s">"type"</span>: <span class="s">"function"</span>,
+    <span class="s">"function"</span>: {
+        <span class="s">"name"</span>: <span class="s">"note_add"</span>,
+        <span class="s">"description"</span>: <span class="s">"Add a local note."</span>,
+        <span class="s">"parameters"</span>: {
+            <span class="s">"type"</span>: <span class="s">"object"</span>,
+            <span class="s">"properties"</span>: {
+                <span class="s">"text"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"Note text"</span>}
+            },
+            <span class="s">"required"</span>: [<span class="s">"text"</span>],
+        },
+    },
+}]
+
+<span class="k">def</span> <span class="s">run</span>(name, args, ctx):
+    <span class="k">if</span> name != <span class="s">"note_add"</span>:
+        <span class="k">return</span> <span class="s">"Unknown tool."</span>
+    text = str(args.get(<span class="s">"text"</span>, <span class="s">""</span>)).strip()
+    <span class="k">if</span> <span class="k">not</span> text:
+        <span class="k">return</span> <span class="s">"Nothing to save."</span>
+    path = ctx.data_dir / <span class="s">"notes.txt"</span>
+    <span class="k">with</span> path.open(<span class="s">"a"</span>, encoding=<span class="s">"utf-8"</span>) <span class="k">as</span> fh:
+        fh.write(text + <span class="s">"\n"</span>)
+    ctx.log(<span class="s">f"note_add: {len(text)} chars"</span>)
+    <span class="k">return</span> <span class="s">f"Saved: {text}"</span></code></pre>
+        </div>
+
+        <h3 data-en="Contract">Контракт</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Name">Назва</th><th data-en="Type">Тип</th><th data-en="Meaning">Значення</th></tr></thead>
+            <tbody>
+              <tr><td><code>TOOLS</code></td><td>list[dict]</td><td data-en="OpenAI-style function schemas. Every item must contain function.name and function.parameters.">OpenAI-style схеми функцій. Кожен елемент має містити function.name і function.parameters.</td></tr>
+              <tr><td><code>run(name, args, ctx)</code></td><td>function</td><td data-en="Called with the tool name, parsed arguments and the plugin context. Return a string; exceptions are shown to the model as tool errors.">Викликається з назвою інструмента, розібраними аргументами й контекстом плагіна. Повертай рядок; винятки показуються моделі як помилка інструмента.</td></tr>
+              <tr><td><code>handle</code></td><td>function</td><td data-en="Optional alias for run(). If both exist, run() wins.">Необов'язковий аліас для run(). Якщо є обидва, перемагає run().</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p data-en="Tool names must be unique. If a plugin declares a name that already exists, Jarvis skips that tool and writes a line to the log. Invalid schemas and broken imports are skipped without crashing the app.">Назви інструментів мають бути унікальними. Якщо плагін оголошує вже наявну назву, Jarvis пропускає цей інструмент і пише рядок у журнал. Некоректні схеми й зламані імпорти пропускаються без падіння застосунку.</p>
+
+        <h3 data-en="Plugin context">Контекст плагіна</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Member">Член</th><th data-en="What it does">Що робить</th></tr></thead>
+            <tbody>
+              <tr><td><code>ctx.confirm(action, detail="")</code></td><td data-en="Shows a confirmation dialog and returns True only if the user agrees. Use it before deleting files, sending data or changing the system.">Показує діалог підтвердження й повертає True, лише якщо користувач згоден. Використовуй перед видаленням файлів, надсиланням даних або зміною системи.</td></tr>
+              <tr><td><code>ctx.log(text)</code></td><td data-en="Writes a line to the Jarvis log and UI.">Пише рядок у журнал і UI Jarvis.</td></tr>
+              <tr><td><code>ctx.run(tool_name, args)</code></td><td data-en="Calls another registered tool and returns its result.">Викликає інший зареєстрований інструмент і повертає результат.</td></tr>
+              <tr><td><code>ctx.cfg</code></td><td data-en="Read-only snapshot of the current settings.">Знімок поточних налаштувань лише для читання.</td></tr>
+              <tr><td><code>ctx.data_dir</code></td><td data-en="Path to the Jarvis data folder. Use it for plugin state.">Шлях до папки даних Jarvis. Використовуй для стану плагіна.</td></tr>
+              <tr><td><code>ctx.plugins_dir</code></td><td data-en="Path to the plugins folder.">Шлях до папки плагінів.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-en="Reload and lifecycle">Перезавантаження й життєвий цикл</h3>
+        <p data-en="Plugins load at startup. After adding or editing a file, say «перезавантаж плагіни» or call the plugin_reload tool. Jarvis removes the old plugin tools, re-imports every file and registers the new set. If plugins are disabled in Settings, the loader returns immediately.">Плагіни завантажуються на старті. Після додавання або редагування файлу скажи «перезавантаж плагіни» або виклич інструмент plugin_reload. Jarvis прибирає старі інструменти плагінів, повторно імпортує кожен файл і реєструє новий набір. Якщо плагіни вимкнені в Налаштуваннях, завантажувач одразу виходить.</p>
+        <div class="docs-callout warning">
+          <strong data-en="Plugins are not sandboxed.">Плагіни не в пісочниці.</strong>
+          <p data-en="A plugin runs with the same permissions as Jarvis. Install only code you trust, read it before running it, and use ctx.confirm for destructive actions. A plugin can read files, call the network and start processes.">Плагін виконується з тими самими правами, що й Jarvis. Встановлюй лише код, якому довіряєш, читай його перед запуском і використовуй ctx.confirm для руйнівних дій. Плагін може читати файли, ходити в мережу й запускати процеси.</p>
+        </div>
+      </section>
+
+      <section id="bridge" class="docs-section">
+        <span class="docs-kicker" data-en="03 · Mobile bridge">03 · Mobile bridge</span>
+        <h2 data-en="Android bridge API">API Android-мосту</h2>
+        <p data-en="The bridge is an optional HTTPS server inside Jarvis. It starts only when you press «ANDROID: ПІДКЛЮЧИТИ» in the sidebar, and it stops when you disable it or close the app. It is designed for a trusted local network, not for exposure to the internet.">Міст — це необов'язковий HTTPS-сервер усередині Jarvis. Він стартує лише коли ти натискаєш «ANDROID: ПІДКЛЮЧИТИ» в бічній панелі, і зупиняється, коли вимикаєш його або закриваєш застосунок. Він розрахований на довірену локальну мережу, а не на доступ з інтернету.</p>
+
+        <div class="docs-callout">
+          <strong data-en="What you get">Що ти отримуєш</strong>
+          <p data-en="One or more LAN URLs like https://192.168.1.10:8765, a random bearer token and a SHA-256 fingerprint of the self-signed certificate. The Android app uses the token for every chat request and can pin the fingerprint.">Один або кілька LAN-URL на кшталт https://192.168.1.10:8765, випадковий bearer-токен і SHA-256 відбиток самопідписаного сертифіката. Android-застосунок використовує токен для кожного запиту чату й може закріпити відбиток.</p>
+        </div>
+
+        <h3 data-en="Endpoints">Ендпоінти</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Method">Метод</th><th data-en="Path">Шлях</th><th data-en="Auth">Авторизація</th><th data-en="Purpose">Призначення</th></tr></thead>
+            <tbody>
+              <tr><td><code>GET</code></td><td><code>/health</code></td><td data-en="None">Немає</td><td data-en="Returns {service: JARVIS, status: ready}. Useful for reachability checks.">Повертає {service: JARVIS, status: ready}. Зручно для перевірки доступності.</td></tr>
+              <tr><td><code>POST</code></td><td><code>/api/chat</code></td><td><code>Bearer &lt;token&gt;</code></td><td data-en="Accepts a prompt, mode and short history; returns the model reply.">Приймає промпт, режим і коротку історію; повертає відповідь моделі.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="docs-code">
+          <div class="code-head">
+            <span class="frame-dot red"></span><span class="frame-dot yellow"></span><span class="frame-dot green"></span>
+            curl · /health + /api/chat
+            <button class="code-copy" type="button" data-copy="bridgeExample" data-en="Copy">Копіювати</button>
+          </div>
+<pre><code id="bridgeExample"><span class="c"># Health check (no token). -k accepts the self-signed certificate.</span>
+curl -k https://192.168.1.10:8765/health
+
+<span class="c"># Chat request.</span>
+curl -k https://192.168.1.10:8765/api/chat \
+  -H <span class="s">"Authorization: Bearer &lt;token&gt;"</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{"text":"Hello","mode":"natural","history":[]}'</span>
+
+<span class="c"># Response</span>
+<span class="c"># {"reply":"..."}</span></code></pre>
+        </div>
+
+        <h3 data-en="Request body">Тіло запиту</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Field">Поле</th><th data-en="Type">Тип</th><th data-en="Rules">Правила</th></tr></thead>
+            <tbody>
+              <tr><td><code>text</code></td><td>string</td><td data-en="Required, 1–4000 characters after trimming.">Обов'язкове, 1–4000 символів після обрізання.</td></tr>
+              <tr><td><code>mode</code></td><td>string</td><td data-en="natural (default) or coder. Any other value becomes natural.">natural (типово) або coder. Будь-яке інше значення стає natural.</td></tr>
+              <tr><td><code>history</code></td><td>array</td><td data-en="Optional. Last 20 items, each {role: user|assistant, content: string}. Total content is capped at 10,000 characters; each item is trimmed to 2,000.">Необов'язково. Останні 20 елементів, кожен {role: user|assistant, content: string}. Загальний текст обмежений 10 000 символів; кожен елемент обрізається до 2 000.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-en="Limits and errors">Ліміти й помилки</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Limit">Ліміт</th><th data-en="Value">Значення</th></tr></thead>
+            <tbody>
+              <tr><td data-en="Request body">Тіло запиту</td><td>18,000 bytes</td></tr>
+              <tr><td data-en="Rate per IP">Частота на IP</td><td data-en="1 request per second">1 запит на секунду</td></tr>
+              <tr><td data-en="Concurrent answers">Одночасні відповіді</td><td>3</td></tr>
+              <tr><td data-en="TLS">TLS</td><td data-en="TLS 1.2 or newer, self-signed certificate">TLS 1.2 або новіше, самопідписаний сертифікат</td></tr>
+              <tr><td data-en="Reply length">Довжина відповіді</td><td data-en="Truncated to 20,000 characters">Обрізається до 20 000 символів</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Status">Статус</th><th data-en="Meaning">Значення</th></tr></thead>
+            <tbody>
+              <tr><td><code>400</code></td><td data-en="Invalid JSON, empty prompt or prompt too long.">Некоректний JSON, порожній промпт або занадто довгий промпт.</td></tr>
+              <tr><td><code>401</code></td><td data-en="Missing or wrong bearer token.">Відсутній або неправильний bearer-токен.</td></tr>
+              <tr><td><code>413</code></td><td data-en="Request body is larger than 18,000 bytes.">Тіло запиту більше за 18 000 байт.</td></tr>
+              <tr><td><code>429</code></td><td data-en="Too many requests per second or all three answer slots are busy.">Забагато запитів на секунду або всі три слоти відповідей зайняті.</td></tr>
+              <tr><td><code>502</code></td><td data-en="Jarvis could not get an answer from the model.">Jarvis не зміг отримати відповідь від моделі.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="docs-callout warning">
+          <strong data-en="Keep the token secret.">Тримай токен у секреті.</strong>
+          <p data-en="Anyone on the same network with the token can send prompts to your Jarvis. Do not port-forward 8765, do not use public Wi-Fi, and disable the bridge when you are done. The certificate is self-signed, so compare the fingerprint instead of trusting it blindly.">Будь-хто в тій самій мережі з токеном може надсилати промпти твоєму Jarvis. Не роби port-forward для 8765, не використовуй публічний Wi-Fi і вимикай міст, коли закінчив. Сертифікат самопідписаний, тому порівнюй відбиток, а не довіряй наосліп.</p>
+        </div>
+      </section>
+
+      <section id="providers" class="docs-section">
+        <span class="docs-kicker" data-en="04 · AI providers">04 · AI-провайдери</span>
+        <h2 data-en="AI providers and failover">AI-провайдери й failover</h2>
+        <p data-en="Jarvis ships with direct integrations, an OpenRouter catalog and local Ollama models. The model list is a mix of curated direct models and live OpenRouter IDs. Add at least one key; add several to make failover useful.">Jarvis має прямі інтеграції, каталог OpenRouter і локальні моделі Ollama. Список моделей — це суміш курованих прямих моделей і живих OpenRouter ID. Додай хоча б один ключ; додай кілька, щоб failover був корисним.</p>
+
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Provider">Провайдер</th><th data-en="Config key">Ключ конфігу</th><th data-en="Notes">Примітки</th></tr></thead>
+            <tbody>
+              <tr><td>OpenAI</td><td><code>openai_api_key</code></td><td data-en="Direct Chat Completions.">Прямий Chat Completions.</td></tr>
+              <tr><td>Anthropic</td><td><code>anthropic_api_key</code></td><td data-en="Native Messages API with tools.">Нативний Messages API з інструментами.</td></tr>
+              <tr><td>xAI</td><td><code>xai_api_key</code></td><td data-en="Grok models.">Моделі Grok.</td></tr>
+              <tr><td>Moonshot</td><td><code>moonshot_api_key</code></td><td data-en="Kimi models.">Моделі Kimi.</td></tr>
+              <tr><td>Qwen / DashScope</td><td><code>qwen_api_key</code></td><td data-en="Qwen coder and chat models.">Кодерські й чатові моделі Qwen.</td></tr>
+              <tr><td>Google Gemini</td><td><code>gemini_api_key</code></td><td data-en="Free tier available.">Є безкоштовний тариф.</td></tr>
+              <tr><td>Groq</td><td><code>groq_api_key</code></td><td data-en="Fast OpenAI-compatible inference.">Швидкий OpenAI-сумісний inference.</td></tr>
+              <tr><td>DeepSeek</td><td><code>deepseek_api_key</code></td><td data-en="Chat and reasoner models.">Чат і reasoner-моделі.</td></tr>
+              <tr><td>Cerebras</td><td><code>cerebras_api_key</code></td><td data-en="Llama on Cerebras hardware.">Llama на залізі Cerebras.</td></tr>
+              <tr><td>Mistral</td><td><code>mistral_api_key</code></td><td data-en="Mistral small and code models.">Mistral small і кодерські моделі.</td></tr>
+              <tr><td>Together</td><td><code>together_api_key</code></td><td data-en="Hosted open models.">Хостинг відкритих моделей.</td></tr>
+              <tr><td>Ashna</td><td><code>ashna_api_key</code></td><td data-en="Aggregated models including GPT, Claude and GLM.">Агреговані моделі, зокрема GPT, Claude і GLM.</td></tr>
+              <tr><td>xKiro</td><td><code>xkiro_api_key</code></td><td data-en="Many free coding and vision models; backup key supported.">Багато безкоштовних кодерських і vision-моделей; підтримується резервний ключ.</td></tr>
+              <tr><td>OpenRouter</td><td><code>openrouter_key</code></td><td data-en="Live free-model catalog and a large model list.">Живий каталог безкоштовних моделей і великий список моделей.</td></tr>
+              <tr><td>Ollama</td><td data-en="No key">Без ключа</td><td data-en="Local models; Ollama must be running on the same machine.">Локальні моделі; Ollama має працювати на тій самій машині.</td></tr>
+              <tr><td>Cursor</td><td><code>cursor_api_key</code></td><td data-en="Experimental: requires a compatible endpoint in cursor_api_url; there is no confirmed public chat API.">Експериментально: потрібен сумісний endpoint у cursor_api_url; підтвердженого публічного chat API немає.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-en="How failover works">Як працює failover</h3>
+        <ol class="docs-list">
+          <li data-en="Jarvis sends the request to the selected model first.">Jarvis надсилає запит спочатку обраній моделі.</li>
+          <li data-en="If the key is missing, the provider returns an auth/quota error, the network times out or the response is unusable, Jarvis tries the next configured model.">Якщо ключ відсутній, провайдер повертає помилку авторизації/квоти, мережа таймаутить або відповідь непридатна, Jarvis пробує наступну налаштовану модель.</li>
+          <li data-en="The switch is silent: you get an answer, not a wall of provider errors. The log shows which provider answered and which ones failed.">Перемикання тихе: ти отримуєш відповідь, а не стіну помилок провайдерів. Журнал показує, хто відповів і хто впав.</li>
+          <li data-en="If every configured provider fails, you get one clear error with the last reason.">Якщо впали всі налаштовані провайдери, ти отримуєш одну зрозумілу помилку з останньою причиною.</li>
+        </ol>
+        <p data-en="Keys live in config.json in the Jarvis data folder. They are sent only to the provider you selected — there is no Jarvis proxy and no telemetry.">Ключі лежать у config.json у папці даних Jarvis. Вони надсилаються лише обраному провайдеру — проксі Jarvis і телеметрії немає.</p>
+
+        <h3 data-en="Response modes">Режими відповіді</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Label">Назва</th><th data-en="Key">Ключ</th><th data-en="Best for">Для чого</th></tr></thead>
+            <tbody>
+              <tr><td>Розмова</td><td><code>natural</code></td><td data-en="Everyday chat.">Повсякденний чат.</td></tr>
+              <tr><td>Коротко</td><td><code>brief</code></td><td data-en="One or two lines.">Одна-дві репліки.</td></tr>
+              <tr><td>Докладно</td><td><code>detailed</code></td><td data-en="Context, steps and examples.">Контекст, кроки й приклади.</td></tr>
+              <tr><td>Макс</td><td><code>max</code></td><td data-en="Deep reasoning and edge cases.">Глибокі міркування й крайові випадки.</td></tr>
+              <tr><td>Код</td><td><code>coding</code></td><td data-en="Short code answers.">Короткі відповіді про код.</td></tr>
+              <tr><td>Кодер</td><td><code>coder</code></td><td data-en="Project-aware coding with tools.">Кодерство з урахуванням проєкту й інструментів.</td></tr>
+              <tr><td>Сувора оцінка</td><td><code>review</code></td><td data-en="Direct critique of code or text.">Пряма критика коду або тексту.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="roblox" class="docs-section">
+        <span class="docs-kicker" data-en="05 · Roblox MCP">05 · Roblox MCP</span>
+        <h2 data-en="Roblox Studio through MCP">Roblox Studio через MCP</h2>
+        <p data-en="On Windows, Jarvis connects to the official Roblox Studio MCP bridge. It does not inject into the Roblox player and does not use exploits. Studio must be open, and the MCP server must be available.">На Windows Jarvis підключається до офіційного Roblox Studio MCP. Він не втручається в клієнт Roblox і не використовує експлойти. Studio має бути відкрите, а MCP-сервер — доступний.</p>
+
+        <h3 data-en="Common tools">Поширені інструменти</h3>
+        <div class="docs-tool-grid">
+          <div><code>list_roblox_studios</code><span data-en="Find open Studio instances.">Знайти відкриті екземпляри Studio.</span></div>
+          <div><code>get_studio_state</code><span data-en="Current place, play state and context.">Поточний place, стан гри й контекст.</span></div>
+          <div><code>get_console_output</code><span data-en="Read the Studio output log.">Прочитати лог виводу Studio.</span></div>
+          <div><code>execute_luau</code><span data-en="Run Luau code in a chosen data model.">Виконати Luau-код у вибраному data model.</span></div>
+          <div><code>script_read</code><span data-en="Read a script by target file.">Прочитати скрипт за target file.</span></div>
+          <div><code>script_grep</code><span data-en="Search scripts for text.">Шукати текст у скриптах.</span></div>
+          <div><code>multi_edit</code><span data-en="Apply several script edits at once.">Застосувати кілька правок скрипта одразу.</span></div>
+          <div><code>search_game_tree</code><span data-en="Find instances by keyword.">Знайти інстанси за ключовим словом.</span></div>
+          <div><code>start_stop_play</code><span data-en="Start or stop a playtest.">Запустити або зупинити playtest.</span></div>
+          <div><code>insert_asset</code><span data-en="Insert an asset by ID.">Вставити асет за ID.</span></div>
+          <div><code>screen_capture</code><span data-en="Capture the Studio viewport.">Зняти viewport Studio.</span></div>
+          <div><code>generate_model</code><span data-en="Generate a model from a prompt.">Згенерувати модель із промпту.</span></div>
+        </div>
+        <p data-en="Use tool='list_tools' in the roblox_studio tool to get the full, live schema list from your Studio version. Do not guess tool names — ask for the list first.">Використай tool='list_tools' в інструменті roblox_studio, щоб отримати повний живий список схем із твоєї версії Studio. Не вгадуй назви інструментів — спершу попроси список.</p>
+
+        <h3 data-en="Private server reset">Перезапуск приватного сервера</h3>
+        <p data-en="Set roblox_private_server in config.json to your private-server configure URL. When you ask Jarvis to reset the server, it opens that page and asks you to confirm. You perform «Shutdown All Servers» on Roblox yourself; Jarvis never automates the Roblox client.">Встанови roblox_private_server у config.json на URL налаштування приватного сервера. Коли просиш Jarvis перезапустити сервер, він відкриває цю сторінку й просить підтвердження. «Shutdown All Servers» ти натискаєш у Roblox сам; Jarvis не автоматизує клієнт Roblox.</p>
+      </section>
+
+      <section id="customize" class="docs-section">
+        <span class="docs-kicker" data-en="06 · Customize">06 · Кастомізація</span>
+        <h2 data-en="Customize the interface">Кастомізація інтерфейсу</h2>
+        <p data-en="The Customize tab is in the sidebar (✦). It changes the real interface, not a mock: colors, block order, fonts, animations and an optional custom-code block with a live preview. Changes are saved to customization.json and applied without a restart.">Вкладка «Кастомізація» — у бічній панелі (✦). Вона змінює справжній інтерфейс, а не макет: кольори, порядок блоків, шрифти, анімації й необов'язковий кастомний блок із живим прев'ю. Зміни зберігаються в customization.json і застосовуються без перезапуску.</p>
+
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Tab">Вкладка</th><th data-en="What you can change">Що можна змінити</th></tr></thead>
+            <tbody>
+              <tr><td>ТЕМА</td><td data-en="12 palette colors and six presets: Command Deck, Midnight, Matrix, Crimson, Amber, Ice.">12 кольорів палітри й шість пресетів: Command Deck, Midnight, Matrix, Crimson, Amber, Ice.</td></tr>
+              <tr><td>МАКЕТ</td><td data-en="Order and visibility of main blocks and sidebar items; compact mode; sidebar on or off.">Порядок і видимість головних блоків і пунктів бічної панелі; компактний режим; бічна панель увімкнена або вимкнена.</td></tr>
+              <tr><td>КОД</td><td data-en="A custom Tkinter block with an editor, a preview pane and an explicit enable switch.">Кастомний Tkinter-блок із редактором, вікном прев'ю й окремим перемикачем.</td></tr>
+              <tr><td>АНІМАЦІЇ</td><td data-en="Window fade, typewriter effect and reactor glow.">Затухання вікна, ефект друкарської машинки й свічення реактора.</td></tr>
+              <tr><td>JSON</td><td data-en="Raw view of the saved customization for advanced edits.">Сирий вигляд збереженої кастомізації для просунутих правок.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-en="Custom code contract">Контракт кастомного коду</h3>
+        <p data-en="The code block must define build(parent, colors) and return a Tkinter widget. The preview updates automatically after a short pause. Available names include tk, ttk, parent, colors, root and math.">Блок коду має визначати build(parent, colors) і повертати Tkinter-віджет. Прев'ю оновлюється автоматично після короткої паузи. Доступні імена: tk, ttk, parent, colors, root і math.</p>
+        <div class="docs-code">
+          <div class="code-head">
+            <span class="frame-dot red"></span><span class="frame-dot yellow"></span><span class="frame-dot green"></span>
+            custom code · build()
+            <button class="code-copy" type="button" data-copy="customCode" data-en="Copy">Копіювати</button>
+          </div>
+<pre><code id="customCode"><span class="k">def</span> <span class="s">build</span>(parent, colors):
+    card = tk.Frame(parent, bg=colors[<span class="s">"panel"</span>])
+    tk.Label(
+        card,
+        text=<span class="s">"CUSTOM MODULE"</span>,
+        bg=colors[<span class="s">"panel"</span>],
+        fg=colors[<span class="s">"accent"</span>],
+        font=(<span class="s">"Consolas"</span>, 8, <span class="s">"bold"</span>),
+    ).pack(anchor=<span class="s">"w"</span>, padx=14, pady=(12, 2))
+    tk.Label(
+        card,
+        text=<span class="s">"This block is built by your code."</span>,
+        bg=colors[<span class="s">"panel"</span>],
+        fg=colors[<span class="s">"text"</span>],
+        font=(<span class="s">"Segoe UI"</span>, 10),
+    ).pack(anchor=<span class="s">"w"</span>, padx=14, pady=(0, 12))
+    <span class="k">return</span> card</code></pre>
+        </div>
+        <div class="docs-callout warning">
+          <strong data-en="Restricted builtins, not a real sandbox.">Обмежені builtins, а не справжня пісочниця.</strong>
+          <p data-en="render_custom_code limits the names available to the snippet, but Python is not a secure sandbox. Run only your own code or code you have read and understood.">render_custom_code обмежує доступні імена для сніпета, але Python не є безпечною пісочницею. Запускай лише свій код або код, який ти прочитав і зрозумів.</p>
+        </div>
+        <p data-en="Saved settings live in %APPDATA%\Jarvis\customization.json on Windows, ~/Library/Application Support/Jarvis/customization.json on macOS and ~/.local/share/Jarvis/customization.json on Linux.">Збережені налаштування лежать у %APPDATA%\Jarvis\customization.json на Windows, ~/Library/Application Support/Jarvis/customization.json на macOS і ~/.local/share/Jarvis/customization.json на Linux.</p>
+      </section>
+
+      <section id="security" class="docs-section">
+        <span class="docs-kicker" data-en="07 · Security">07 · Безпека</span>
+        <h2 data-en="Security model">Модель безпеки</h2>
+        <ul class="docs-list">
+          <li data-en="Local-first: chats, settings, keys and plugin data live in the Jarvis data folder. There is no Jarvis account or cloud.">Local-first: чати, налаштування, ключі й дані плагінів лежать у папці даних Jarvis. Акаунта або хмари Jarvis немає.</li>
+          <li data-en="Dangerous PC actions require confirmation. Catastrophic PowerShell patterns are blocked before execution.">Небезпечні дії на ПК потребують підтвердження. Катастрофічні PowerShell-патерни блокуються до виконання.</li>
+          <li data-en="The Android bridge uses a random bearer token and HTTPS with a self-signed certificate. It is off by default.">Android-міст використовує випадковий bearer-токен і HTTPS із самопідписаним сертифікатом. Він вимкнений за замовчуванням.</li>
+          <li data-en="Plugins and custom code are trusted local code, not sandboxes. Review before running.">Плагіни й кастомний код — це довірений локальний код, а не пісочниці. Перевіряй перед запуском.</li>
+          <li data-en="Reviews are public GitHub issues. Do not put passwords, API keys or personal data in a review.">Відгуки — публічні GitHub issues. Не додавай у відгук паролі, API-ключі чи особисті дані.</li>
+          <li data-en="Builds are unsigned. Verify SHA256 and GitHub attestations before running a downloaded file.">Збірки непідписані. Перевіряй SHA256 і GitHub-атестації перед запуском завантаженого файлу.</li>
+        </ul>
+        <div class="docs-callout">
+          <strong data-en="What leaves your PC">Що виходить із твого ПК</strong>
+          <p data-en="Only the requests needed for the features you invoke: model prompts to your chosen AI provider, web searches, Home Assistant calls, Roblox Studio MCP calls and GitHub API requests for updates and reviews. There is no hidden telemetry endpoint.">Лише запити, потрібні для функцій, які ти викликаєш: промпти до обраного AI-провайдера, вебпошук, запити до Home Assistant, виклики Roblox Studio MCP і запити до GitHub API для оновлень і відгуків. Прихованого endpoint телеметрії немає.</p>
+        </div>
+      </section>
+
+      <section id="troubleshooting" class="docs-section">
+        <span class="docs-kicker" data-en="08 · Troubleshooting">08 · Проблеми</span>
+        <h2 data-en="Troubleshooting">Що робити, якщо не працює</h2>
+        <div class="docs-faq">
+          <details>
+            <summary data-en="The plugin is not loading">Плагін не завантажується</summary>
+            <p data-en="Check that the file ends in .py and does not start with an underscore. It must define TOOLS and a callable run() or handle(). Tool names must not collide with built-in tools. Enable plugins in Settings and run plugin_reload. The log shows the exact import error.">Перевір, що файл закінчується на .py і не починається з підкреслення. Він має визначати TOOLS і викличний run() або handle(). Назви інструментів не повинні збігатися з вбудованими. Увімкни плагіни в Налаштуваннях і виклич plugin_reload. Журнал покаже точну помилку імпорту.</p>
+          </details>
+          <details>
+            <summary data-en="The phone cannot reach the bridge">Телефон не бачить міст</summary>
+            <p data-en="Use the same Wi-Fi, allow port 8765 in the firewall, copy the URL and token exactly, and compare the certificate fingerprint. The bridge binds to 0.0.0.0, so a VPN or a second network adapter can expose a different address.">Використовуй той самий Wi-Fi, дозволь порт 8765 у фаєрволі, скопіюй URL і токен точно, порівняй відбиток сертифіката. Міст слухає 0.0.0.0, тому VPN або другий мережевий адаптер можуть дати іншу адресу.</p>
+          </details>
+          <details>
+            <summary data-en="Every model fails">Усі моделі падають</summary>
+            <p data-en="Open Settings and check the keys and quotas. A 401 means a bad key; 429 means a rate limit. Try a different provider or model. The log shows which provider was tried last and why it failed.">Відкрий Налаштування й перевір ключі та квоти. 401 означає поганий ключ; 429 — ліміт частоти. Спробуй іншого провайдера або модель. Журнал покаже, хто пробувався останнім і чому впав.</p>
+          </details>
+          <details>
+            <summary data-en="Studio tools are unavailable">Інструменти Studio недоступні</summary>
+            <p data-en="Studio MCP is Windows-only. Open Roblox Studio, make sure its MCP server is running, then call list_roblox_studios. If the list is empty, restart Studio and check the MCP setting.">Studio MCP працює лише на Windows. Відкрий Roblox Studio, переконайся, що його MCP-сервер запущений, і виклич list_roblox_studios. Якщо список порожній, перезапусти Studio й перевір налаштування MCP.</p>
+          </details>
+          <details>
+            <summary data-en="My review did not appear">Мій відгук не з'явився</summary>
+            <p data-en="The site reads public issues whose body contains the review marker. After submitting the prefilled issue, wait a minute and refresh. GitHub API rate limits can delay the list; the «All reviews on GitHub» link always works.">Сайт читає публічні issues, у тілі яких є маркер відгуку. Після надсилання заповненого issue зачекай хвилину й онови сторінку. Ліміти GitHub API можуть затримати список; посилання «Усі відгуки на GitHub» працює завжди.</p>
+          </details>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-bottom docs-footer">
+      <span>© 2026 J.A.R.V.I.S. · <span data-en="Developer documentation.">Документація для розробників.</span></span>
+      <span class="mono"><a href="index.html" data-en="BACK TO SITE">НА САЙТ</a> · <a href="https://github.com/__GITHUB_REPOSITORY__" target="_blank" rel="noopener">GITHUB</a> · <a href="index.html#download" data-en="DOWNLOAD">ЗАВАНТАЖИТИ</a></span>
+    </div>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" type="button" aria-label="Повернутися вгору">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+</button>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
