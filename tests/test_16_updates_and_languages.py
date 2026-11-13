@@ -118,6 +118,38 @@ class CheckUpdateTests(unittest.TestCase):
         self.assertIn("нова версія", result)
         self.assertIn("https://github.com/x/JARVIS.exe", result)
 
+    def test_finds_windows_suffixed_asset(self) -> None:
+        payload = {
+            "tag_name": "v9.9.9",
+            "html_url": "https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v9.9.9",
+            "assets": [
+                {
+                    "name": "JARVIS-Windows.exe",
+                    "browser_download_url": "https://github.com/x/JARVIS-Windows.exe",
+                    "size": 1234,
+                    "digest": "sha256:" + "a" * 64,
+                },
+            ],
+        }
+        with mock.patch("requests.get", return_value=_FakeResponse(200, payload)):
+            info = self.jarvis.fetch_latest_release_info()
+        self.assertEqual(info["asset_url"], "https://github.com/x/JARVIS-Windows.exe")
+        self.assertEqual(info["asset_size"], 1234)
+        self.assertEqual(info["asset_sha256"], "a" * 64)
+
+    def test_prefers_plain_exe_when_both_exist(self) -> None:
+        payload = {
+            "tag_name": "v9.9.9",
+            "html_url": "https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v9.9.9",
+            "assets": [
+                {"name": "JARVIS-Windows.exe", "browser_download_url": "https://github.com/x/win.exe"},
+                {"name": "JARVIS.exe", "browser_download_url": "https://github.com/x/plain.exe"},
+            ],
+        }
+        with mock.patch("requests.get", return_value=_FakeResponse(200, payload)):
+            info = self.jarvis.fetch_latest_release_info()
+        self.assertEqual(info["asset_url"], "https://github.com/x/plain.exe")
+
     def test_reports_current_when_same(self) -> None:
         payload = {
             "tag_name": "v" + self.jarvis.APP_VERSION,

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="J.A.R.V.I.S. roadmap: what is done, what is next, and what is honestly blocked. Wake word, offline mode, memory, automations and code signing.">
+<meta name="theme-color" content="#0F1115">
+<meta property="og:title" content="J.A.R.V.I.S. — roadmap">
+<meta property="og:description" content="What is done, what is next and what is honestly blocked: wake word, offline mode, memory, automations, code signing.">
+<meta property="og:image" content="__SITE_URL__/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="__SITE_URL__/roadmap.html">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="J.A.R.V.I.S. — roadmap">
+<meta name="twitter:description" content="What is done, what is next and what is honestly blocked.">
+<meta name="twitter:image" content="__SITE_URL__/assets/og-cover.png">
+<link rel="canonical" href="__SITE_URL__/roadmap.html">
+<link rel="sitemap" type="application/xml" href="sitemap.xml">
+<title>J.A.R.V.I.S. — roadmap</title>
+<link rel="icon" href="assets/favicon.png" type="image/png">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/docs.css">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body class="docs-page">
+
+<div class="bg-fx" aria-hidden="true">
+  <span class="aurora a1"></span>
+  <span class="aurora a2"></span>
+  <span class="aurora a3"></span>
+  <span class="bg-grid"></span>
+</div>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="J.A.R.V.I.S. — на головну">
+      <span class="brand-mark">J</span>
+      J.A.R.V.I.S. <span>Roadmap</span>
+    </a>
+    <nav class="nav-links" id="navLinks" aria-label="Головна навігація">
+      <a href="index.html#features" data-en="Features">Можливості</a>
+      <a href="index.html#plugins" data-en="Plugins">Плагіни</a>
+      <a href="index.html#reviews" data-en="Reviews">Відгуки</a>
+      <a href="docs.html" data-en="Docs">Доки</a>
+      <a href="roadmap.html" class="active" data-en="Roadmap">Roadmap</a>
+      <a class="btn btn-primary btn-small nav-cta" href="index.html#download" data-en="Download">Завантажити</a>
+    </nav>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button type="button" data-lang="uk" class="active">UA</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Меню" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main class="docs-main" id="top">
+  <section class="roadmap-hero">
+    <div class="wrap">
+      <span class="kicker" data-en="Roadmap">Roadmap</span>
+      <h1 data-en="What is done, what is next — and what is honestly blocked.">Що вже є, що далі — і що чесно заблоковано.</h1>
+      <p class="docs-lead" data-en="No fake deadlines. This page tracks real work: shipped features, active tasks, planned ideas and external blockers. Every item links back to the repository where possible.">Без вигаданих дедлайнів. Ця сторінка показує реальну роботу: що вже випущено, що зараз у роботі, що заплановано і що заблоковано зовнішніми причинами. Кожен пункт за можливості веде до репозиторію.</p>
+      <div class="roadmap-legend">
+        <span><i class="roadmap-dot done"></i> <span data-en="Done">Готово</span></span>
+        <span><i class="roadmap-dot progress"></i> <span data-en="In progress">У роботі</span></span>
+        <span><i class="roadmap-dot planned"></i> <span data-en="Planned">Заплановано</span></span>
+        <span><i class="roadmap-dot blocked"></i> <span data-en="Blocked">Заблоковано</span></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap docs-layout">
+    <aside class="docs-sidebar" aria-label="Навігація roadmap">
+      <span class="docs-sidebar-title" data-en="Jump to">Перейти до</span>
+      <nav class="docs-toc">
+        <a href="#done" data-en="Done">Готово</a>
+        <a href="#next" data-en="In progress &amp; next">У роботі й далі</a>
+        <a href="#blocked" data-en="Blocked">Заблоковано</a>
+        <a href="#how" data-en="How to help">Як допомогти</a>
+      </nav>
+      <div class="docs-sidebar-note">
+        <span class="mono">v2.2</span>
+        <p data-en="Updated 13.11.2026. Items move only when code, tests and a build exist.">Оновлено 13.11.2026. Пункти рухаються лише коли є код, тести й збірка.</p>
+        <a href="https://github.com/__GITHUB_REPOSITORY__/issues" target="_blank" rel="noopener" data-en="Discuss on GitHub">Обговорити на GitHub</a>
+      </div>
+    </aside>
+
+    <div class="docs-content">
+      <section id="done" class="docs-section">
+        <span class="docs-kicker" data-en="01 · Shipped">01 · Випущено</span>
+        <h2 data-en="Already in the codebase">Вже в коді</h2>
+        <div class="roadmap-grid">
+          <div class="roadmap-column">
+            <div class="roadmap-column-head">
+              <h2 data-en="Product">Продукт</h2>
+              <span class="roadmap-count">8</span>
+            </div>
+            <article class="roadmap-card done">
+              <h3 data-en="Customize tab">Вкладка «Кастомізація»</h3>
+              <p data-en="Theme colors, six presets, block order, fonts, animations, custom code with a live preview and JSON view.">Кольори теми, шість пресетів, порядок блоків, шрифти, анімації, кастомний код із живим прев'ю й JSON-вигляд.</p>
+              <span class="roadmap-tag" data-en="2.2.0">2.2.0</span>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="Voice + chat + failover">Голос + чат + failover</h3>
+              <p data-en="Ukrainian and English speech, 81 models, 16 providers and automatic switching when a provider fails.">Українська й англійська мова, 81 модель, 16 провайдерів і автоматичне перемикання, коли провайдер падає.</p>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="PC control and Roblox Studio">Керування ПК і Roblox Studio</h3>
+              <p data-en="Apps, files, PowerShell, system control, Roblox MCP and private server reset with confirmation.">Програми, файли, PowerShell, керування системою, Roblox MCP і перезапуск приватного сервера з підтвердженням.</p>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="Vision, translation, plugins">Зір, переклад, плагіни</h3>
+              <p data-en="Screen vision on Ctrl+Alt+S, screen translation, local plugins with TOOLS and run().">Зір екрана на Ctrl+Alt+S, переклад екрана, локальні плагіни з TOOLS і run().</p>
+            </article>
+          </div>
+
+          <div class="roadmap-column">
+            <div class="roadmap-column-head">
+              <h2 data-en="Website">Сайт</h2>
+              <span class="roadmap-count">7</span>
+            </div>
+            <article class="roadmap-card done">
+              <h3 data-en="Premium redesign">Преміум-редизайн</h3>
+              <p data-en="Aurora background, glass navigation, orbit hero, scroll reveals, spotlight cards and count-up stats.">Aurora-фон, скляна навігація, orbit-hero, scroll-reveal, spotlight-картки й анімовані лічильники.</p>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="3D logo intro">3D-інтро логотипа</h3>
+              <p data-en="Plays once at the top, replays on brand click, skippable and respects reduced motion.">Грає один раз угорі, повторюється кліком по бренду, можна пропустити, поважає reduced motion.</p>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="Real reviews">Реальні відгуки</h3>
+              <p data-en="Nickname, 1–5 stars, 5000 characters, average rating and a live list backed by GitHub issues.">Нік, 1–5 зірок, 5000 символів, середній рейтинг і живий список на основі GitHub issues.</p>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="Docs + roadmap">Доки + roadmap</h3>
+              <p data-en="Bilingual API/plugin docs with search, plus this honest roadmap page.">Двомовна документація API/плагінів із пошуком і ця чесна сторінка roadmap.</p>
+            </article>
+          </div>
+
+          <div class="roadmap-column">
+            <div class="roadmap-column-head">
+              <h2 data-en="Infrastructure">Інфраструктура</h2>
+              <span class="roadmap-count">6</span>
+            </div>
+            <article class="roadmap-card done">
+              <h3 data-en="SHA256SUMS + attestations">SHA256SUMS + атестації</h3>
+              <p data-en="Every release publishes hashes and GitHub build provenance so users can verify the binary.">Кожен реліз публікує хеші й GitHub build provenance, щоб користувач міг перевірити бінарник.</p>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="Auto-update with rollback">Автооновлення з відкатом</h3>
+              <p data-en="Downloads the new exe, checks size and SHA256, replaces the file after exit and rolls back on failure.">Завантажує новий exe, перевіряє розмір і SHA256, замінює файл після виходу й відкочується при помилці.</p>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="Tests CI + Dependabot">CI тестів + Dependabot</h3>
+              <p data-en="Windows, macOS and Linux test matrix, pip-audit, weekly dependency updates and SECURITY.md.">Матриця тестів Windows/macOS/Linux, pip-audit, щотижневі оновлення залежностей і SECURITY.md.</p>
+            </article>
+            <article class="roadmap-card done">
+              <h3 data-en="SEO + sitemap">SEO + sitemap</h3>
+              <p data-en="Canonical URLs, Open Graph/Twitter cards, FAQ schema, sitemap.xml and robots.txt.">Canonical-URL, Open Graph/Twitter-картки, FAQ-схема, sitemap.xml і robots.txt.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="next" class="docs-section">
+        <span class="docs-kicker" data-en="02 · Next">02 · Далі</span>
+        <h2 data-en="In progress and planned">У роботі й заплановано</h2>
+        <div class="roadmap-grid">
+          <div class="roadmap-column">
+            <div class="roadmap-column-head">
+              <h2 data-en="Release 2.2.0">Реліз 2.2.0</h2>
+              <span class="roadmap-count">3</span>
+            </div>
+            <article class="roadmap-card progress">
+              <h3 data-en="Build and publish 2.2.0">Зібрати й опублікувати 2.2.0</h3>
+              <p data-en="Code and tests are ready; the Windows/macOS/Linux builds are published by the release workflow after the tag.">Код і тести готові; збірки Windows/macOS/Linux публікуються release-workflow після тегу.</p>
+              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+            </article>
+            <article class="roadmap-card progress">
+              <h3 data-en="Intel macOS build">Збірка для Intel macOS</h3>
+              <p data-en="A macos-13 runner is added to the matrix so Intel Macs get a native build instead of Apple Silicon only.">До матриці додано runner macos-13, щоб Intel Mac отримав нативну збірку, а не лише Apple Silicon.</p>
+              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+            </article>
+            <article class="roadmap-card progress">
+              <h3 data-en="Android CI repair">Ремонт Android CI</h3>
+              <p data-en="Buildozer dependencies and SDK licenses are being stabilised; the APK remains experimental until a green build exists.">Залежності Buildozer і ліцензії SDK стабілізуються; APK лишається експериментальним, доки немає зеленої збірки.</p>
+              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+            </article>
+          </div>
+
+          <div class="roadmap-column">
+            <div class="roadmap-column-head">
+              <h2 data-en="Product 2.3+">Продукт 2.3+</h2>
+              <span class="roadmap-count">5</span>
+            </div>
+            <article class="roadmap-card planned">
+              <h3 data-en="Wake word + VAD">Wake word + VAD</h3>
+              <p data-en="«Hey Jarvis» without a button, with automatic end-of-speech detection and a cooldown.">«Hey Jarvis» без кнопки, з автоматичним визначенням кінця фрази й затримкою від повторів.</p>
+              <span class="roadmap-tag" data-en="planned">заплановано</span>
+            </article>
+            <article class="roadmap-card planned">
+              <h3 data-en="Fully offline mode">Повний офлайн-режим</h3>
+              <p data-en="Local Whisper.cpp STT, Piper TTS and Ollama for a private setup without cloud calls.">Локальні Whisper.cpp STT, Piper TTS і Ollama для приватної роботи без хмарних запитів.</p>
+              <span class="roadmap-tag" data-en="planned">заплановано</span>
+            </article>
+            <article class="roadmap-card planned">
+              <h3 data-en="Memory with embeddings">Пам'ять із embeddings</h3>
+              <p data-en="Semantic search across chat history and files instead of only the last 12 messages.">Семантичний пошук по історії чатів і файлах, а не лише останні 12 повідомлень.</p>
+              <span class="roadmap-tag" data-en="planned">заплановано</span>
+            </article>
+            <article class="roadmap-card planned">
+              <h3 data-en="Scheduled automations">Автоматизації за розкладом</h3>
+              <p data-en="«Every day at 9:00 open the report and read the weather» — local schedules with confirmations.">«Щодня о 9:00 відкрий звіт і скажи погоду» — локальні розклади з підтвердженнями.</p>
+              <span class="roadmap-tag" data-en="planned">заплановано</span>
+            </article>
+            <article class="roadmap-card planned">
+              <h3 data-en="Plugin marketplace">Маркетплейс плагінів</h3>
+              <p data-en="One-click install from GitHub, signature checks and a curated index.">Встановлення з GitHub одним кліком, перевірка підпису й курований індекс.</p>
+              <span class="roadmap-tag" data-en="planned">заплановано</span>
+            </article>
+          </div>
+
+          <div class="roadmap-column">
+            <div class="roadmap-column-head">
+              <h2 data-en="Trust">Довіра</h2>
+              <span class="roadmap-count">2</span>
+            </div>
+            <article class="roadmap-card progress">
+              <h3 data-en="Code signing">Підпис коду</h3>
+              <p data-en="A SignPath.io OSS certificate application has not been submitted yet; it is the next step. Builds stay unsigned until approval.">Заявку на OSS-сертифікат SignPath.io ще не подано; це наступний крок. Збірки лишаються непідписаними до схвалення.</p>
+              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+            </article>
+            <article class="roadmap-card planned">
+              <h3 data-en="Plugin sandbox">Пісочниця плагінів</h3>
+              <p data-en="Run plugins in a restricted subprocess instead of the current trusted-code model.">Запуск плагінів в обмеженому subprocess замість поточної моделі довіреного коду.</p>
+              <span class="roadmap-tag" data-en="planned">заплановано</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="blocked" class="docs-section">
+        <span class="docs-kicker" data-en="03 · Blocked">03 · Заблоковано</span>
+        <h2 data-en="Honest blockers">Чесні блокери</h2>
+        <div class="roadmap-blockers">
+          <div class="docs-callout warning">
+            <strong data-en="Commercial code signing certificate">Комерційний сертифікат підпису</strong>
+            <p data-en="There is no paid certificate yet. SignPath.io offers free signing for eligible open-source projects, but approval takes time. Until then, verify SHA256SUMS.txt and GitHub attestations.">Платного сертифіката ще немає. SignPath.io безкоштовно підписує відповідні open-source проєкти, але схвалення потребує часу. До того часу перевіряй SHA256SUMS.txt і GitHub-атестації.</p>
+          </div>
+          <div class="docs-callout warning">
+            <strong data-en="Ashna API key rotation">Ротація ключа Ashna</strong>
+            <p data-en="An Ashna key was exposed in a chat. It must be revoked and regenerated in the Ashna dashboard; the old key should not be trusted.">Ключ Ashna був показаний у чаті. Його треба відкликати й згенерувати новий у панелі Ashna; старому ключу довіряти не можна.</p>
+          </div>
+          <div class="docs-callout warning">
+            <strong data-en="Home Assistant credentials">Дані Home Assistant</strong>
+            <p data-en="Smart-home control is implemented, but it needs a Home Assistant URL and a long-lived token in Settings. Without them the feature cannot be tested.">Керування розумним домом реалізовано, але потребує URL Home Assistant і довготривалого токена в Налаштуваннях. Без них функцію не перевірити.</p>
+          </div>
+          <div class="docs-callout warning">
+            <strong data-en="Cursor chat API">Chat API Cursor</strong>
+            <p data-en="Cursor has no confirmed public chat API. The experimental provider needs a compatible endpoint in cursor_api_url, so it is not enabled by default.">Cursor не має підтвердженого публічного chat API. Експериментальний провайдер потребує сумісного endpoint у cursor_api_url, тому він не ввімкнений за замовчуванням.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="how" class="docs-section">
+        <span class="docs-kicker" data-en="04 · Contribute">04 · Долучитися</span>
+        <h2 data-en="How to help">Як допомогти</h2>
+        <ul class="docs-list">
+          <li data-en="Test a build on your OS and leave an honest review with the system and the version.">Перевір збірку на своїй ОС і залиш чесний відгук із системою й версією.</li>
+          <li data-en="Report bugs with logs from the Jarvis data folder, but remove API keys and personal data first.">Повідомляй про баги з логами з папки даних Jarvis, але спершу прибери API-ключі й особисті дані.</li>
+          <li data-en="Write a plugin, share it in an issue, or improve the docs with a pull request.">Напиши плагін, поділись ним в issue або покращ документацію через pull request.</li>
+          <li data-en="If you maintain an OSS signing service or can help with a certificate, open an issue.">Якщо ти підтримуєш OSS-сервіс підпису або можеш допомогти із сертифікатом — відкрий issue.</li>
+        </ul>
+        <div class="download-actions" style="margin-top:18px">
+          <a class="btn btn-primary" href="https://github.com/__GITHUB_REPOSITORY__/issues/new" target="_blank" rel="noopener" data-en="Open an issue">Відкрити issue</a>
+          <a class="btn btn-ghost" href="docs.html" data-en="Read the docs">Читати документацію</a>
+          <a class="btn btn-ghost" href="index.html#reviews" data-en="Leave a review">Залишити відгук</a>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-bottom docs-footer">
+      <span>© 2026 J.A.R.V.I.S. · <span data-en="Honest roadmap, no fake deadlines.">Чесна roadmap без вигаданих дедлайнів.</span></span>
+      <span class="mono"><a href="index.html" data-en="BACK TO SITE">НА САЙТ</a> · <a href="docs.html" data-en="DOCS">ДОКИ</a> · <a href="https://github.com/__GITHUB_REPOSITORY__" target="_blank" rel="noopener">GITHUB</a></span>
+    </div>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" type="button" aria-label="Повернутися вгору">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+</button>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

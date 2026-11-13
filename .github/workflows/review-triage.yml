@@ -1,0 +1,134 @@
+name: Triage reviews
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  triage:
+    name: Validate review format
+    if: github.event.issue.pull_request == null
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || "";
+            const MARKER = "<!-- jarvis-review -->";
+
+            if (!body.includes(MARKER)) {
+              core.info("Not a review issue, skipping.");
+              return;
+            }
+
+            const rating = body.match(
+              /(?:Оцінка|Rating)[^\d\n]{0,12}([1-5])\s*\/\s*5/i
+            );
+            const nick = body.match(
+              /(?:Нік|Nickname)\s*:?\s*\**\s*([^\r\n]{2,40})/i
+            );
+            const review = body.match(
+              /(?:Відгук|Review)\s*:?\s*\**\s*([\s\S]+)/i
+            );
+
+            let text = review ? review[1] : "";
+            text = text
+              .replace(/<!--[\s\S]*?-->/g, "")
+              .replace(/\n---[\s\S]*$/, "")
+              .trim();
+
+            const valid =
+              Boolean(rating) &&
+              Boolean(nick) &&
+              text.length >= 10 &&
+              text.length <= 5000;
+
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  color,
+                  description,
+                });
+              }
+            }
+
+            await ensureLabel(
+              "review",
+              "4D6BFE",
+              "Validated user review shown on the website"
+            );
+            await ensureLabel(
+              "review-invalid",
+              "D93F0B",
+              "Review issue that does not match the required format"
+            );
+
+            const current = (issue.labels || []).map((label) =>
+              typeof label === "string" ? label : label.name
+            );
+
+            if (valid) {
+              if (!current.includes("review")) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: ["review"],
+                });
+              }
+              if (current.includes("review-invalid")) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  name: "review-invalid",
+                });
+              }
+              core.info(`Review #${issue.number} is valid.`);
+              return;
+            }
+
+            if (!current.includes("review-invalid")) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ["review-invalid"],
+              });
+            }
+            if (current.includes("review")) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                name: "review",
+              });
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: [
+                "Цей issue не схожий на валідний відгук, тому він не потрапить на сайт.",
+                "",
+                "Потрібен маркер `<!-- jarvis-review -->`, оцінка `1–5/5`, нік (2–40 символів) і текст відгуку (10–5000 символів).",
+                "Найпростіше — надіслати відгук через форму на сайті: " +
+                  `https://${context.repo.owner}.github.io/${context.repo.repo}/#reviews`,
+              ].join("\n"),
+            });

@@ -132,17 +132,23 @@ def fetch_latest_release_info() -> dict:
         return {"ok": False, "error": "GitHub повернув некоректне посилання на реліз."}
 
     asset_url, asset_size, asset_sha256 = "", 0, ""
+    candidates = []
     for asset in release.get("assets", []) or []:
-        if str(asset.get("name", "")).lower() == "jarvis.exe":
-            asset_url = str(asset.get("browser_download_url") or "")
-            try:
-                asset_size = int(asset.get("size") or 0)
-            except (TypeError, ValueError):
-                asset_size = 0
-            digest = str(asset.get("digest") or "")
-            if digest.lower().startswith("sha256:"):
-                asset_sha256 = digest.split(":", 1)[1].strip().lower()
-            break
+        name = str(asset.get("name", "")).lower()
+        if not name.endswith(".exe") or "jarvis" not in name:
+            continue
+        score = 0 if name == "jarvis.exe" else 1 if name == "jarvis-windows.exe" else 2
+        candidates.append((score, asset))
+    if candidates:
+        asset = sorted(candidates, key=lambda item: item[0])[0][1]
+        asset_url = str(asset.get("browser_download_url") or "")
+        try:
+            asset_size = int(asset.get("size") or 0)
+        except (TypeError, ValueError):
+            asset_size = 0
+        digest = str(asset.get("digest") or "")
+        if digest.lower().startswith("sha256:"):
+            asset_sha256 = digest.split(":", 1)[1].strip().lower()
 
     return {
         "ok": True,

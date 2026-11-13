@@ -26,20 +26,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+        id: pages
       - name: Prepare website links
         env:
           REPOSITORY: ${{ github.repository }}
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
           python - <<'PY'
           from pathlib import Path
           import os
-          for page in Path("website").rglob("*.html"):
-              page.write_text(
-                  page.read_text(encoding="utf-8").replace(
-                      "__GITHUB_REPOSITORY__", os.environ["REPOSITORY"]
-                  ),
-                  encoding="utf-8",
-              )
+
+          replacements = {
+              "__GITHUB_REPOSITORY__": os.environ["REPOSITORY"],
+              "__SITE_URL__": os.environ["SITE_URL"].rstrip("/"),
+          }
+          for path in Path("website").rglob("*"):
+              if path.suffix.lower() not in {".html", ".xml", ".txt"}:
+                  continue
+              text = path.read_text(encoding="utf-8")
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              path.write_text(text, encoding="utf-8")
           PY
       - uses: actions/upload-pages-artifact@v3
         with:

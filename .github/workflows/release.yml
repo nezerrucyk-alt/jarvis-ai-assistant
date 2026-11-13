@@ -21,6 +21,8 @@ jobs:
             artifact: windows
           - os: macos-latest
             artifact: macos
+          - os: macos-13
+            artifact: macos-intel
           - os: ubuntu-22.04
             artifact: linux
     runs-on: ${{ matrix.os }}
@@ -51,7 +53,12 @@ jobs:
         run: |
           python -m PyInstaller --noconfirm --clean --windowed --onedir --name JARVIS --add-data "assets:assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all pyttsx3 jarvis.py
           mkdir -p release
-          ditto -c -k --sequesterRsrc --keepParent dist/JARVIS.app release/JARVIS-macOS.zip
+          if [ "${{ matrix.artifact }}" = "macos-intel" ]; then
+            ASSET="JARVIS-macOS-Intel.zip"
+          else
+            ASSET="JARVIS-macOS.zip"
+          fi
+          ditto -c -k --sequesterRsrc --keepParent dist/JARVIS.app "release/$ASSET"
       - name: Build Linux app
         if: runner.os == 'Linux'
         run: |
@@ -65,14 +72,17 @@ jobs:
           if-no-files-found: error
 
   android:
-    name: Build Android APK
+    name: Build Android APK (experimental)
     runs-on: ubuntu-22.04
+    # The APK is experimental and must not block the desktop release.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Install Android build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libffi-dev libssl-dev
+          sudo apt-get install -y libtinfo5 || sudo apt-get install -y libtinfo6
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"

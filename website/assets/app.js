@@ -12,6 +12,21 @@
     link.href = link.href.replace(REPO_PLACEHOLDER, repoSlug);
   });
 
+  /* ── local fallback for absolute SEO URLs ───────────── */
+  const sitePlaceholder = "__SITE_URL__";
+  const siteFallback = `https://${repoSlug.split("/")[0]}.github.io/${repoSlug.split("/")[1]}`;
+  document
+    .querySelectorAll(
+      'link[rel="canonical"], meta[property="og:url"], meta[property="og:image"], meta[name="twitter:image"]'
+    )
+    .forEach((node) => {
+      const attr = node.tagName === "LINK" ? "href" : "content";
+      const value = node.getAttribute(attr) || "";
+      if (value.includes(sitePlaceholder)) {
+        node.setAttribute(attr, value.replaceAll(sitePlaceholder, siteFallback));
+      }
+    });
+
   /* ── language switch ─────────────────────────────────── */
   const originalText = new Map();
   const originalPlaceholder = new Map();
@@ -233,10 +248,19 @@
       });
   }
 
+  function setOptionalDownload(platform, available) {
+    document
+      .querySelectorAll(`.js-optional-download[data-download="${platform}"]`)
+      .forEach((node) => {
+        node.hidden = !available;
+      });
+  }
+
   function useFallbackDownloads() {
     Object.entries(fallbackLinks).forEach(([platform, url]) => {
       setDownload(platform, url);
     });
+    setOptionalDownload("macos-intel", false);
   }
 
   function matchesPlatform(platform, name) {
@@ -244,8 +268,20 @@
     if (platform === "windows") {
       return lower.endsWith(".exe") && /win|jarvis/.test(lower);
     }
+    if (platform === "macos-intel") {
+      return (
+        lower.includes("macos") &&
+        (lower.includes("intel") || lower.includes("x86_64"))
+      );
+    }
     if (platform === "macos") {
-      return lower.includes("macos") || lower.includes("darwin") || lower.endsWith(".dmg");
+      return (
+        (lower.includes("macos") ||
+          lower.includes("darwin") ||
+          lower.endsWith(".dmg")) &&
+        !lower.includes("intel") &&
+        !lower.includes("x86_64")
+      );
     }
     if (platform === "linux") {
       return (
@@ -295,7 +331,7 @@
       ordered.forEach((release) => {
         (release.assets || []).forEach((asset) => {
           total += Number(asset.download_count || 0);
-          ["windows", "macos", "linux"].forEach((platform) => {
+          ["windows", "macos-intel", "macos", "linux"].forEach((platform) => {
             if (!found[platform] && matchesPlatform(platform, asset.name)) {
               found[platform] = asset.browser_download_url;
             }
@@ -304,6 +340,7 @@
       });
 
       setCounter(total);
+      setOptionalDownload("macos-intel", Boolean(found["macos-intel"]));
       Object.entries(fallbackLinks).forEach(([platform, fallback]) => {
         setDownload(platform, found[platform] || fallback);
       });
@@ -768,6 +805,116 @@
     });
 
     fetchReviews();
+  }
+
+  /* ── docs search + TOC scrollspy ───────────────────── */
+  const docsSearch = document.getElementById("docsSearch");
+  if (docsSearch) {
+    const docsSections = Array.from(document.querySelectorAll(".docs-section"));
+    const docsTocLinks = Array.from(
+      document.querySelectorAll('.docs-toc a[href^="#"]')
+    );
+    const docsSearchStatus = document.getElementById("docsSearchStatus");
+    const docsContent = document.querySelector(".docs-content");
+    const docsIndex = docsSections.map((section) => ({
+      section,
+      title: (section.querySelector("h2")?.textContent || "").toLowerCase(),
+      text: (section.textContent || "").toLowerCase(),
+    }));
+    let docsNoResults = null;
+    let docsTimer = null;
+
+    const docsEnglish = () => document.documentElement.lang === "en";
+
+    function setDocsSearch(query) {
+      const q = query.trim().toLowerCase();
+      let shown = 0;
+      docsIndex.forEach((item) => {
+        const match = !q || item.title.includes(q) || item.text.includes(q);
+        item.section.hidden = !match;
+        if (match) shown += 1;
+      });
+      docsTocLinks.forEach((link) => {
+        const target = document.getElementById(link.getAttribute("href").slice(1));
+        link.hidden = !!target && target.hidden;
+      });
+      if (docsNoResults) {
+        docsNoResults.remove();
+        docsNoResults = null;
+      }
+      if (docsSearchStatus) {
+        docsSearchStatus.hidden = !q;
+        docsSearchStatus.textContent = q
+          ? docsEnglish()
+            ? `Found: ${shown} section${shown === 1 ? "" : "s"}`
+            : `Знайдено: ${shown} ${shown === 1 ? "розділ" : shown < 5 ? "розділи" : "розділів"}`
+          : "";
+      }
+      if (q && shown === 0 && docsContent) {
+        docsNoResults = document.createElement("div");
+        docsNoResults.className = "docs-no-results";
+        const strong = document.createElement("strong");
+        strong.textContent = docsEnglish() ? "Nothing found" : "Нічого не знайдено";
+        const span = document.createElement("span");
+        span.textContent = docsEnglish()
+          ? "Try another query, for example «plugin», «bridge» or «security»."
+          : "Спробуй інший запит, наприклад «плагін», «міст» або «безпека».";
+        docsNoResults.append(strong, span);
+        docsContent.append(docsNoResults);
+      }
+    }
+
+    docsSearch.addEventListener("input", () => {
+      clearTimeout(docsTimer);
+      docsTimer = setTimeout(() => setDocsSearch(docsSearch.value), 120);
+    });
+
+    docsSearch.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        docsSearch.value = "";
+        setDocsSearch("");
+        docsSearch.blur();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (
+        event.key !== "/" ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "") ||
+        document.activeElement?.isContentEditable
+      ) {
+        return;
+      }
+      event.preventDefault();
+      docsSearch.focus();
+    });
+
+    document.querySelectorAll("[data-lang]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setTimeout(() => setDocsSearch(docsSearch.value), 0);
+      });
+    });
+
+    if ("IntersectionObserver" in window) {
+      const docsObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            docsTocLinks.forEach((link) => {
+              link.classList.toggle(
+                "active",
+                link.getAttribute("href") === `#${entry.target.id}`
+              );
+            });
+          });
+        },
+        { rootMargin: "-15% 0px -70% 0px", threshold: 0 }
+      );
+      docsSections.forEach((section) => docsObserver.observe(section));
+    }
   }
 
   /* ── copy SHA256 ────────────────────────────────────── */

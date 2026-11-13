@@ -7,8 +7,18 @@
 <meta name="theme-color" content="#0F1115">
 <meta property="og:title" content="J.A.R.V.I.S. — голосовий AI-асистент для десктопу">
 <meta property="og:description" content="Керуй комп'ютером голосом. Windows, macOS, Linux. Roblox Studio, vision, переклад екрана, плагіни та автоматичний failover між AI-провайдерами.">
-<meta property="og:image" content="assets/screenshot-main.png">
+<meta property="og:image" content="__SITE_URL__/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="J.A.R.V.I.S. — voice AI assistant for Windows, macOS and Linux">
+<meta property="og:url" content="__SITE_URL__/">
 <meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="J.A.R.V.I.S. — voice AI assistant for desktop">
+<meta name="twitter:description" content="Voice, chat, PC control, Roblox Studio, screen vision, translation and plugins. Windows, macOS and Linux.">
+<meta name="twitter:image" content="__SITE_URL__/assets/og-cover.png">
+<link rel="canonical" href="__SITE_URL__/">
+<link rel="sitemap" type="application/xml" href="sitemap.xml">
 <title>J.A.R.V.I.S. — голосовий AI-асистент для Windows, macOS і Linux</title>
 <link rel="icon" href="assets/favicon.png" type="image/png">
 <link rel="stylesheet" href="assets/styles.css">
@@ -46,6 +56,7 @@
       <a href="#plugins" data-en="Plugins">Плагіни</a>
       <a href="#reviews" data-en="Reviews">Відгуки</a>
       <a href="docs.html" data-en="Docs">Доки</a>
+      <a href="roadmap.html" data-en="Roadmap">Roadmap</a>
       <a href="#changelog" data-en="Changelog">Зміни</a>
       <a href="#install" data-en="Install">Встановлення</a>
       <a class="btn btn-primary btn-small nav-cta" href="#download" data-en="Download">Завантажити</a>
@@ -398,10 +409,11 @@
         <span class="kicker" data-en="Changelog">Журнал змін</span>
         <h2 data-en="What changed recently.">Що змінилося останнім часом.</h2>
         <p data-en="Every build is tested on Windows 11 before it reaches the download button.">Кожен білд перевіряється на Windows 11 перед тим, як потрапити до кнопки завантаження.</p>
+        <a class="btn btn-ghost btn-small" href="roadmap.html" style="margin-top:14px" data-en="Full roadmap →">Повна roadmap →</a>
       </div>
       <div class="timeline" data-stagger>
         <article class="release site-update">
-          <div class="release-head"><strong data-en="Website">Сайт</strong><time datetime="2026-11-12">12.11.2026</time><span class="release-badge" data-en="site update">оновлення сайту</span></div>
+          <div class="release-head"><strong data-en="Website">Сайт</strong><time datetime="2026-11-13">13.11.2026</time><span class="release-badge" data-en="site update">оновлення сайту</span></div>
           <ul>
             <li data-en="Premium redesign: aurora background, glass navigation, animated hero with orbit rings, scroll reveals, spotlight cards and count-up stats.">Преміум-редизайн: aurora-фон, скляна навігація, анімований hero з orbit-кільцями, scroll-reveal, spotlight-картки й анімовані лічильники.</li>
             <li data-en="New Command Deck section with a mock of the task queue and composer.">Нова секція Command Deck із макетом черги завдань і composer.</li>
@@ -412,6 +424,11 @@
             <li data-en="Separate developer docs page for the plugin API, Android bridge, AI providers, Roblox MCP and customization.">Окрема сторінка документації для API плагінів, Android-мосту, AI-провайдерів, Roblox MCP і кастомізації.</li>
             <li data-en="Build verification section with SHA256 commands, SHA256SUMS.txt, GitHub attestations and an honest note about unsigned binaries.">Секція перевірки збірок із SHA256-командами, SHA256SUMS.txt, GitHub-атестаціями й чесною приміткою про непідписані бінарники.</li>
             <li data-en="Version and last-update date now come from the latest GitHub release and are shown next to every download button.">Версія й дата останнього оновлення тепер беруться з останнього GitHub-релізу й показуються біля кожної кнопки завантаження.</li>
+            <li data-en="New roadmap page with shipped, active, planned and honestly blocked items.">Нова сторінка roadmap із випущеним, активним, запланованим і чесно заблокованим.</li>
+            <li data-en="Docs search with a / hotkey, section filtering and a table-of-contents scrollspy.">Пошук по документації з гарячою клавішею «/», фільтрацією розділів і scrollspy для змісту.</li>
+            <li data-en="SEO: sitemap.xml, robots.txt, canonical URLs, Open Graph/Twitter cover and FAQ schema.">SEO: sitemap.xml, robots.txt, canonical-URL, Open Graph/Twitter-обкладинка й FAQ-схема.</li>
+            <li data-en="Tests CI on every pull request, pip-audit, Dependabot and SECURITY.md; review issues are auto-labelled only when the format is valid.">CI тестів на кожен pull request, pip-audit, Dependabot і SECURITY.md; issues з відгуками автоматично отримують label лише за валідного формату.</li>
+            <li data-en="Intel Mac build added to the release matrix; the Android APK stays experimental and no longer blocks desktop releases.">Збірку для Intel Mac додано до матриці релізу; Android APK лишається експериментальним і більше не блокує десктопні релізи.</li>
           </ul>
         </article>
         <article class="release upcoming">
@@ -522,7 +539,7 @@
           <article class="step">
             <div class="step-num">01</div>
             <h3 data-en="Download the .zip">Завантаж .zip</h3>
-            <p data-en="Grab JARVIS-macOS.zip (about 76 MB) and unzip it. You get JARVIS.app.">Завантаж JARVIS-macOS.zip (близько 76 МБ) і розпакуй. Усередині — JARVIS.app.</p>
+            <p data-en="Grab JARVIS-macOS.zip for Apple Silicon or JARVIS-macOS-Intel.zip for Intel Macs (about 76 MB) and unzip it. You get JARVIS.app.">Завантаж JARVIS-macOS.zip для Apple Silicon або JARVIS-macOS-Intel.zip для Intel Mac (близько 76 МБ) і розпакуй. Усередині — JARVIS.app.</p>
           </article>
           <article class="step">
             <div class="step-num">02</div>
@@ -730,6 +747,9 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-en="Download .zip">Завантажити .zip</span>
             </a>
+            <a class="platform-alt js-download js-optional-download" data-download="macos-intel" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/latest/download/JARVIS-macOS-Intel.zip" hidden>
+              <span data-en="Intel Mac build →">Збірка для Intel Mac →</span>
+            </a>
             <button class="sha js-sha" type="button" data-sha="E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE" title="Скопіювати SHA256">SHA256 E8652BFD…19ABE</button>
           </article>
 
@@ -801,6 +821,10 @@
         </article>
       </div>
 
+      <p class="verify-guide" data-reveal>
+        <a class="btn btn-ghost btn-small" href="https://github.com/__GITHUB_REPOSITORY__/blob/main/docs/CODE_SIGNING.md" target="_blank" rel="noopener" data-en="Full code-signing and verification guide →">Повний гід із підпису й перевірки збірок →</a>
+      </p>
+
       <div class="verify-hashes" data-reveal>
         <div class="verify-hashes-head">
           <h3 data-en="SHA256 for v2.1.0">SHA256 для v2.1.0</h3>
@@ -837,7 +861,7 @@
         </details>
         <details>
           <summary data-en="Does it run on macOS and Linux?">Чи працює на macOS і Linux?</summary>
-          <p data-en="Yes. Chat, voice, plugins, screen vision, translation and Home Assistant work on all three systems. Full PC control, global hotkeys, gaming overlay and Roblox Studio are Windows-only. macOS builds are Apple Silicon; Linux builds are x86_64.">Так. Чат, голос, плагіни, зір екрана, переклад і Home Assistant працюють на всіх трьох системах. Повне керування ПК, глобальні гарячі клавіші, ґеймерський оверлей і Roblox Studio — лише Windows. macOS-збірка для Apple Silicon, Linux — x86_64.</p>
+          <p data-en="Yes. Chat, voice, plugins, screen vision, translation and Home Assistant work on all three systems. Full PC control, global hotkeys, gaming overlay and Roblox Studio are Windows-only. macOS builds are available for Apple Silicon and Intel; Linux builds are x86_64.">Так. Чат, голос, плагіни, зір екрана, переклад і Home Assistant працюють на всіх трьох системах. Повне керування ПК, глобальні гарячі клавіші, ґеймерський оверлей і Roblox Studio — лише Windows. macOS-збірки є для Apple Silicon і Intel, Linux — x86_64.</p>
         </details>
         <details>
           <summary data-en="Where are my keys stored?">Де зберігаються ключі?</summary>
@@ -845,7 +869,7 @@
         </details>
         <details>
           <summary data-en="Does it work offline?">Чи працює без інтернету?</summary>
-          <p data-en="The interface and local tools work offline, but cloud models need internet. A local Ollama provider is on the roadmap.">Інтерфейс і локальні інструменти працюють офлайн, але хмарні моделі потребують інтернету. Локальний провайдер Ollama — у планах.</p>
+          <p data-en="The interface and local tools work offline, and local Ollama models are supported. Cloud models need internet. Fully offline STT and TTS are on the roadmap.">Інтерфейс і локальні інструменти працюють офлайн, а локальні моделі Ollama вже підтримуються. Хмарні моделі потребують інтернету. Повністю офлайн STT і TTS — у планах.</p>
         </details>
         <details>
           <summary data-en="Is it safe for full PC access?">Чи безпечний повний доступ до ПК?</summary>
@@ -885,6 +909,7 @@
         <a href="#features" data-en="Features">Можливості</a>
         <a href="#plugins" data-en="Plugins">Плагіни</a>
         <a href="#reviews" data-en="Reviews">Відгуки</a>
+        <a href="roadmap.html" data-en="Roadmap">Roadmap</a>
         <a href="#changelog" data-en="Changelog">Зміни</a>
         <a href="#download" data-en="Download">Завантажити</a>
       </div>
@@ -925,6 +950,61 @@
     </div>
   </div>
 </footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "uk",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Чи потрібен API-ключ?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Так, хоча б один. У Gemini, Groq, OpenRouter і xKiro є безкоштовні тарифи. Додай кілька ключів — і Джарвіс перемикатиметься автоматично, якщо один не працює."}
+    },
+    {
+      "@type": "Question",
+      "name": "Чи працює J.A.R.V.I.S. на macOS і Linux?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Так. Чат, голос, плагіни, зір екрана, переклад і Home Assistant працюють на всіх трьох системах. Повне керування ПК, глобальні гарячі клавіші, ґеймерський оверлей і Roblox Studio — лише Windows."}
+    },
+    {
+      "@type": "Question",
+      "name": "Де зберігаються API-ключі?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Локально в папці даних Jarvis: %APPDATA%\\Jarvis на Windows, ~/Library/Application Support/Jarvis на macOS, ~/.local/share/Jarvis на Linux. Вони надсилаються лише обраному AI-провайдеру — сервера Jarvis не існує."}
+    },
+    {
+      "@type": "Question",
+      "name": "Чи працює J.A.R.V.I.S. без інтернету?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Інтерфейс і локальні інструменти працюють офлайн. Хмарні моделі потребують інтернету, а локальні моделі Ollama вже підтримуються. Повністю офлайн STT і TTS — у планах."}
+    },
+    {
+      "@type": "Question",
+      "name": "Чи безпечний повний доступ до ПК?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Небезпечні дії потребують підтвердження. Повний доступ можна вимкнути в Налаштуваннях. Код відкритий, тож кожен інструмент можна перевірити до запуску."}
+    },
+    {
+      "@type": "Question",
+      "name": "Чи забанять мене в Roblox за використання зі Studio?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Ні. Jarvis використовує офіційний Studio MCP і звичайні API Studio. Він не втручається в клієнт Roblox і не використовує експлойти."}
+    },
+    {
+      "@type": "Question",
+      "name": "Як оновитися й не втратити налаштування?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Завантаж нову збірку для своєї системи й заміни старий файл або застосунок. Конфіг, чати й плагіни лежать у папці даних Jarvis і не постраждають."}
+    },
+    {
+      "@type": "Question",
+      "name": "macOS каже, що застосунок пошкоджений або заблокований. Що робити?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Застосунок непідписаний. Клікни правою кнопкою по JARVIS.app → Open. Якщо Gatekeeper все одно блокує, виконай у Terminal: xattr -dr com.apple.quarantine /Applications/JARVIS.app"}
+    },
+    {
+      "@type": "Question",
+      "name": "Чи можу я написати свій плагін?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Так. Поклади .py-файл із TOOLS і run(name, args, ctx) у папку plugins, потім скажи «перезавантаж плагіни». Деталі — на сторінці документації."}
+    }
+  ]
+}
+</script>
 
 <script type="application/ld+json">
 {
