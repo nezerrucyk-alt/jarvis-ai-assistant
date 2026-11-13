@@ -38,10 +38,19 @@ from modules.voice.wake import (
     is_wake_phrase,
     normalize_wake_text,
 )
+from modules.voice.offline import (
+    OfflineVoiceError,
+    capabilities as offline_capabilities,
+    stt_available as offline_stt_available,
+    synthesize as offline_synthesize,
+    transcribe as offline_transcribe,
+    tts_available as offline_tts_available,
+)
 
 __all__ = [
     "Ears",
     "EarsError",
+    "OfflineVoiceError",
     "STT",
     "TTS",
     "VOICES",
@@ -56,5 +65,10 @@ __all__ = [
     "is_wake_phrase",
     "list_input_devices",
     "normalize_wake_text",
+    "offline_capabilities",
+    "offline_stt_available",
+    "offline_synthesize",
+    "offline_transcribe",
+    "offline_tts_available",
     "resolve_default_input",
 ]

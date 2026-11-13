@@ -98,6 +98,9 @@
         <a href="#plugins" data-en="Plugin API">Plugin API</a>
         <a href="#bridge" data-en="Mobile bridge">Mobile bridge</a>
         <a href="#providers" data-en="AI providers">AI-провайдери</a>
+        <a href="#offline" data-en="Offline mode">Офлайн-режим</a>
+        <a href="#automations" data-en="Memory &amp; automations">Пам'ять і автоматизації</a>
+        <a href="#marketplace" data-en="Marketplace">Marketplace</a>
         <a href="#roblox" data-en="Roblox MCP">Roblox MCP</a>
         <a href="#customize" data-en="Customize">Кастомізація</a>
         <a href="#security" data-en="Security">Безпека</a>
@@ -359,8 +362,114 @@ curl -k https://192.168.1.10:8765/api/chat \
         </div>
       </section>
 
+      <section id="offline" class="docs-section">
+        <span class="docs-kicker" data-en="05 · Offline mode">05 · Офлайн-режим</span>
+        <h2 data-en="Offline mode and local voice">Офлайн-режим і локальний голос</h2>
+        <p data-en="Enable offline mode in Settings and Brain talks only to local Ollama models. Cloud provider keys are ignored, so nothing leaves your machine. If Ollama is not running or the model is not pulled, Jarvis shows a clear error instead of silently going online.">Увімкни офлайн-режим у Налаштуваннях — і Brain спілкується лише з локальними моделями Ollama. Хмарні ключі ігноруються, тож нічого не виходить за межі машини. Якщо Ollama не запущена або модель не завантажена, Jarvis покаже зрозумілу помилку, а не піде тихо в мережу.</p>
+
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Key">Ключ</th><th data-en="Default">Типово</th><th data-en="Meaning">Значення</th></tr></thead>
+            <tbody>
+              <tr><td><code>offline_mode</code></td><td><code>false</code></td><td data-en="Use only local Ollama models.">Використовувати лише локальні моделі Ollama.</td></tr>
+              <tr><td><code>offline_model</code></td><td><code>ollama/llama3.2</code></td><td data-en="Primary local model; any Ollama name works, e.g. ollama/qwen2.5:7b.">Основна локальна модель; підходить будь-яка назва Ollama, наприклад ollama/qwen2.5:7b.</td></tr>
+              <tr><td><code>offline_ollama_url</code></td><td><code>http://127.0.0.1:11434/v1/chat/completions</code></td><td data-en="Ollama OpenAI-compatible endpoint.">OpenAI-сумісний endpoint Ollama.</td></tr>
+              <tr><td><code>stt_backend</code></td><td><code>auto</code></td><td data-en="auto, google or offline. Offline mode forces local STT.">auto, google або offline. Офлайн-режим примусово використовує локальний STT.</td></tr>
+              <tr><td><code>tts_backend</code></td><td><code>auto</code></td><td data-en="auto or offline. Offline mode forces local TTS.">auto або offline. Офлайн-режим примусово використовує локальний TTS.</td></tr>
+              <tr><td><code>offline_stt_binary</code></td><td data-en="empty">порожньо</td><td data-en="Path to whisper-cli (or a compatible binary).">Шлях до whisper-cli (або сумісного бінарника).</td></tr>
+              <tr><td><code>offline_whisper_model</code></td><td data-en="empty">порожньо</td><td data-en="Path to a ggml-*.bin model.">Шлях до моделі ggml-*.bin.</td></tr>
+              <tr><td><code>offline_tts_binary</code></td><td data-en="empty">порожньо</td><td data-en="Path to the Piper executable.">Шлях до виконуваного файлу Piper.</td></tr>
+              <tr><td><code>offline_piper_model</code></td><td data-en="empty">порожньо</td><td data-en="Path to a Piper .onnx voice.">Шлях до голосу Piper .onnx.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-en="Setting up local speech">Налаштування локального мовлення</h3>
+        <ol class="docs-list">
+          <li data-en="Download whisper.cpp (whisper-cli) and a ggml model, for example ggml-base.bin.">Завантаж whisper.cpp (whisper-cli) і ggml-модель, наприклад ggml-base.bin.</li>
+          <li data-en="Download Piper and a Ukrainian or English .onnx voice.">Завантаж Piper і український або англійський голос .onnx.</li>
+          <li data-en="Open Settings → Offline mode, paste both binary paths and both model paths, then press «Перевірити».">Відкрий Налаштування → Офлайн-режим, встав шляхи до обох бінарників і моделей, потім натисни «Перевірити».</li>
+          <li data-en="Set STT and TTS to offline (or leave auto) and test the microphone.">Постав STT і TTS в offline (або залиш auto) і перевір мікрофон.</li>
+        </ol>
+        <div class="docs-callout warning">
+          <strong data-en="Binaries are not bundled.">Бінарники не входять у збірку.</strong>
+          <p data-en="Jarvis does not download whisper.cpp or Piper automatically. Without them offline mode still answers text prompts through Ollama, but speech recognition and voice output are unavailable. In offline mode Jarvis never falls back to cloud STT or TTS.">Jarvis не завантажує whisper.cpp чи Piper автоматично. Без них офлайн-режим усе ще відповідає на текстові запити через Ollama, але розпізнавання мовлення й озвучення недоступні. В офлайн-режимі Jarvis не переходить на хмарні STT чи TTS.</p>
+        </div>
+      </section>
+
+      <section id="automations" class="docs-section">
+        <span class="docs-kicker" data-en="06 · Memory &amp; automations">06 · Пам'ять і автоматизації</span>
+        <h2 data-en="Memory search and scheduled tasks">Пошук у пам'яті й задачі за розкладом</h2>
+
+        <h3 data-en="How memory retrieval works">Як працює пошук у пам'яті</h3>
+        <p data-en="Every saved memory gets a 384-dimensional local embedding built from words, word bigrams and character trigrams with BLAKE2b hashing. The vector is deterministic, needs no model download and never leaves the machine. When you send a prompt, Jarvis ranks memories by cosine similarity and injects the eight most relevant records, not the last thirty.">Кожен збережений запис отримує 384-вимірний локальний embedding із слів, біграм і триграм символів через хешування BLAKE2b. Вектор детермінований, не потребує завантаження моделі й не виходить за межі машини. Коли ти надсилаєш запит, Jarvis ранжує записи за косинусною схожістю й додає вісім найрелевантніших, а не останні тридцять.</p>
+        <ul class="docs-list">
+          <li data-en="Old memory.json records get embeddings automatically on first use.">Старі записи memory.json отримують embeddings автоматично під час першого використання.</li>
+          <li data-en="The memory manager has a semantic search field; results are ranked locally.">У менеджері пам'яті є поле семантичного пошуку; результати ранжуються локально.</li>
+          <li data-en="This is lexical-semantic retrieval, not a neural model. It handles inflections and typos well but does not understand deep paraphrases.">Це лексико-семантичний пошук, а не нейромережа. Він добре працює з відмінками й одруками, але не розуміє глибоких перефразувань.</li>
+        </ul>
+
+        <h3 data-en="Automation schedules">Розклади автоматизацій</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th data-en="Example">Приклад</th><th data-en="When it runs">Коли запускається</th></tr></thead>
+            <tbody>
+              <tr><td><code>once 2026-12-31T23:59</code></td><td data-en="Once at a specific local time.">Одноразово в конкретний локальний час.</td></tr>
+              <tr><td><code>daily 09:00</code></td><td data-en="Every day at 09:00 local time.">Щодня о 09:00 за локальним часом.</td></tr>
+              <tr><td><code>weekly mon 09:00</code></td><td data-en="Every Monday at 09:00; Ukrainian day names work too.">Щопонеділка о 09:00; українські назви днів теж працюють.</td></tr>
+              <tr><td><code>every 30m</code></td><td data-en="Every 30 minutes, minimum 5 minutes.">Кожні 30 хвилин, мінімум 5 хвилин.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p data-en="Actions are deliberately limited: prompt sends text to the assistant when due, notify shows a reminder and speaks it. Automations are stored in automations.json and cannot execute arbitrary shell commands. Create them with the Automations tab or the automation_create, automation_list and automation_cancel tools.">Дії навмисно обмежені: prompt надсилає текст асистенту, notify показує нагадування й озвучує його. Автоматизації зберігаються в automations.json і не можуть виконувати свавільні shell-команди. Створюй їх у вкладці «Автоматизації» або інструментами automation_create, automation_list і automation_cancel.</p>
+        <div class="docs-callout">
+          <strong data-en="No background daemon.">Без фонового демона.</strong>
+          <p data-en="The scheduler runs inside the Jarvis process every 20 seconds. If Jarvis is closed, automations do not fire; missed one-off tasks stay disabled, recurring tasks resume on the next matching slot.">Планувальник працює всередині процесу Jarvis кожні 20 секунд. Якщо Jarvis закритий, автоматизації не запускаються; пропущені одноразові задачі лишаються вимкненими, повторювані — чекають наступного відповідного слота.</p>
+        </div>
+      </section>
+
+      <section id="marketplace" class="docs-section">
+        <span class="docs-kicker" data-en="07 · Marketplace">07 · Marketplace</span>
+        <h2 data-en="Plugin marketplace">Marketplace плагінів</h2>
+        <p data-en="The marketplace is a local JSON registry, not a server. Jarvis reads assets/marketplace/registry.json, validates every entry, verifies the plugin bytes against SHA256 and asks for confirmation before copying the file into your plugins folder. There is no auto-install and no silent update.">Marketplace — це локальний JSON-реєстр, а не сервер. Jarvis читає assets/marketplace/registry.json, перевіряє кожен запис, звіряє байти плагіна з SHA256 і просить підтвердження перед копіюванням файлу в папку плагінів. Авто-встановлення й тихого оновлення немає.</p>
+
+        <div class="docs-code">
+          <div class="code-head">
+            <span class="frame-dot red"></span><span class="frame-dot yellow"></span><span class="frame-dot green"></span>
+            registry.json
+            <button class="code-copy" type="button" data-copy="marketplaceExample" data-en="Copy">Копіювати</button>
+          </div>
+<pre><code id="marketplaceExample">{
+  "version": 1,
+  "plugins": [{
+    "id": "hello-market",
+    "name": "Hello Market",
+    "version": "1.0.0",
+    "description": "Minimal example plugin.",
+    "author": "JARVIS",
+    "file": "hello_market.py",
+    "sha256": "d589eacaeab41f7cb9b604cc2631a723ac61361efa8594b811c024fdf3ada47d",
+    "tags": ["example", "hello"]
+  }]
+}</code></pre>
+        </div>
+
+        <h3 data-en="Install flow">Процес встановлення</h3>
+        <ol class="docs-list">
+          <li data-en="Validate id, name, file name, version and SHA256 format.">Перевірка id, назви, імені файлу, версії й формату SHA256.</li>
+          <li data-en="Reject files above 512 KB, non-.py names and any path traversal.">Відхилення файлів понад 512 КБ, не-.py назв і будь-якого path traversal.</li>
+          <li data-en="Hash the source and compare it with the registry; a mismatch aborts the install.">Хешування джерела й порівняння з реєстром; розбіжність скасовує встановлення.</li>
+          <li data-en="Show the name, version, description and hash prefix in a confirmation dialog.">Показ назви, версії, опису й префікса хешу в діалозі підтвердження.</li>
+          <li data-en="Copy atomically into the plugins folder and reload the plugin registry.">Атомарне копіювання в папку плагінів і перезавантаження реєстру плагінів.</li>
+        </ol>
+        <div class="docs-callout warning">
+          <strong data-en="A hash is not a safety guarantee.">Хеш — не гарантія безпеки.</strong>
+          <p data-en="SHA256 proves the file matches the registry, not that the code is harmless. Plugins run with the same permissions as Jarvis and are not sandboxed. Read the source before installing, especially plugins from a custom registry.">SHA256 доводить, що файл відповідає реєстру, а не що код безпечний. Плагіни працюють із тими самими правами, що й Jarvis, і не ізольовані пісочницею. Читай код перед встановленням, особливо якщо реєстр нестандартний.</p>
+        </div>
+      </section>
+
       <section id="roblox" class="docs-section">
-        <span class="docs-kicker" data-en="05 · Roblox MCP">05 · Roblox MCP</span>
+        <span class="docs-kicker" data-en="08 · Roblox MCP">08 · Roblox MCP</span>
         <h2 data-en="Roblox Studio through MCP">Roblox Studio через MCP</h2>
         <p data-en="On Windows, Jarvis connects to the official Roblox Studio MCP bridge. It does not inject into the Roblox player and does not use exploits. Studio must be open, and the MCP server must be available.">На Windows Jarvis підключається до офіційного Roblox Studio MCP. Він не втручається в клієнт Roblox і не використовує експлойти. Studio має бути відкрите, а MCP-сервер — доступний.</p>
 
@@ -386,7 +495,7 @@ curl -k https://192.168.1.10:8765/api/chat \
       </section>
 
       <section id="customize" class="docs-section">
-        <span class="docs-kicker" data-en="06 · Customize">06 · Кастомізація</span>
+        <span class="docs-kicker" data-en="09 · Customize">09 · Кастомізація</span>
         <h2 data-en="Customize the interface">Кастомізація інтерфейсу</h2>
         <p data-en="The Customize tab is in the sidebar (✦). It changes the real interface, not a mock: colors, block order, fonts, animations and an optional custom-code block with a live preview. Changes are saved to customization.json and applied without a restart.">Вкладка «Кастомізація» — у бічній панелі (✦). Вона змінює справжній інтерфейс, а не макет: кольори, порядок блоків, шрифти, анімації й необов'язковий кастомний блок із живим прев'ю. Зміни зберігаються в customization.json і застосовуються без перезапуску.</p>
 
@@ -437,7 +546,7 @@ curl -k https://192.168.1.10:8765/api/chat \
       </section>
 
       <section id="security" class="docs-section">
-        <span class="docs-kicker" data-en="07 · Security">07 · Безпека</span>
+        <span class="docs-kicker" data-en="10 · Security">10 · Безпека</span>
         <h2 data-en="Security model">Модель безпеки</h2>
         <ul class="docs-list">
           <li data-en="Local-first: chats, settings, keys and plugin data live in the Jarvis data folder. There is no Jarvis account or cloud.">Local-first: чати, налаштування, ключі й дані плагінів лежать у папці даних Jarvis. Акаунта або хмари Jarvis немає.</li>
@@ -455,7 +564,7 @@ curl -k https://192.168.1.10:8765/api/chat \
       </section>
 
       <section id="troubleshooting" class="docs-section">
-        <span class="docs-kicker" data-en="08 · Troubleshooting">08 · Проблеми</span>
+        <span class="docs-kicker" data-en="11 · Troubleshooting">11 · Проблеми</span>
         <h2 data-en="Troubleshooting">Що робити, якщо не працює</h2>
         <div class="docs-faq">
           <details>
@@ -481,6 +590,18 @@ curl -k https://192.168.1.10:8765/api/chat \
           <details>
             <summary data-en="My review did not appear">Мій відгук не з'явився</summary>
             <p data-en="The site reads public issues whose body contains the review marker. After submitting the prefilled issue, wait a minute and refresh. GitHub API rate limits can delay the list; the «All reviews on GitHub» link always works.">Сайт читає публічні issues, у тілі яких є маркер відгуку. Після надсилання заповненого issue зачекай хвилину й онови сторінку. Ліміти GitHub API можуть затримати список; посилання «Усі відгуки на GitHub» працює завжди.</p>
+          </details>
+          <details>
+            <summary data-en="Offline voice says it is not configured">Офлайн-голос каже, що не налаштований</summary>
+            <p data-en="Open Settings → Offline mode and check both binary paths and both model paths. whisper-cli needs a ggml-*.bin model; Piper needs an .onnx voice. Press «Перевірити» to see what was found. Jarvis does not bundle or download these files. In offline mode it will not fall back to cloud speech services.">Відкрий Налаштування → Офлайн-режим і перевір обидва шляхи до бінарників і обидва шляхи до моделей. whisper-cli потребує моделі ggml-*.bin; Piper — голосу .onnx. Натисни «Перевірити», щоб побачити, що знайдено. Jarvis не включає й не завантажує ці файли. В офлайн-режимі він не переходить на хмарні мовленнєві сервіси.</p>
+          </details>
+          <details>
+            <summary data-en="Marketplace says SHA256 does not match">Marketplace каже, що SHA256 не збігається</summary>
+            <p data-en="The plugin file was edited after the registry was generated, or the registry is stale. Do not bypass the check. Regenerate the hash from the exact file and update registry.json, or reinstall the original file. A mismatch means the bytes you are about to run are not the bytes that were reviewed.">Файл плагіна відредагували після генерації реєстру або реєстр застарів. Не обходь перевірку. Перегенеруй хеш із точного файлу й онови registry.json або перевстанови оригінальний файл. Розбіжність означає, що байти, які ти збираєшся запустити, не ті, що переглядали.</p>
+          </details>
+          <details>
+            <summary data-en="An automation did not fire">Автоматизація не спрацювала</summary>
+            <p data-en="Automations run only while Jarvis is open; there is no background service. Check that the task is enabled, the schedule is in the future and the next run time is shown in the Automations tab. One-off tasks in the past stay disabled. Recurring tasks resume at the next matching slot.">Автоматизації працюють лише коли Jarvis відкритий; фонового сервісу немає. Перевір, що задача ввімкнена, розклад у майбутньому, а наступний запуск видно у вкладці «Автоматизації». Одноразові задачі в минулому лишаються вимкненими. Повторювані — чекають наступного відповідного слота.</p>
           </details>
         </div>
       </section>

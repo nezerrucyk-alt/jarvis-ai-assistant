@@ -1,0 +1,3 @@
+# Marketplace plugin bytes are covered by SHA256 in registry.json.
+# Disable end-of-line conversion so a Windows checkout keeps the exact bytes.
+assets/marketplace/plugins/*.py -text

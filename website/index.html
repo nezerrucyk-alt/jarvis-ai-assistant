@@ -187,6 +187,26 @@
           <p data-en="Drop a .py file into %APPDATA%\Jarvis\plugins and Jarvis gets new tools: notes, weather, currency, PC stats and more.">Кинь .py-файл у %APPDATA%\Jarvis\plugins — і Джарвіс отримує нові інструменти: нотатки, погода, курси, статистика ПК.</p>
         </article>
         <article class="feature">
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0 1 14 0"/><path d="M1.4 9a16 16 0 0 1 21.2 0"/><path d="M8.5 16a6 6 0 0 1 7 0"/><circle cx="12" cy="20" r="1"/><line x1="2" y1="2" x2="22" y2="22"/></svg></div>
+          <h3 data-en="Offline mode">Офлайн-режим</h3>
+          <p data-en="Turn it on and every request goes only to local Ollama. Cloud keys are ignored. For voice, connect whisper.cpp and Piper; without them offline stays text-only.">Увімкни — і всі запити йдуть лише до локальної Ollama. Хмарні ключі ігноруються. Для голосу можна підключити whisper.cpp і Piper; без них офлайн лишається текстовим.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/><path d="M17 3l4 4-4 4"/></svg></div>
+          <h3 data-en="Searchable memory">Пам'ять із пошуком</h3>
+          <p data-en="Local hash embeddings find relevant memories by meaning, not by date. Nothing is sent over the network.">Локальні хеш-embeddings знаходять релевантні записи за змістом, а не за датою. Нічого не надсилається в мережу.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M8 2l4 4 4-4"/></svg></div>
+          <h3 data-en="Scheduled automations">Автоматизації</h3>
+          <p data-en="Once/daily/weekly/every schedules: the assistant sends a prompt or reminds you by voice. No arbitrary shell commands.">Розклади once/daily/weekly/every: асистент сам надішле запит або нагадає голосом. Без свавільних shell-команд.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/><path d="M17 15l3 3-3 3"/></svg></div>
+          <h3 data-en="Plugin marketplace">Marketplace плагінів</h3>
+          <p data-en="Local catalog with SHA256, code review and explicit confirmation. No auto-install and no server.">Локальний каталог із SHA256, переглядом коду й явним підтвердженням. Без авто-встановлення й без сервера.</p>
+        </article>
+        <article class="feature">
           <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg></div>
           <h3 data-en="Smart home">Розумний дім</h3>
           <p data-en="Connect Home Assistant with a URL and token: lights, sockets, sensors and scenes by voice.">Підключи Home Assistant через URL і токен: світло, розетки, датчики й сцени голосом.</p>
@@ -438,6 +458,10 @@
             <li data-en="Custom code editor with a preview pane and an explicit enable switch; settings persist in %APPDATA%\Jarvis\customization.json and apply without a restart.">Редактор кастомного коду з вікном прев'ю й окремим перемикачем; налаштування зберігаються в %APPDATA%\Jarvis\customization.json і застосовуються без перезапуску.</li>
             <li data-en="The assistant now knows about the Customize tab and can point you to it instead of claiming the feature does not exist.">Асистент тепер знає про вкладку «Кастомізація» і може підказати її, замість того щоб казати, що такої функції немає.</li>
             <li data-en="Wake word «Hey Jarvis» with a local openWakeWord backend, an STT fallback, cooldown and up to three follow-up phrases without pressing a button.">Wake word «Hey Jarvis» із локальним бекендом openWakeWord, резервним STT, затримкою від повторів і до трьох реплік продовження без натискання кнопки.</li>
+            <li data-en="Long-term memory now uses local hash embeddings: the prompt gets the most relevant records, not just the last 30, and nothing leaves the machine.">Довготривала пам'ять тепер використовує локальні хеш-embeddings: до запиту потрапляють найрелевантніші записи, а не просто останні 30, і нічого не виходить за межі комп'ютера.</li>
+            <li data-en="Scheduled automations: once, daily, weekly and interval schedules with prompt or notify actions, a manager window and three new tools. No arbitrary shell execution.">Заплановані автоматизації: розклади once, daily, weekly та interval із діями prompt або notify, вікно менеджера й три нові інструменти. Без свавільного виконання shell-команд.</li>
+            <li data-en="Local plugin marketplace with a JSON registry, SHA256 verification, code size limits, path-traversal protection and explicit confirmation before install.">Локальний marketplace плагінів із JSON-реєстром, перевіркою SHA256, обмеженням розміру, захистом від path traversal і явним підтвердженням перед встановленням.</li>
+            <li data-en="Offline mode routes every request to local Ollama models, ignores cloud keys, and supports optional whisper.cpp STT and Piper TTS with honest fallbacks.">Офлайн-режим спрямовує всі запити до локальних моделей Ollama, ігнорує хмарні ключі та підтримує опційні whisper.cpp STT і Piper TTS із чесними fallback.</li>
             <li data-en="Windows, macOS and Linux builds are published after the release workflow finishes; this entry becomes the latest release then.">Збірки для Windows, macOS і Linux публікуються після завершення release-workflow; тоді цей запис стане останнім релізом.</li>
           </ul>
         </article>
@@ -874,7 +898,19 @@
         </details>
         <details>
           <summary data-en="Does it work offline?">Чи працює без інтернету?</summary>
-          <p data-en="The interface and local tools work offline, and local Ollama models are supported. Cloud models need internet. Fully offline STT and TTS are on the roadmap.">Інтерфейс і локальні інструменти працюють офлайн, а локальні моделі Ollama вже підтримуються. Хмарні моделі потребують інтернету. Повністю офлайн STT і TTS — у планах.</p>
+          <p data-en="Yes, with local Ollama models. Enable offline mode in Settings and every request goes to Ollama; cloud keys are ignored. Voice can also work offline if you point Jarvis to whisper.cpp and Piper binaries and models. Without them, speech recognition needs the internet.">Так, із локальними моделями Ollama. Увімкни офлайн-режим у Налаштуваннях — і всі запити йдуть до Ollama, а хмарні ключі ігноруються. Голос теж може працювати офлайн, якщо вказати шляхи до whisper.cpp і Piper та їхніх моделей. Без них розпізнавання мовлення потребує інтернету.</p>
+        </details>
+        <details>
+          <summary data-en="How does memory search work?">Як працює пошук у пам'яті?</summary>
+          <p data-en="Memories are indexed locally with deterministic hash embeddings. When you ask something, Jarvis picks the eight most relevant records by meaning and adds only those to the prompt. There is no neural model download and no network request.">Записи індексуються локально детермінованими хеш-embeddings. Коли ти щось питаєш, Джарвіс вибирає вісім найрелевантніших записів за змістом і додає до запиту лише їх. Жодних завантажень нейромережі чи мережевих запитів.</p>
+        </details>
+        <details>
+          <summary data-en="Can Jarvis run tasks on a schedule?">Чи може Джарвіс виконувати задачі за розкладом?</summary>
+          <p data-en="Yes. Say «створи автоматизацію» or use the Automations tab: once, daily, weekly or every N minutes. The action can send a prompt to the assistant or show a voice reminder. Automations cannot run arbitrary shell commands.">Так. Скажи «створи автоматизацію» або відкрий вкладку «Автоматизації»: once, daily, weekly або кожні N хвилин. Дія може надіслати запит асистенту або нагадати голосом. Автоматизації не виконують свавільні shell-команди.</p>
+        </details>
+        <details>
+          <summary data-en="Is the plugin marketplace safe?">Чи безпечний marketplace плагінів?</summary>
+          <p data-en="It is honest, not magic. The registry is a local JSON file, every plugin is checked against SHA256, and installation always asks for confirmation. A plugin still runs with the same rights as Jarvis, so read its code before installing.">Він чесний, але не чарівний. Реєстр — локальний JSON-файл, кожен плагін звіряється з SHA256, а встановлення завжди просить підтвердження. Плагін усе одно працює з тими самими правами, що й Джарвіс, тож читай код перед встановленням.</p>
         </details>
         <details>
           <summary data-en="Is it safe for full PC access?">Чи безпечний повний доступ до ПК?</summary>
@@ -985,7 +1021,7 @@
     {
       "@type": "Question",
       "name": "Чи працює J.A.R.V.I.S. без інтернету?",
-      "acceptedAnswer": {"@type": "Answer", "text": "Інтерфейс і локальні інструменти працюють офлайн. Хмарні моделі потребують інтернету, а локальні моделі Ollama вже підтримуються. Повністю офлайн STT і TTS — у планах."}
+      "acceptedAnswer": {"@type": "Answer", "text": "Так, із локальними моделями Ollama. Увімкни офлайн-режим у Налаштуваннях — і всі запити йдуть до Ollama, а хмарні ключі ігноруються. Голос теж може працювати офлайн, якщо вказати шляхи до whisper.cpp і Piper та їхніх моделей. Без них розпізнавання мовлення потребує інтернету."}
     },
     {
       "@type": "Question",
@@ -1011,6 +1047,21 @@
       "@type": "Question",
       "name": "Чи можу я написати свій плагін?",
       "acceptedAnswer": {"@type": "Answer", "text": "Так. Поклади .py-файл із TOOLS і run(name, args, ctx) у папку plugins, потім скажи «перезавантаж плагіни». Деталі — на сторінці документації."}
+    },
+    {
+      "@type": "Question",
+      "name": "Як працює пошук у пам'яті?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Записи індексуються локально детермінованими хеш-embeddings. Коли ти щось питаєш, Джарвіс вибирає вісім найрелевантніших записів за змістом і додає до запиту лише їх. Жодних завантажень нейромережі чи мережевих запитів."}
+    },
+    {
+      "@type": "Question",
+      "name": "Чи може Джарвіс виконувати задачі за розкладом?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Так. Скажи «створи автоматизацію» або відкрий вкладку «Автоматизації»: once, daily, weekly або кожні N хвилин. Дія може надіслати запит асистенту або нагадати голосом. Автоматизації не виконують свавільні shell-команди."}
+    },
+    {
+      "@type": "Question",
+      "name": "Чи безпечний marketplace плагінів?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Він чесний, але не чарівний. Реєстр — локальний JSON-файл, кожен плагін звіряється з SHA256, а встановлення завжди просить підтвердження. Плагін усе одно працює з тими самими правами, що й Джарвіс, тож читай код перед встановленням."}
     }
   ]
 }

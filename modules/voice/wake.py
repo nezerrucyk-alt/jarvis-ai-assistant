@@ -247,9 +247,13 @@ class WakeWordListener:
         from modules.voice.stt import Ears, EarsError
 
         ears = Ears(self.cfg)
+        requirement = (
+            "потрібен локальний whisper.cpp"
+            if self.cfg.get("offline_mode")
+            else "потрібен інтернет"
+        )
         self.log(
-            "Wake word: резервний STT. Скажи «Hey Jarvis» "
-            "(потрібен інтернет)."
+            f"Wake word: резервний STT. Скажи «Hey Jarvis» ({requirement})."
         )
         language = str(self.cfg.get("language") or "uk-UA")
         failures = 0

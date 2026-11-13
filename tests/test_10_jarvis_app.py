@@ -2,6 +2,8 @@
 """Headless-конструкція JarvisApp: withdrawn Tk-root + тимчасові шляхи даних."""
 from __future__ import annotations
 
+import tkinter as tk
+
 from core.customization import load_customization
 from tests.helpers import JarvisAppEnv, pump
 
@@ -72,6 +74,36 @@ class JarvisAppConstructTests(JarvisAppEnv):
         pump(app.root, 100)
         self.assertIsNotNone(app.current_chat)
         self.assertNotEqual(app.current_chat.get("id"), first.get("id"))
+
+    def test_settings_opens_with_offline_controls(self) -> None:
+        app = self.make_app()
+        app.cfg["offline_mode"] = True
+        app.cfg["offline_model"] = "ollama/test:1b"
+        app.open_settings()
+        pump(app.root)
+        dialogs = [
+            widget for widget in app.root.winfo_children()
+            if isinstance(widget, tk.Toplevel)
+        ]
+        self.assertTrue(dialogs)
+        dialog = dialogs[-1]
+        texts: list[str] = []
+
+        def walk(widget) -> None:
+            try:
+                text = widget.cget("text")
+                if text:
+                    texts.append(str(text))
+            except Exception:
+                pass
+            for child in widget.winfo_children():
+                walk(child)
+
+        walk(dialog)
+        self.assertTrue(any("Офлайн-режим" in text for text in texts))
+        self.assertTrue(any("WHISPER.CPP" in text for text in texts))
+        self.assertTrue(any("PIPER МОДЕЛЬ" in text for text in texts))
+        dialog.destroy()
 
 
 if __name__ == "__main__":

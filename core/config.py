@@ -72,6 +72,17 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "wake_word_model": "hey_jarvis",
     "wake_word_threshold": 0.5,
     "wake_word_cooldown": 2.0,
+    "offline_mode": False,
+    "offline_model": "ollama/llama3.2",
+    "offline_ollama_url": "http://127.0.0.1:11434/v1/chat/completions",
+    "stt_backend": "auto",
+    "tts_backend": "auto",
+    "offline_stt_binary": "",
+    "offline_stt_command": "",
+    "offline_whisper_model": "",
+    "offline_tts_binary": "",
+    "offline_tts_command": "",
+    "offline_piper_model": "",
 }
 
 #: Мови інтерфейсу/розпізнавання, доступні в налаштуваннях.
@@ -84,6 +95,7 @@ RESPONSE_MODES: dict[str, str] = {
     "detailed": "Докладно",
     "max": "Макс",
     "coding": "Код",
+    "coder": "Кодер",
     "review": "Сувора оцінка",
 }
 

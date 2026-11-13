@@ -187,12 +187,26 @@ class Voice:
                 f"jarvis_tts_{os.getpid()}_{uuid.uuid4().hex[:8]}.mp3"
             )
             try:
+                backend = str(self.config.get("tts_backend") or "auto").strip().lower()
+                offline_first = bool(self.config.get("offline_mode")) or backend == "offline"
+                if offline_first:
+                    if self._offline_speak(clean):
+                        return not self._stop.is_set()
+                    if self._stop.is_set():
+                        return False
+                    # pyttsx3 / System.Speech are local too, so this is still offline.
+                    return self._fallback_speak(clean)
+
                 try:
                     self._generate_edge(clean, selected_voice, audio_path)
                 except Exception as exc:
                     logger.warning(
                         "Edge TTS недоступний (%s); використовую резервний синтез.", exc
                     )
+                    if self._stop.is_set():
+                        return False
+                    if self._offline_speak(clean):
+                        return not self._stop.is_set()
                     if self._stop.is_set():
                         return False
                     return self._fallback_speak(clean)
@@ -205,6 +219,10 @@ class Voice:
                     logger.warning(
                         "Відтворення через pygame не вдалося (%s); резервний синтез.", exc
                     )
+                    if self._stop.is_set():
+                        return False
+                    if self._offline_speak(clean):
+                        return not self._stop.is_set()
                     if self._stop.is_set():
                         return False
                     return self._fallback_speak(clean)
@@ -292,6 +310,31 @@ class Voice:
                     pygame.mixer.music.stop()
                 except Exception:
                     logger.debug("pygame.mixer.music.stop() не вдався", exc_info=True)
+
+    # ── локальний синтез (Piper) ─────────────────────────────────────────────
+    def _offline_speak(self, text: str) -> bool:
+        """Synthesize and play with Piper; return False when unavailable."""
+        if self.muted or self._stop.is_set():
+            return False
+        path = Path(tempfile.gettempdir()) / (
+            f"jarvis_piper_{os.getpid()}_{uuid.uuid4().hex[:8]}.wav"
+        )
+        try:
+            from modules.voice.offline import synthesize
+
+            synthesize(text, self.config, path)
+            if self._stop.is_set():
+                return False
+            self._play(path)
+            return not self._stop.is_set()
+        except Exception as exc:
+            logger.info("Локальний Piper TTS недоступний: %s", exc)
+            return False
+        finally:
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                logger.debug("Не вдалося видалити тимчасовий файл %s", path)
 
     # ── резервний синтез ─────────────────────────────────────────────────────
     def _fallback_speak(self, text: str) -> bool:

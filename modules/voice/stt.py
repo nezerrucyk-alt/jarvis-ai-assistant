@@ -278,9 +278,32 @@ class Ears:
         Спочатку пробує основну мову, потім резервну (``uk-UA`` → ``ru-RU``).
         Повертає порожній рядок, якщо мовлення не розпізнано; у разі помилки
         сервісу кидає :class:`EarsError`.
+
+        Backend вибирається ключем ``stt_backend``: ``auto`` (типово),
+        ``google`` або ``offline``. У режимі ``offline_mode`` хмарний STT
+        не використовується взагалі.
         """
         if not raw:
             return ""
+        language_code = (language or self.language or DEFAULT_LANGUAGE).strip()
+        backend = str(self.config.get("stt_backend") or "auto").strip().lower()
+        offline_mode = bool(self.config.get("offline_mode"))
+
+        if backend == "offline" or (backend == "auto" and offline_mode):
+            try:
+                from modules.voice.offline import transcribe as offline_transcribe
+
+                return offline_transcribe(
+                    raw, self.sample_rate, self.config, language_code
+                )
+            except Exception as exc:
+                if offline_mode or backend == "offline":
+                    raise EarsError(
+                        "Сер, офлайн-розпізнавання недоступне. "
+                        f"Перевір whisper.cpp і модель: {exc}"
+                    ) from exc
+                logger.warning("Офлайн-STT недоступний (%s); пробую Google.", exc)
+
         try:
             import speech_recognition as sr  # type: ignore[import-not-found]
         except ImportError as exc:  # pragma: no cover — залежність є в requirements.txt
@@ -289,7 +312,6 @@ class Ears:
                 "Перевстановіть JARVIS або виконайте pip install -r requirements.txt."
             ) from exc
 
-        language_code = (language or self.language or DEFAULT_LANGUAGE).strip()
         audio = sr.AudioData(raw, self.sample_rate, 2)
         recognizer = sr.Recognizer()
 
@@ -305,9 +327,25 @@ class Ears:
                 continue
             except sr.RequestError as exc:
                 logger.exception("Сервіс Google STT недоступний")
+                if backend == "auto" and not offline_mode:
+                    try:
+                        from modules.voice.offline import (
+                            stt_available,
+                            transcribe as offline_transcribe,
+                        )
+
+                        if stt_available(self.config):
+                            return offline_transcribe(
+                                raw, self.sample_rate, self.config, language_code
+                            )
+                    except Exception as offline_exc:
+                        logger.warning(
+                            "Резервний офлайн-STT теж не спрацював: %s",
+                            offline_exc,
+                        )
                 raise EarsError(
                     "Сер, сервіс розпізнавання мовлення недоступний. "
-                    "Перевірте інтернет-з'єднання."
+                    "Перевірте інтернет-з'єднання або налаштуйте офлайн-STT."
                 ) from exc
             except Exception as exc:
                 logger.exception("Помилка розпізнавання мовлення")

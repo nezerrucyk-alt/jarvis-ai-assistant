@@ -32,6 +32,7 @@ JARVIS_PATH_VARS = (
     "LOG_PATH",
     "MEMORY_PATH",
     "REMINDERS_PATH",
+    "AUTOMATIONS_PATH",
     "CHATS_PATH",
     "CUSTOMIZATION_PATH",
     "ICON_PATH",
@@ -71,6 +72,7 @@ def install_temp_paths(jarvis_module, tmp_dir: Path, config: Optional[dict] = No
     jarvis_module.LOG_PATH = tmp_dir / "jarvis.log"
     jarvis_module.MEMORY_PATH = tmp_dir / "memory.json"
     jarvis_module.REMINDERS_PATH = tmp_dir / "reminders.json"
+    jarvis_module.AUTOMATIONS_PATH = tmp_dir / "automations.json"
     jarvis_module.CHATS_PATH = tmp_dir / "chats.json"
     jarvis_module.CUSTOMIZATION_PATH = tmp_dir / "customization.json"
     jarvis_module.ICON_PATH = tmp_dir / "missing_icon.ico"  # не читаємо реальну іконку
