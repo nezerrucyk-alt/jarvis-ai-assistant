@@ -160,8 +160,9 @@ MAIN_BLOCK_LABELS: dict[str, str] = {
     "footer": "Футер",
 }
 SIDEBAR_ITEMS: tuple[str, ...] = (
-    "voice", "scan", "translate", "new_chat",
-    "settings", "customize", "update", "memory", "reminders", "automations", "plugins", "gaming",
+    "voice", "scan", "translate", "new_chat", "clipboard", "briefing",
+    "settings", "customize", "update", "memory", "reminders", "automations",
+    "organizer", "plugins", "gaming",
     "history",
 )
 SIDEBAR_LABELS: dict[str, str] = {
@@ -169,12 +170,15 @@ SIDEBAR_LABELS: dict[str, str] = {
     "scan": "Сканувати екран",
     "translate": "Перекласти екран",
     "new_chat": "Нова розмова",
+    "clipboard": "Буфер обміну",
+    "briefing": "Ранковий брифінг",
     "settings": "Налаштування",
     "customize": "Кастомізація",
     "update": "Оновлення",
     "memory": "Моя пам'ять",
     "reminders": "Нагадування",
     "automations": "Автоматизації",
+    "organizer": "Порядок файлів",
     "plugins": "Плагіни",
     "gaming": "Режим ґеймера",
     "history": "Вся історія",

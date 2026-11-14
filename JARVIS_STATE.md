@@ -1,10 +1,10 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-14. Поточна гілка: `main`, останній коміт: `effcded`
-(реліз v2.2.0, оновлений сайт, Dependabot-залежності, Windows-інсталятор).
+Оновлено: 2026-11-14 (2.3.0, локальна збірка). Поточна гілка: `main`, останній
+коміт: `effcded`; зміни 2.3.0 у робочій копії ще не закомічені й не опубліковані.
 
-Версія в коді: **2.2.0** (`APP_VERSION`, `modules.__version__`).
-Публічний реліз: **v2.2.0** (14.11.2026) — Windows, macOS Apple Silicon і Linux.
+Версія в коді: **2.3.0** (`APP_VERSION`, `modules.__version__`).
+Публічний реліз — досі **v2.2.0** (14.11.2026); 2.3.0 існує лише як локальна збірка.
 
 ## Де що лежить
 
@@ -20,6 +20,7 @@
 | Пам'ять | `C:\Users\nezer\AppData\Roaming\Jarvis\memory.json` |
 | Нагадування | `C:\Users\nezer\AppData\Roaming\Jarvis\reminders.json` |
 | Автоматизації | `C:\Users\nezer\AppData\Roaming\Jarvis\automations.json` |
+| Історія буфера | `C:\Users\nezer\AppData\Roaming\Jarvis\clipboard.json` |
 | Кастомізація | `C:\Users\nezer\AppData\Roaming\Jarvis\customization.json` |
 | Плагіни | `C:\Users\nezer\AppData\Roaming\Jarvis\plugins\` |
 | Лог | `C:\Users\nezer\AppData\Roaming\Jarvis\jarvis.log` |
@@ -59,6 +60,46 @@
 кнопка Windows веде на `JARVIS-Setup.exe`, розмір 95.9 MB і новий SHA256. JS
 усе одно підтягує останній non-prerelease реліз GitHub і віддає перевагу
 setup-ассету над портативним exe.
+
+## Що нового у 2.3.0 (локальна збірка, не опублікована)
+
+- Провайдери: свій OpenAI-сумісний endpoint (`custom_provider_name`,
+  `custom_api_url`, `custom_api_key`, `custom_model`, `custom_vision`) і модель
+  `custom/<model>`; у вікні налаштувань v2 тепер усі 16 ключів + «Вставити».
+- Буфер обміну: локальна історія (до 120 записів, дедуп), вікно з пошуком,
+  копіюванням, «Пояснити»/«Перекласти»; інструменти `clipboard_history`,
+  `clipboard_copy`.
+- Порядок файлів: сортування «Завантажень» за категоріями з dry-run і
+  безпечним перейменуванням; вікно попереднього перегляду; інструмент
+  `organize_downloads`.
+- Проактивність: брифінг (погода Open-Meteo, курс НБУ, нагадування, активні
+  автоматизації), дія автоматизації `briefing`, щоденний брифінг о 09:00;
+  інструмент `daily_briefing`; стеження за «Завантаженнями».
+- HUD: прозорий орб станів (idle/listening/thinking/speaking), перетягування,
+  подвійний клік повертає вікно; вмикається в налаштуваннях.
+- Telegram: long-polling бот, дозволений лише один chat id; команди `/status`,
+  `/briefing`, `/ask`; інструменти ПК через Telegram вимкнені.
+- Нові модулі: `core/clipboard_history.py`, `core/file_organizer.py`,
+  `core/proactive.py`, `core/telegram_bot.py`, `ui/hud.py`.
+- Тести: 242 OK (було 197), нові файли test_37–test_44.
+- Білд: `dist\JARVIS.exe` — 151 008 930 байт, SHA256
+  `F96A10CB2E2967CAAC3AAC545D165ED644747AAF5CE851D40DA641C40B42F545`
+  (14.11.2026); скопійовано в `JARVIS.exe`.
+
+## Соцмережі
+
+- Перше вертикальне TikTok-відео: `build\tiktok_unsloop\jarvis_tiktok_01.mp4`
+  (1080×1920, 30 fps, 30.9 с, H.264 + AAC, озвучка edge-tts
+  `uk-UA-OstapNeural`). Кадри — реальні скріншоти live-сайту і застосунку.
+- Пайплайн: `build\tiktok_unsloop\capture_site.py` (Playwright, вертикальні
+  кадри), `render.py` (PIL-кадри + ffmpeg з `imageio_ffmpeg`), `post.txt`,
+  `cover.png`. Копії готового відео: `C:\Users\nezer\Downloads\JARVIS_TikTok_01*`.
+- Концепція — анти-слоп у дусі референсу Unslop: без стокових 3D і градієнтів
+  в оздобленні, великі підписи, чесні факти. Музику додавати в самому TikTok.
+- Друге відео (2.3.0): `build\tiktok_23\jarvis_tiktok_02.mp4` — 1080×1920,
+  31.2 с, сцени: 2.3.0, буфер обміну, брифінг, HUD, Telegram, CTA. Реальні
+  вікна зняті `capture_features.py` (PrintWindow, демо-дані, без ключів),
+  Telegram-чат — макет, бо бот ще не налаштований. Пост — `post.txt`.
 
 ## Що зроблено у 2.2.0 (Batch 1 + Batch 2)
 
@@ -151,7 +192,7 @@ setup-ассету над портативним exe.
 ## Тести та перевірки
 
 - Повний прогін: `.\.venv\Scripts\python.exe -m unittest discover -s tests`
-  → **197 тестів OK** (2026-11-14).
+  → **242 тести OK** (2026-11-14).
 - Нові тести:
   - `tests/test_31_wake_word.py` — 15 тестів.
   - `tests/test_32_memory_index.py` — 12 тестів.

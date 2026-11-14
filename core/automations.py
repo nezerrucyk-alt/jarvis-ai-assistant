@@ -14,10 +14,11 @@ Supported schedules::
     every 30m
     interval 2h
 
-Actions: ``prompt`` (send text to the assistant) and ``notify`` (desktop
-notification + voice).  Dangerous shell commands are intentionally not an
-action: automations must not gain the ability to run arbitrary code while the
-user is away.
+Actions: ``prompt`` (send text to the assistant), ``notify`` (desktop
+notification + voice) and ``briefing`` (proactive summary with weather,
+NBU rates and today's reminders).  Dangerous shell commands are intentionally
+not an action: automations must not gain the ability to run arbitrary code
+while the user is away.
 """
 from __future__ import annotations
 
@@ -29,7 +30,7 @@ MAX_AUTOMATIONS = 100
 MAX_TEXT = 500
 MIN_INTERVAL_MINUTES = 5
 MAX_INTERVAL_MINUTES = 7 * 24 * 60
-ACTIONS = ("prompt", "notify")
+ACTIONS = ("prompt", "notify", "briefing")
 SCHEDULES = ("once", "daily", "weekly", "interval")
 
 _WEEKDAYS = {
@@ -204,7 +205,7 @@ def build_automation(
         raise AutomationError("Текст автоматизації порожній.")
     action = _clean(action).lower() or "prompt"
     if action not in ACTIONS:
-        raise AutomationError("Дія має бути prompt або notify.")
+        raise AutomationError("Дія має бути prompt, notify або briefing.")
     fields = parse_schedule(schedule)
     created = created_at or datetime.now()
     record: dict[str, Any] = {
@@ -270,7 +271,11 @@ def advance_automation(
 
 
 def describe_automation(record: dict[str, Any]) -> str:
-    action = "надіслати запит" if record.get("action", "prompt") == "prompt" else "нагадати"
+    action = {
+        "prompt": "надіслати запит",
+        "notify": "нагадати",
+        "briefing": "брифінг",
+    }.get(str(record.get("action") or "prompt"), "надіслати запит")
     status = "" if record.get("enabled", True) else " · вимкнено"
     return (
         f"[{record.get('id', '?')}] {format_schedule(record)} · {action}: "

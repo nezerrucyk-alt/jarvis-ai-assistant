@@ -53,6 +53,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "cursor_api_key": "",
     "cursor_api_url": "https://api.cursor.com/v1/chat/completions",
     "cursor_model": "composer-2.5",
+    "custom_provider_name": "Мій провайдер",
+    "custom_api_url": "",
+    "custom_api_key": "",
+    "custom_model": "",
+    "custom_vision": True,
     # ── модель та мовлення ──
     "model": "deepseek-direct/deepseek-chat",
     "language": "uk-UA",
@@ -83,6 +88,18 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "offline_tts_binary": "",
     "offline_tts_command": "",
     "offline_piper_model": "",
+    "clipboard_history": True,
+    "clipboard_limit": 120,
+    "watch_downloads": False,
+    "watch_downloads_interval": 30,
+    "briefing_city": "Київ",
+    "briefing_lat": 50.45,
+    "briefing_lon": 30.52,
+    "briefing_time": "09:00",
+    "hud_enabled": False,
+    "telegram_enabled": False,
+    "telegram_token": "",
+    "telegram_chat_id": "",
 }
 
 #: Мови інтерфейсу/розпізнавання, доступні в налаштуваннях.

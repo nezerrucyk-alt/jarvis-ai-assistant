@@ -56,6 +56,20 @@ KEY_FIELDS: tuple[tuple[str, str], ...] = (
     ("mistral_api_key", "Mistral API-ключ"),
     ("together_api_key", "Together API-ключ"),
     ("ashna_api_key", "Ashna API-ключ"),
+    ("openai_api_key", "OpenAI API-ключ"),
+    ("anthropic_api_key", "Anthropic API-ключ"),
+    ("xai_api_key", "xAI (Grok) API-ключ"),
+    ("moonshot_api_key", "Moonshot (Kimi) API-ключ"),
+    ("qwen_api_key", "Qwen / DashScope API-ключ"),
+    ("cursor_api_key", "Cursor API-ключ"),
+    ("custom_api_key", "Свій провайдер · API-ключ"),
+)
+
+#: Поля свого OpenAI-сумісного провайдера (URL і модель не секретні).
+CUSTOM_FIELDS: tuple[tuple[str, str], ...] = (
+    ("custom_provider_name", "Назва"),
+    ("custom_api_url", "URL · /v1/chat/completions"),
+    ("custom_model", "Модель (напр. gpt-4o-mini)"),
 )
 
 RESPONSE_MODE_BY_LABEL: dict[str, str] = {
@@ -113,8 +127,30 @@ class SettingsWindow:
             bg=BG_DARK,
         ).pack(anchor="w")
 
-        body = tk.Frame(self.win, bg=BG_DARK, padx=18)
-        body.pack(fill="both", expand=True)
+        body_shell = tk.Frame(self.win, bg=BG_DARK)
+        body_shell.pack(fill="both", expand=True)
+        canvas = tk.Canvas(body_shell, bg=BG_DARK, highlightthickness=0, bd=0)
+        scrollbar = ttk.Scrollbar(body_shell, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        body = tk.Frame(canvas, bg=BG_DARK, padx=18)
+        body_id = canvas.create_window((0, 0), window=body, anchor="nw")
+
+        def sync_scroll(_event=None) -> None:
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            canvas.itemconfigure(body_id, width=canvas.winfo_width())
+
+        def on_wheel(event) -> None:
+            canvas.yview_scroll(-3 if event.delta > 0 else 3, "units")
+
+        body.bind("<Configure>", sync_scroll)
+        canvas.bind("<Configure>", sync_scroll)
+        canvas.bind("<Enter>", lambda _e: canvas.bind_all("<MouseWheel>", on_wheel))
+        canvas.bind("<Leave>", lambda _e: canvas.unbind_all("<MouseWheel>"))
+        self.win.bind(
+            "<Destroy>", lambda _e: canvas.unbind_all("<MouseWheel>"), add="+"
+        )
 
         # ── модель і мовлення ────────────────────────────────────────────────
         main_section = tk.Frame(body, bg=BG_SIDEBAR, padx=14, pady=10)
@@ -246,6 +282,18 @@ class SettingsWindow:
         keys_frame.pack(fill="x", pady=(2, 8))
         keys_frame.columnconfigure(0, weight=1)
         keys_frame.columnconfigure(1, weight=1)
+
+        def paste_key(entry: tk.Entry) -> None:
+            try:
+                value = self.win.clipboard_get().strip()
+            except tk.TclError:
+                return
+            if not value:
+                return
+            if entry.selection_present():
+                entry.delete("sel.first", "sel.last")
+            entry.insert("insert", value)
+
         for index, (key, label) in enumerate(KEY_FIELDS):
             cell = tk.Frame(keys_frame, bg=BG_PANEL)
             cell.grid(row=index // 2, column=index % 2, sticky="ew", padx=4, pady=3)
@@ -258,8 +306,10 @@ class SettingsWindow:
                 anchor="w",
             ).pack(fill="x")
             variable = tk.StringVar(value=str(self.config.get(key) or ""))
+            row = tk.Frame(cell, bg=BG_PANEL)
+            row.pack(fill="x")
             key_entry = tk.Entry(
-                cell,
+                row,
                 textvariable=variable,
                 show="\u2022",
                 bg=BG_INPUT,
@@ -269,9 +319,146 @@ class SettingsWindow:
                 bd=0,
                 font=FONT_MONO,
             )
-            key_entry.pack(fill="x", ipady=4)
+            key_entry.pack(side="left", fill="x", expand=True, ipady=4)
+            tk.Button(
+                row,
+                text="Вставити",
+                command=lambda entry=key_entry: paste_key(entry),
+                bg=BG_PANEL,
+                fg=RED_ACCENT,
+                activebackground=BORDER,
+                activeforeground=TEXT_PRIMARY,
+                relief="flat",
+                bd=0,
+                font=("Segoe UI", 7),
+                padx=6,
+            ).pack(side="left", padx=(4, 0))
             self._key_vars[key] = variable
             self._key_entries.append(key_entry)
+
+        # ── свій OpenAI-сумісний провайдер ───────────────────────────────────
+        tk.Label(
+            body,
+            text="СВІЙ OPENAI-СУМІСНИЙ ПРОВАЙДЕР",
+            font=FONT_BADGE,
+            fg=GOLD_WARN,
+            bg=BG_DARK,
+        ).pack(anchor="w", pady=(2, 2))
+        custom_frame = tk.Frame(body, bg=BG_PANEL, padx=10, pady=8)
+        custom_frame.pack(fill="x", pady=(0, 8))
+        self._custom_vars: dict[str, tk.StringVar] = {}
+        for field, label in CUSTOM_FIELDS:
+            row = tk.Frame(custom_frame, bg=BG_PANEL)
+            row.pack(fill="x", pady=2)
+            tk.Label(
+                row,
+                text=label,
+                width=30,
+                anchor="w",
+                font=("Segoe UI", 8),
+                fg=TEXT_MUTED,
+                bg=BG_PANEL,
+            ).pack(side="left")
+            variable = tk.StringVar(value=str(self.config.get(field) or ""))
+            entry = tk.Entry(
+                row,
+                textvariable=variable,
+                bg=BG_INPUT,
+                fg=TEXT_PRIMARY,
+                insertbackground=RED_ACCENT,
+                relief="flat",
+                bd=0,
+                font=FONT_MONO,
+            )
+            entry.pack(side="left", fill="x", expand=True, ipady=4)
+            self._custom_vars[field] = variable
+        tk.Label(
+            custom_frame,
+            text="Щоб використати — вкажи модель як custom/<model> (напр. custom/gpt-4o-mini).",
+            font=("Segoe UI", 8),
+            fg=TEXT_DIM,
+            bg=BG_PANEL,
+        ).pack(anchor="w", pady=(3, 0))
+
+        # ── нові можливості ─────────────────────────────────────────────────
+        features_frame = tk.Frame(body, bg=BG_PANEL, padx=12, pady=8)
+        features_frame.pack(fill="x", pady=(0, 8))
+        self._clipboard_var = tk.BooleanVar(
+            value=bool(self.config.get("clipboard_history", True))
+        )
+        self._watch_downloads_var = tk.BooleanVar(
+            value=bool(self.config.get("watch_downloads"))
+        )
+        self._hud_var = tk.BooleanVar(value=bool(self.config.get("hud_enabled")))
+        self._telegram_var = tk.BooleanVar(
+            value=bool(self.config.get("telegram_enabled"))
+        )
+        for text, variable in (
+            ("Історія буфера обміну", self._clipboard_var),
+            ("Стежити за папкою «Завантаження»", self._watch_downloads_var),
+            ("HUD-орб на екрані", self._hud_var),
+            ("Telegram-бот", self._telegram_var),
+        ):
+            tk.Checkbutton(
+                features_frame,
+                text=text,
+                variable=variable,
+                font=FONT_BODY,
+                fg=TEXT_PRIMARY,
+                bg=BG_PANEL,
+                activebackground=BG_PANEL,
+                activeforeground=RED_ACCENT,
+                selectcolor=BG_DARK,
+                highlightthickness=0,
+                bd=0,
+                anchor="w",
+            ).pack(side="left", padx=(0, 12))
+
+        extra_frame = tk.Frame(body, bg=BG_PANEL, padx=10, pady=8)
+        extra_frame.pack(fill="x", pady=(0, 8))
+        self._telegram_token_var = tk.StringVar(
+            value=str(self.config.get("telegram_token") or "")
+        )
+        self._telegram_chat_var = tk.StringVar(
+            value=str(self.config.get("telegram_chat_id") or "")
+        )
+        self._briefing_city_var = tk.StringVar(
+            value=str(self.config.get("briefing_city") or "Київ")
+        )
+        self._briefing_time_var = tk.StringVar(
+            value=str(self.config.get("briefing_time") or "09:00")
+        )
+        for label, variable, secret in (
+            ("Telegram · токен", self._telegram_token_var, True),
+            ("Telegram · chat id", self._telegram_chat_var, False),
+            ("Брифінг · місто", self._briefing_city_var, False),
+            ("Брифінг · час", self._briefing_time_var, False),
+        ):
+            row = tk.Frame(extra_frame, bg=BG_PANEL)
+            row.pack(fill="x", pady=2)
+            tk.Label(
+                row,
+                text=label,
+                width=30,
+                anchor="w",
+                font=("Segoe UI", 8),
+                fg=TEXT_MUTED,
+                bg=BG_PANEL,
+            ).pack(side="left")
+            entry = tk.Entry(
+                row,
+                textvariable=variable,
+                show="\u2022" if secret else "",
+                bg=BG_INPUT,
+                fg=TEXT_PRIMARY,
+                insertbackground=RED_ACCENT,
+                relief="flat",
+                bd=0,
+                font=FONT_MONO,
+            )
+            entry.pack(side="left", fill="x", expand=True, ipady=4)
+            if secret:
+                self._key_entries.append(entry)
 
         # ── кнопки ───────────────────────────────────────────────────────────
         buttons = tk.Frame(self.win, bg=BG_DARK, padx=18, pady=12)
@@ -432,6 +619,18 @@ class SettingsWindow:
             variable = self._key_vars.get(key)
             if variable is not None:
                 config[key] = variable.get().strip()
+        for field, _ in CUSTOM_FIELDS:
+            variable = self._custom_vars.get(field)
+            if variable is not None:
+                config[field] = variable.get().strip()
+        config["clipboard_history"] = bool(self._clipboard_var.get())
+        config["watch_downloads"] = bool(self._watch_downloads_var.get())
+        config["hud_enabled"] = bool(self._hud_var.get())
+        config["telegram_enabled"] = bool(self._telegram_var.get())
+        config["telegram_token"] = self._telegram_token_var.get().strip()
+        config["telegram_chat_id"] = self._telegram_chat_var.get().strip()
+        config["briefing_city"] = self._briefing_city_var.get().strip() or "Київ"
+        config["briefing_time"] = self._briefing_time_var.get().strip() or "09:00"
         config["mute"] = bool(self._mute_var.get())
         config["full_access"] = bool(self._full_access_var.get())
         config["always_on_top"] = bool(self._always_on_top_var.get())
@@ -469,4 +668,4 @@ class SettingsWindow:
             pass
 
 
-__all__ = ["KEY_FIELDS", "RESPONSE_MODE_BY_LABEL", "SettingsWindow"]
+__all__ = ["CUSTOM_FIELDS", "KEY_FIELDS", "RESPONSE_MODE_BY_LABEL", "SettingsWindow"]

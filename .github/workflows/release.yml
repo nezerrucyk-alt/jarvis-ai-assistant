@@ -47,6 +47,16 @@ jobs:
           python -m PyInstaller --noconfirm --clean --onefile --windowed --name JARVIS --icon assets/jarvis.ico --add-data "assets;assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all pyttsx3 --collect-all cryptography --collect-all psutil --collect-all pycaw --collect-all comtypes --collect-all pystray --hidden-import PIL.Image --hidden-import pystray._win32 --hidden-import modules.mobile_bridge --hidden-import modules.coding_workspace --hidden-import modules.voice.offline jarvis.py
           New-Item -ItemType Directory -Force release | Out-Null
           Copy-Item dist/JARVIS.exe release/JARVIS-Windows.exe
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force installer/payload | Out-Null
+          Copy-Item dist/JARVIS.exe installer/payload/JARVIS-Windows.exe
+          choco install innosetup --no-progress -y
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/JARVIS.iss
+          Copy-Item dist/JARVIS-Setup.exe release/JARVIS-Setup.exe
       - name: Build macOS app
         if: runner.os == 'macOS'
         run: |

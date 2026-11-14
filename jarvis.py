@@ -76,6 +76,11 @@ from core.automations import (
     due_automations,
 )
 from core.memory_index import ensure_embedding, memory_prompt, rank_memories
+import core.clipboard_history as clipboard_store
+import core.file_organizer as file_organizer
+import core.proactive as proactive
+from core.telegram_bot import TelegramBot, TelegramError
+from ui.hud import HudOrb, state_from_status
 from core.marketplace import (
     MarketplaceError,
     install_plugin,
@@ -87,7 +92,7 @@ from core.marketplace import (
 from modules.voice.wake import WakeWordListener
 
 APP_NAME = "Jarvis"
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.3.0"
 GITHUB_REPO = "nezerrucyk-alt/jarvis-ai-assistant"
 APP_DIR = Path(__file__).resolve().parent
 if os.name == "nt":
@@ -105,6 +110,7 @@ AUTOMATIONS_PATH = DATA_DIR / "automations.json"
 PROJECT_MEMORY_PATH = DATA_DIR / "projects.json"
 CHATS_PATH = DATA_DIR / "chats.json"
 CUSTOMIZATION_PATH = DATA_DIR / "customization.json"
+CLIPBOARD_PATH = DATA_DIR / "clipboard.json"
 SCREENSHOTS_DIR = DATA_DIR / "screenshots"
 PLUGINS_DIR = DATA_DIR / "plugins"
 MARKETPLACE_DIR = APP_DIR / "assets" / "marketplace"
@@ -883,6 +889,11 @@ DEFAULT_CONFIG = {
     "cursor_api_key": "",
     "cursor_api_url": "https://api.cursor.com/v1/chat/completions",
     "cursor_model": "composer-2.5",
+    "custom_provider_name": "Мій провайдер",
+    "custom_api_url": "",
+    "custom_api_key": "",
+    "custom_model": "",
+    "custom_vision": True,
     "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "language": "uk-UA",
     "voice": "uk-UA-OstapNeural",
@@ -917,6 +928,18 @@ DEFAULT_CONFIG = {
     "plugins_enabled": True,
     "auto_update_check": True,
     "minimize_to_tray": True,
+    "clipboard_history": True,
+    "clipboard_limit": 120,
+    "watch_downloads": False,
+    "watch_downloads_interval": 30,
+    "briefing_city": "Київ",
+    "briefing_lat": 50.45,
+    "briefing_lon": 30.52,
+    "briefing_time": "09:00",
+    "hud_enabled": False,
+    "telegram_enabled": False,
+    "telegram_token": "",
+    "telegram_chat_id": "",
 }
 
 SYSTEM_PROMPT = """Ти — J.A.R.V.I.S., особистий асистент, який спілкується з власником як близький знайомий у чаті: живо, просто й по-людськи, без офіційщини.
@@ -946,7 +969,7 @@ SYSTEM_PROMPT = """Ти — J.A.R.V.I.S., особистий асистент, �
 - давай зрозуміле обґрунтування висновку, але не розкривай прихований ланцюг внутрішніх міркувань. Замість цього подавай перевірювані причини, розрахунки чи джерела.
 
 ІНСТРУМЕНТИ Й ДІЇ НА ПК:
-- доступні інструменти: run_powershell, open_app, find_files, read_file, write_file, project_open, project_memory, code_review, code_check, code_run, create_project_template, git_helper, system_info, system_control, play_media, smart_home, gaming_mode, plugin_list, check_update, look_at_screen, translate_screen, roblox_studio, roblox_reset_server, memory_save, memory_list, memory_forget, reminder_create, reminder_list, reminder_cancel, automation_create, automation_list, automation_cancel;
+- доступні інструменти: run_powershell, open_app, find_files, read_file, write_file, project_open, project_memory, code_review, code_check, code_run, create_project_template, git_helper, system_info, system_control, play_media, smart_home, gaming_mode, plugin_list, check_update, look_at_screen, translate_screen, roblox_studio, roblox_reset_server, memory_save, memory_list, memory_forget, reminder_create, reminder_list, reminder_cancel, automation_create, automation_list, automation_cancel, clipboard_history, clipboard_copy, organize_downloads, daily_briefing;
 - для програмування спершу визнач активний проєкт; читай файли перед правками й використовуй code_review/code_check для пошуку помилок; показуй diff у підтвердженні запису, запускай код лише після підтвердження, Git використовуй тільки для читання та підготовки повідомлення коміту;
 - project_memory читай за потреби, а зберігай нотатку лише після прямого прохання; create_project_template викликай лише за запитом створити новий шаблон; не коміть і не змінюй Git-історію;
 - для гучності, яскравості, скріншота, блокування екрана, сну, вимкнення або перезавантаження ПК використовуй system_control; вимкнення, перезавантаження, вихід і сон завжди підтверджуй;
@@ -1637,6 +1660,78 @@ TOOLS = [
             "parameters": {"type": "object", "properties": {}},
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "clipboard_history",
+            "description": (
+                "Search the local clipboard history — text the user copied recently. "
+                "Use it when the user asks what they copied or to reuse earlier text."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Substring to look for. Empty returns the latest entries.",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Number of entries, 1-20. Default 10.",
+                    },
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "clipboard_copy",
+            "description": "Copy text to the user's clipboard.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string", "description": "Text to put into the clipboard."},
+                },
+                "required": ["text"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "organize_downloads",
+            "description": (
+                "Sort files in the Downloads folder into category subfolders: Documents, "
+                "Images, Video, Audio, Archives, Code, Installers. By default only previews "
+                "the plan; set apply=true to move files after user confirmation."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "folder": {
+                        "type": "string",
+                        "description": "Folder to sort. Defaults to the user's Downloads folder.",
+                    },
+                    "apply": {
+                        "type": "boolean",
+                        "description": "Actually move files (asks for confirmation). Default false.",
+                    },
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "daily_briefing",
+            "description": (
+                "Build a proactive briefing: weather for the configured city, NBU currency "
+                "rates, today's reminders and the number of active automations."
+            ),
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
 ]
 
 TOOLS.extend([
@@ -2005,6 +2100,29 @@ class Brain:
 
         candidates: list[dict] = []
         for model in order:
+            if str(model).startswith("custom/"):
+                custom_url = str(self.cfg.get("custom_api_url") or "").strip()
+                custom_keys = self._keys_for("custom_api_key")
+                if not custom_url or not custom_keys:
+                    continue
+                api_model = (
+                    str(self.cfg.get("custom_model") or "").strip()
+                    or str(model).split("/", 1)[1]
+                )
+                for key in custom_keys:
+                    candidates.append({
+                        "provider": str(
+                            self.cfg.get("custom_provider_name") or "Custom"
+                        ),
+                        "model": model,
+                        "api_model": api_model,
+                        "url": custom_url,
+                        "key": key,
+                        "label": f"Custom · {api_model}",
+                        "api_style": "openai",
+                        "vision": bool(self.cfg.get("custom_vision", True)),
+                    })
+                continue
             direct = DIRECT_MODEL_CONFIG.get(model)
             if direct:
                 is_ollama = direct.get("provider") == "Ollama · локально"
@@ -3265,13 +3383,15 @@ class PcTools:
         "taskmgr", "discord", "steam", "spotify",
     })
 
-    def __init__(self, confirm, log, get_cfg=None, vision_runner=None, translate_runner=None, update_runner=None):
+    def __init__(self, confirm, log, get_cfg=None, vision_runner=None, translate_runner=None, update_runner=None, clipboard_runner=None, briefing_runner=None):
         self.confirm = confirm
         self.log = log
         self.get_cfg = get_cfg
         self.vision_runner = vision_runner
         self.translate_runner = translate_runner
         self.update_runner = update_runner
+        self.clipboard_runner = clipboard_runner
+        self.briefing_runner = briefing_runner
         self._start_apps_cache: list[tuple[str, str]] | None = None
         self._registry_apps_cache: list[tuple[str, str]] | None = None
         self._plugin_tools: dict[str, object] = {}
@@ -3844,6 +3964,52 @@ class PcTools:
             return "Перекладач екрана недоступний."
         self.log("⇄ Перекладаю текст на екрані…")
         return self.translate_runner(str(language or "українську"))
+
+    # ── буфер обміну, файли, брифінг ────────────────────────────────────────
+    def _clipboard_history(self, query: str = "", limit: int = 10) -> str:
+        if self.clipboard_runner is None:
+            return "Історія буфера обміну недоступна."
+        return self.clipboard_runner("search", query=query, limit=limit)
+
+    def _clipboard_copy(self, text: str = "") -> str:
+        if self.clipboard_runner is None:
+            return "Буфер обміну недоступний."
+        return self.clipboard_runner("copy", text=text)
+
+    def _organize_downloads(self, folder: str = "", apply: bool = False) -> str:
+        root = Path(folder).expanduser() if str(folder or "").strip() else Path.home() / "Downloads"
+        try:
+            moves = file_organizer.plan(root)
+        except file_organizer.FileOrganizerError as exc:
+            return str(exc)
+        if not moves:
+            return f"У папці {root} немає файлів, які варто сортувати."
+        preview = [f"• {Path(m['source']).name} → {m['category']}/" for m in moves[:20]]
+        if apply and not self.confirm(
+            "Сортування файлів",
+            f"{root}\n\n" + "\n".join(preview),
+        ):
+            return "Скасовано, сер."
+        result = file_organizer.apply_plan(moves, dry_run=not apply)
+        lines = [
+            ("Переміщено" if apply else "План сортування")
+            + f": {len(result['moved'])} з {len(moves)} файл(ів) у {root}."
+        ]
+        lines.extend(result["moved"][:20])
+        if len(result["moved"]) > 20:
+            lines.append(f"… і ще {len(result['moved']) - 20}.")
+        if result["skipped"]:
+            lines.append(f"Пропущено: {len(result['skipped'])}.")
+        if result["errors"]:
+            lines.append("Помилки: " + "; ".join(result["errors"][:5]))
+        if not apply:
+            lines.append("Файли не рухалися. Виклич з apply=true, щоб застосувати.")
+        return "\n".join(lines)
+
+    def _daily_briefing(self) -> str:
+        if self.briefing_runner is None:
+            return "Брифінг недоступний."
+        return self.briefing_runner()
 
     # ── PowerShell ───────────────────────────────────────────────────────────
     def _catastrophic(self, command: str) -> bool:
@@ -5201,6 +5367,8 @@ class JarvisApp:
             vision_runner=self._vision_tool,
             translate_runner=self._translate_tool,
             update_runner=self._on_check_update,
+            clipboard_runner=self._clipboard_tool,
+            briefing_runner=self._build_briefing_text,
         )
         self.gaming_active = False
         self._game_hint_window = None
@@ -5225,6 +5393,16 @@ class JarvisApp:
         self._chats_save_job = None
         self._tray_icon = None
         self._tray_quit = False
+        self.hud = None
+        self.clipboard_items = load_local_records(CLIPBOARD_PATH)
+        self._clipboard_last_text = ""
+        self._telegram_bot = None
+        self._telegram_thread = None
+        self._telegram_stop = None
+        self.telegram_brain = None
+        self._watch_thread = None
+        self._watch_stop = None
+        self._downloads_snapshot = {}
 
         self._build()
         self._apply_customization()
@@ -5238,6 +5416,10 @@ class JarvisApp:
         self.root.after(10000, self._check_reminders)
         self.root.after(12000, self._check_automations)
         self.root.after(4500, self._check_gaming_mode)
+        self.root.after(1200, self._poll_clipboard)
+        self.root.after(1600, self._apply_hud)
+        self.root.after(2200, self._restart_telegram)
+        self.root.after(3000, self._restart_downloads_watch)
         if self.cfg.get("auto_update_check", True):
             self.root.after(9000, self._start_auto_update_check)
 
@@ -5284,7 +5466,7 @@ class JarvisApp:
             font=("Segoe UI", 12, "bold"),
         ).pack(anchor="w")
         tk.Label(
-            brand_text, text="COMMAND DECK · v2.2", bg=SIDEBAR, fg=MUTED,
+            brand_text, text="COMMAND DECK · v2.3", bg=SIDEBAR, fg=MUTED,
             font=("Consolas", 7),
         ).pack(anchor="w", pady=(2, 0))
 
@@ -5314,6 +5496,8 @@ class JarvisApp:
         self.scan_btn = nav("◈   Сканувати екран", self._on_scan, True)
         self.translate_btn = nav("⇄   Перекласти екран", self._on_translate, True)
         self.new_chat_btn = nav("＋   Нова розмова", self._new_conversation)
+        self.clipboard_btn = nav("📋   Буфер обміну", self.open_clipboard_manager)
+        self.briefing_btn = nav("☀   Ранковий брифінг", self.open_briefing)
 
         section("SYSTEM")
         self.settings_btn = nav("⚙   Налаштування", self.open_settings)
@@ -5322,6 +5506,7 @@ class JarvisApp:
         self.memory_btn = nav("◇   Моя пам'ять", self.open_memory_manager)
         self.reminders_btn = nav("◷   Нагадування", self.open_reminders_manager)
         self.automations_btn = nav("⟳   Автоматизації", self.open_automations_manager)
+        self.organizer_btn = nav("🗂   Порядок файлів", self.open_organizer)
         self.plugins_btn = nav("🧩   Плагіни", self.open_marketplace)
         self.gaming_btn = nav("🎮   Режим ґеймера", self._toggle_gaming_mode)
 
@@ -5335,12 +5520,15 @@ class JarvisApp:
             "scan": self.scan_btn,
             "translate": self.translate_btn,
             "new_chat": self.new_chat_btn,
+            "clipboard": self.clipboard_btn,
+            "briefing": self.briefing_btn,
             "settings": self.settings_btn,
             "customize": self.customize_btn,
             "update": self.update_btn,
             "memory": self.memory_btn,
             "reminders": self.reminders_btn,
             "automations": self.automations_btn,
+            "organizer": self.organizer_btn,
             "plugins": self.plugins_btn,
             "gaming": self.gaming_btn,
             "history": self.history_btn,
@@ -5351,6 +5539,8 @@ class JarvisApp:
             ("item", "scan", self.scan_btn),
             ("item", "translate", self.translate_btn),
             ("item", "new_chat", self.new_chat_btn),
+            ("item", "clipboard", self.clipboard_btn),
+            ("item", "briefing", self.briefing_btn),
             ("section", "SYSTEM", self._sidebar_section_labels.get("SYSTEM")),
             ("item", "settings", self.settings_btn),
             ("item", "customize", self.customize_btn),
@@ -5358,6 +5548,7 @@ class JarvisApp:
             ("item", "memory", self.memory_btn),
             ("item", "reminders", self.reminders_btn),
             ("item", "automations", self.automations_btn),
+            ("item", "organizer", self.organizer_btn),
             ("item", "plugins", self.plugins_btn),
             ("item", "gaming", self.gaming_btn),
             ("section", "RECENT", self._sidebar_section_labels.get("RECENT")),
@@ -5697,7 +5888,7 @@ class JarvisApp:
         self.footer = tk.Frame(main, bg=BG)
         self.footer.pack(fill="x", padx=28, pady=(0, 8))
         tk.Label(
-            self.footer, text="J.A.R.V.I.S. · MULTI-PROVIDER AI · v2.2",
+            self.footer, text="J.A.R.V.I.S. · MULTI-PROVIDER AI · v2.3",
             bg=BG, fg=MUTED, font=("Consolas", 7),
         ).pack(side="left")
         tk.Label(
@@ -6801,6 +6992,12 @@ class JarvisApp:
         if hasattr(self, "side_status_label"):
             self.side_status_label.config(text=text[:22], fg=color)
             self.side_status_dot.config(fg=color)
+        hud = getattr(self, "hud", None)
+        if hud is not None:
+            try:
+                hud.set_state(state_from_status(text))
+            except Exception:  # noqa: BLE001 — HUD must never break the UI
+                logging.debug("HUD state update failed", exc_info=True)
 
     def _log(
         self,
@@ -7363,6 +7560,15 @@ class JarvisApp:
             logging.exception("Не вдалося вимкнути Android-підключення")
         self._stop_global_hotkey()
         self._stop_wake_word()
+        self._stop_telegram()
+        self._stop_downloads_watch()
+        hud = getattr(self, "hud", None)
+        if hud is not None:
+            try:
+                hud.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+            self.hud = None
         try:
             self._prune_empty_chats(keep=self.current_chat if not self._chat_is_empty(self.current_chat or {}) else None)
             self._save_chats()
@@ -7447,6 +7653,10 @@ class JarvisApp:
             "sys",
             f"Автоматизація «{text}» ({'запит' if action == 'prompt' else 'нагадування'}).",
         )
+        if action == "briefing":
+            threading.Thread(target=self._deliver_briefing, daemon=True).start()
+            self.set_status("Готую брифінг…", GOLD)
+            return
         if action == "notify":
             try:
                 self.root.bell()
@@ -8876,6 +9086,576 @@ class JarvisApp:
             return
         threading.Thread(target=self._cycle, args=(True,), daemon=True).start()
 
+    # ── буфер обміну ─────────────────────────────────────────────────────────
+    def _ui_call(self, func, timeout: float = 5.0):
+        if threading.current_thread() is threading.main_thread():
+            return func()
+        box: dict[str, object] = {}
+        done = threading.Event()
+
+        def wrapper() -> None:
+            try:
+                box["value"] = func()
+            except Exception as exc:  # noqa: BLE001
+                box["error"] = exc
+            finally:
+                done.set()
+
+        self.ui(wrapper)
+        done.wait(timeout)
+        if "error" in box:
+            raise box["error"]  # type: ignore[misc]
+        return box.get("value")
+
+    def _clipboard_tool(
+        self,
+        action: str = "search",
+        query: str = "",
+        limit: int = 10,
+        text: str = "",
+    ) -> str:
+        if action == "copy":
+            value = str(text or "")
+            if not value.strip():
+                return "Немає тексту для копіювання."
+
+            def write() -> str:
+                self.root.clipboard_clear()
+                self.root.clipboard_append(value)
+                self.root.update_idletasks()
+                return "Текст скопійовано в буфер."
+
+            return str(self._ui_call(write))
+        rows = clipboard_store.search(self.clipboard_items, query, limit)
+        if not rows:
+            return "Історія буфера порожня або нічого не знайдено."
+        lines = [f"Буфер обміну ({len(rows)}):"]
+        for index, row in enumerate(rows, 1):
+            flat = " ".join(str(row.get("text") or "").split())
+            lines.append(f"{index}. {flat[:160]}")
+        return "\n".join(lines)
+
+    def _poll_clipboard(self) -> None:
+        if self.cfg.get("clipboard_history", True):
+            try:
+                value = self.root.clipboard_get()
+            except tk.TclError:
+                value = ""
+            if value and value != self._clipboard_last_text:
+                self._clipboard_last_text = value
+                try:
+                    limit = int(
+                        self.cfg.get("clipboard_limit")
+                        or clipboard_store.DEFAULT_LIMIT
+                    )
+                except (TypeError, ValueError):
+                    limit = clipboard_store.DEFAULT_LIMIT
+                self.clipboard_items = clipboard_store.add_entry(
+                    self.clipboard_items, value, limit=limit
+                )
+                try:
+                    save_local_records(CLIPBOARD_PATH, self.clipboard_items)
+                except Exception:  # noqa: BLE001
+                    logging.exception("Не вдалося зберегти історію буфера")
+        try:
+            self.root.after(1500, self._poll_clipboard)
+        except tk.TclError:
+            pass
+
+    def open_clipboard_manager(self) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("J.A.R.V.I.S. · Буфер обміну")
+        win.configure(bg=BG)
+        win.geometry("780x560")
+        win.minsize(620, 420)
+        win.transient(self.root)
+
+        tk.Label(
+            win, text="БУФЕР ОБМІНУ", bg=BG, fg=TEXT,
+            font=("Segoe UI", 14, "bold"),
+        ).pack(anchor="w", padx=18, pady=(16, 2))
+        tk.Label(
+            win,
+            text=f"Історія копіювань зберігається локально: %APPDATA%\\Jarvis\\{CLIPBOARD_PATH.name}",
+            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+        ).pack(anchor="w", padx=18)
+
+        search_var = tk.StringVar()
+        search_entry = tk.Entry(
+            win, textvariable=search_var, bg=PANEL, fg=TEXT,
+            insertbackground=CYAN, relief="flat", font=("Segoe UI", 9),
+        )
+        search_entry.pack(fill="x", padx=18, pady=(10, 6), ipady=6)
+        self._bind_clipboard_shortcuts(search_entry)
+
+        frame = tk.Frame(win, bg=LINE, padx=1, pady=1)
+        frame.pack(fill="both", expand=True, padx=18)
+        listbox = tk.Listbox(
+            frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
+            selectforeground=TEXT, activestyle="none", relief="flat",
+            font=("Consolas", 9), height=14,
+        )
+        scroll = ttk.Scrollbar(
+            frame, orient="vertical", command=listbox.yview,
+            style="Jarvis.Vertical.TScrollbar",
+        )
+        listbox.config(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        listbox.pack(side="left", fill="both", expand=True, padx=8, pady=8)
+
+        status = tk.Label(
+            win, text="", bg=BG, fg=CYAN_DIM, font=("Segoe UI", 8),
+        )
+        status.pack(anchor="w", padx=18, pady=(6, 0))
+
+        rows: list[dict] = []
+
+        def refresh(*_event) -> None:
+            rows[:] = clipboard_store.search(
+                self.clipboard_items, search_var.get(), limit=200
+            )
+            listbox.delete(0, "end")
+            for item in rows:
+                try:
+                    stamp = datetime.fromisoformat(
+                        str(item.get("ts") or "")
+                    ).strftime("%d.%m %H:%M")
+                except (TypeError, ValueError):
+                    stamp = str(item.get("ts") or "").replace("T", " ")[5:16]
+                flat = " ".join(str(item.get("text") or "").split())
+                listbox.insert("end", f"{stamp}  {flat[:150]}")
+            status.config(text=f"Записів: {len(rows)}")
+
+        search_var.trace_add("write", refresh)
+
+        def selected() -> dict | None:
+            try:
+                index = listbox.curselection()[0]
+            except IndexError:
+                return None
+            return rows[index] if index < len(rows) else None
+
+        def copy_back() -> None:
+            item = selected()
+            if not item:
+                status.config(text="Обери запис у списку.")
+                return
+            self.root.clipboard_clear()
+            self.root.clipboard_append(str(item.get("text") or ""))
+            self.root.update_idletasks()
+            status.config(text="Скопійовано в буфер.")
+
+        def ask_ai(kind: str) -> None:
+            item = selected()
+            if not item:
+                status.config(text="Обери запис у списку.")
+                return
+            text = str(item.get("text") or "")[:4000]
+            prompt = (
+                f"Поясни цей текст українською, коротко й по суті:\n{text}"
+                if kind == "explain"
+                else f"Переклади цей текст українською:\n{text}"
+            )
+            threading.Thread(
+                target=self._answer, args=(prompt, False), daemon=True
+            ).start()
+            status.config(text="Запит надіслано в чат.")
+
+        def delete_selected() -> None:
+            item = selected()
+            if not item:
+                return
+            self.clipboard_items = clipboard_store.remove_entry(
+                self.clipboard_items, str(item.get("id") or "")
+            )
+            save_local_records(CLIPBOARD_PATH, self.clipboard_items)
+            refresh()
+
+        def clear_all() -> None:
+            if not messagebox.askyesno(
+                "Буфер обміну", "Очистити всю історію?", parent=win
+            ):
+                return
+            self.clipboard_items = []
+            save_local_records(CLIPBOARD_PATH, self.clipboard_items)
+            refresh()
+
+        buttons = tk.Frame(win, bg=BG)
+        buttons.pack(fill="x", padx=18, pady=10)
+        for label, command in (
+            ("Скопіювати", copy_back),
+            ("Пояснити", lambda: ask_ai("explain")),
+            ("Перекласти", lambda: ask_ai("translate")),
+            ("Видалити", delete_selected),
+            ("Очистити", clear_all),
+        ):
+            tk.Button(
+                buttons, text=label, command=command, bg=PANEL, fg=TEXT,
+                activebackground=LINE, activeforeground=CYAN, relief="flat",
+                bd=0, font=("Segoe UI", 9), padx=12, pady=6, cursor="hand2",
+            ).pack(side="left", padx=(0, 6))
+
+        refresh()
+
+    # ── порядок у файлах ─────────────────────────────────────────────────────
+    def open_organizer(self) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("J.A.R.V.I.S. · Порядок у файлах")
+        win.configure(bg=BG)
+        win.geometry("760x560")
+        win.transient(self.root)
+        folder = Path.home() / "Downloads"
+
+        tk.Label(
+            win, text="ПОРЯДОК У ФАЙЛАХ", bg=BG, fg=TEXT,
+            font=("Segoe UI", 14, "bold"),
+        ).pack(anchor="w", padx=18, pady=(16, 2))
+        tk.Label(
+            win, text=f"Папка: {folder}", bg=BG, fg=MUTED, font=("Segoe UI", 8),
+        ).pack(anchor="w", padx=18)
+
+        frame = tk.Frame(win, bg=LINE, padx=1, pady=1)
+        frame.pack(fill="both", expand=True, padx=18, pady=(10, 6))
+        listbox = tk.Listbox(
+            frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
+            selectforeground=TEXT, activestyle="none", relief="flat",
+            font=("Consolas", 9), height=16,
+        )
+        scroll = ttk.Scrollbar(
+            frame, orient="vertical", command=listbox.yview,
+            style="Jarvis.Vertical.TScrollbar",
+        )
+        listbox.config(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        listbox.pack(side="left", fill="both", expand=True, padx=8, pady=8)
+
+        status = tk.Label(win, text="", bg=BG, fg=CYAN_DIM, font=("Segoe UI", 8))
+        status.pack(anchor="w", padx=18)
+        moves: list[dict] = []
+
+        def refresh() -> None:
+            moves.clear()
+            listbox.delete(0, "end")
+            try:
+                moves.extend(file_organizer.plan(folder))
+            except file_organizer.FileOrganizerError as exc:
+                status.config(text=str(exc))
+                return
+            for move in moves:
+                listbox.insert(
+                    "end",
+                    f"{Path(move['source']).name}  →  {move['category']}/",
+                )
+            status.config(
+                text=(
+                    f"Файлів до сортування: {len(moves)}"
+                    if moves
+                    else "Все вже розсортовано."
+                )
+            )
+
+        def apply_now() -> None:
+            if not moves:
+                status.config(text="Немає що сортувати.")
+                return
+            preview = "\n".join(
+                f"{Path(m['source']).name} → {m['category']}/" for m in moves[:15]
+            )
+            if not messagebox.askyesno(
+                "Сортування",
+                f"Перемістити {len(moves)} файл(ів)?\n\n{preview}",
+                parent=win,
+            ):
+                return
+            result = file_organizer.apply_plan(moves, dry_run=False)
+            status.config(
+                text=f"Переміщено: {len(result['moved'])}, "
+                f"пропущено: {len(result['skipped'])}, "
+                f"помилок: {len(result['errors'])}"
+            )
+            refresh()
+
+        buttons = tk.Frame(win, bg=BG)
+        buttons.pack(fill="x", padx=18, pady=10)
+        for label, command in (
+            ("Оновити", refresh),
+            ("Сортувати", apply_now),
+            ("Закрити", win.destroy),
+        ):
+            tk.Button(
+                buttons, text=label, command=command, bg=PANEL, fg=TEXT,
+                activebackground=LINE, activeforeground=CYAN, relief="flat",
+                bd=0, font=("Segoe UI", 9), padx=12, pady=6, cursor="hand2",
+            ).pack(side="left", padx=(0, 6))
+        refresh()
+
+    # ── проактивний брифінг ──────────────────────────────────────────────────
+    def _build_briefing_text(self) -> str:
+        reminders = load_local_records(REMINDERS_PATH)
+        automations = load_local_records(AUTOMATIONS_PATH)
+        return proactive.collect_briefing(self.cfg, reminders, automations)
+
+    def _deliver_briefing(self) -> None:
+        try:
+            text = self._build_briefing_text()
+        except Exception as exc:  # noqa: BLE001
+            logging.exception("Briefing failed")
+            text = f"Не вдалося зібрати брифінг: {exc}"
+        self.ui(self._log, "jarvis", text)
+        if not self.cfg.get("mute"):
+            try:
+                threading.Thread(
+                    target=self.voice.speak, args=(text,), daemon=True
+                ).start()
+            except Exception:  # noqa: BLE001
+                logging.exception("Briefing voice failed")
+        self._ready_later(4000)
+
+    def open_briefing(self) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("J.A.R.V.I.S. · Ранковий брифінг")
+        win.configure(bg=BG)
+        win.geometry("660x560")
+        win.transient(self.root)
+
+        tk.Label(
+            win, text="РАНКОВИЙ БРИФІНГ", bg=BG, fg=TEXT,
+            font=("Segoe UI", 14, "bold"),
+        ).pack(anchor="w", padx=18, pady=(16, 2))
+        info = tk.Label(
+            win,
+            text=(
+                f"Місто: {self.cfg.get('briefing_city') or 'Київ'} · "
+                f"час: {self.cfg.get('briefing_time') or '09:00'}"
+            ),
+            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+        )
+        info.pack(anchor="w", padx=18)
+
+        text_box = tk.Text(
+            win, bg=PANEL, fg=TEXT, insertbackground=CYAN, relief="flat",
+            wrap="word", font=("Segoe UI", 10), height=16,
+        )
+        text_box.pack(fill="both", expand=True, padx=18, pady=10)
+        text_box.insert("1.0", "Збираю дані…")
+        status = tk.Label(win, text="", bg=BG, fg=CYAN_DIM, font=("Segoe UI", 8))
+        status.pack(anchor="w", padx=18)
+
+        def fill(value: str) -> None:
+            text_box.delete("1.0", "end")
+            text_box.insert("1.0", value)
+            status.config(text="Готово.")
+
+        def run_now() -> None:
+            status.config(text="Збираю погоду, курс і нагадування…")
+
+            def worker() -> None:
+                try:
+                    value = self._build_briefing_text()
+                except Exception as exc:  # noqa: BLE001
+                    value = f"Помилка брифінгу: {exc}"
+                self.ui(fill, value)
+
+            threading.Thread(target=worker, daemon=True).start()
+
+        def enable_daily() -> None:
+            when = str(self.cfg.get("briefing_time") or "09:00")
+            try:
+                record = build_automation(
+                    "Ранковий брифінг",
+                    f"daily {when}",
+                    action="briefing",
+                    automation_id="briefing-daily",
+                )
+            except AutomationError as exc:
+                status.config(text=str(exc))
+                return
+            records = [
+                item
+                for item in load_local_records(AUTOMATIONS_PATH)
+                if item.get("id") != "briefing-daily"
+            ]
+            records.append(record)
+            save_local_records(AUTOMATIONS_PATH, records)
+            status.config(text=f"Щоденний брифінг увімкнено о {when}.")
+
+        def disable_daily() -> None:
+            records = load_local_records(AUTOMATIONS_PATH)
+            for item in records:
+                if item.get("id") == "briefing-daily":
+                    item["enabled"] = False
+            save_local_records(AUTOMATIONS_PATH, records)
+            status.config(text="Щоденний брифінг вимкнено.")
+
+        buttons = tk.Frame(win, bg=BG)
+        buttons.pack(fill="x", padx=18, pady=10)
+        for label, command in (
+            ("Отримати зараз", run_now),
+            ("Увімкнути щодня", enable_daily),
+            ("Вимкнути", disable_daily),
+            ("Закрити", win.destroy),
+        ):
+            tk.Button(
+                buttons, text=label, command=command, bg=PANEL, fg=TEXT,
+                activebackground=LINE, activeforeground=CYAN, relief="flat",
+                bd=0, font=("Segoe UI", 9), padx=10, pady=6, cursor="hand2",
+            ).pack(side="left", padx=(0, 6))
+        win.after(200, run_now)
+
+    # ── HUD-орб ──────────────────────────────────────────────────────────────
+    def _apply_hud(self) -> None:
+        want = bool(self.cfg.get("hud_enabled"))
+        if want and self.hud is None:
+            try:
+                self.hud = HudOrb(self.root, on_click=self._focus_from_hud)
+            except Exception:  # noqa: BLE001
+                logging.exception("HUD creation failed")
+                self.hud = None
+        elif not want and self.hud is not None:
+            try:
+                self.hud.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+            self.hud = None
+
+    def _focus_from_hud(self) -> None:
+        def action() -> None:
+            try:
+                self.root.deiconify()
+                self.root.lift()
+                self.root.focus_force()
+            except tk.TclError:
+                pass
+
+        self.ui(action)
+
+    # ── Telegram ─────────────────────────────────────────────────────────────
+    def _restart_telegram(self) -> None:
+        self._stop_telegram()
+        if not self.cfg.get("telegram_enabled"):
+            return
+        token = str(self.cfg.get("telegram_token") or "").strip()
+        if not token:
+            self._log("sys", "Telegram: спочатку додай токен бота в налаштуваннях.")
+            return
+        try:
+            self.telegram_brain = Brain(dict(self.cfg))
+            self._telegram_bot = TelegramBot(
+                token,
+                str(self.cfg.get("telegram_chat_id") or ""),
+                handler=self._on_telegram_message,
+            )
+        except TelegramError as exc:
+            self._log("sys", f"Telegram: {exc}")
+            return
+        self._telegram_stop = threading.Event()
+        self._telegram_thread = threading.Thread(
+            target=self._telegram_bot.run_forever,
+            args=(self._telegram_stop,),
+            daemon=True,
+        )
+        self._telegram_thread.start()
+        self._log("sys", "Telegram-бот запущено. Команди: /status, /briefing, /ask <текст>.")
+
+    def _stop_telegram(self) -> None:
+        stop = getattr(self, "_telegram_stop", None)
+        if stop is not None:
+            stop.set()
+        bot = getattr(self, "_telegram_bot", None)
+        if bot is not None:
+            try:
+                bot.close()
+            except Exception:  # noqa: BLE001
+                pass
+        thread = getattr(self, "_telegram_thread", None)
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=2)
+        self._telegram_bot = None
+        self._telegram_thread = None
+        self._telegram_stop = None
+
+    def _telegram_ask(self, text: str) -> str:
+        brain = self.telegram_brain or self.brain
+        try:
+            return brain.ask(text, tool_runner=None)
+        except Exception as exc:  # noqa: BLE001
+            return f"Помилка: {exc}"
+
+    def _on_telegram_message(self, bot, message: dict) -> None:
+        text = str(message.get("text") or "").strip()
+        lowered = text.casefold()
+        if lowered in ("/start", "start", "/help"):
+            reply = (
+                "JARVIS на зв'язку. Команди: /status, /briefing, /ask <текст>. "
+                "Інструменти керування ПК через Telegram вимкнені."
+            )
+        elif lowered.startswith("/status"):
+            reply = (
+                f"JARVIS {APP_VERSION} · модель {self.cfg.get('model')} · "
+                f"режим {self.cfg.get('response_mode')}"
+            )
+        elif lowered.startswith("/briefing"):
+            reply = self._build_briefing_text()
+        elif lowered.startswith("/ask"):
+            reply = self._telegram_ask(text[4:].strip() or "Привіт")
+        else:
+            reply = self._telegram_ask(text)
+        try:
+            bot.send_message(reply)
+        except Exception:  # noqa: BLE001
+            logging.exception("Telegram reply failed")
+
+    # ── стеження за «Завантаженнями» ────────────────────────────────────────
+    def _restart_downloads_watch(self) -> None:
+        self._stop_downloads_watch()
+        if not self.cfg.get("watch_downloads"):
+            return
+        self._watch_stop = threading.Event()
+        self._watch_thread = threading.Thread(
+            target=self._downloads_watch_loop,
+            args=(self._watch_stop,),
+            daemon=True,
+        )
+        self._watch_thread.start()
+
+    def _stop_downloads_watch(self) -> None:
+        stop = getattr(self, "_watch_stop", None)
+        if stop is not None:
+            stop.set()
+        thread = getattr(self, "_watch_thread", None)
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=2)
+        self._watch_thread = None
+        self._watch_stop = None
+        self._downloads_snapshot = {}
+
+    def _downloads_watch_loop(self, stop: threading.Event) -> None:
+        folder = Path.home() / "Downloads"
+        previous = file_organizer.snapshot(folder)
+        self._downloads_snapshot = previous
+        try:
+            interval = max(10, int(self.cfg.get("watch_downloads_interval") or 30))
+        except (TypeError, ValueError):
+            interval = 30
+        while not stop.wait(interval):
+            current = file_organizer.snapshot(folder)
+            fresh = file_organizer.new_files(previous, current)
+            previous = current
+            self._downloads_snapshot = current
+            if not fresh:
+                continue
+            names = ", ".join(Path(path).name for path in fresh[:5])
+            more = f" і ще {len(fresh) - 5}" if len(fresh) > 5 else ""
+
+            def announce(summary: str = names + more) -> None:
+                self._log("sys", f"Нові файли в «Завантаженнях»: {summary}")
+                try:
+                    self.root.bell()
+                except tk.TclError:
+                    pass
+
+            self.ui(announce)
+
     def open_memory_manager(self) -> None:
         win = tk.Toplevel(self.root)
         win.title("Локальна пам’ять J.A.R.V.I.S.")
@@ -9784,6 +10564,21 @@ class JarvisApp:
         provider_field("MISTRAL API · FREE", "mistral_api_key", 5, 0)
         provider_field("TOGETHER API · FREE", "together_api_key", 5, 1)
         provider_field("ASHNA API · PAID PLAN", "ashna_api_key", 6, 0, colspan=2)
+        provider_field(
+            "СВІЙ ПРОВАЙДЕР · НАЗВА", "custom_provider_name", 7, 0, secret=False,
+        )
+        provider_field(
+            "СВІЙ ПРОВАЙДЕР · URL", "custom_api_url", 7, 1, secret=False,
+            hint="OpenAI-сумісний endpoint, наприклад https://host/v1/chat/completions",
+        )
+        provider_field(
+            "СВІЙ ПРОВАЙДЕР · МОДЕЛЬ", "custom_model", 8, 0, secret=False,
+            hint="ID моделі, який очікує endpoint.",
+        )
+        provider_field(
+            "СВІЙ ПРОВАЙДЕР · API-КЛЮЧ", "custom_api_key", 8, 1,
+            hint="Модель обирай як custom/<model> у списку моделей.",
+        )
 
         tk.Label(
             win,
@@ -9837,6 +10632,24 @@ class JarvisApp:
                                  activeforeground=CYAN)
         model_box.pack(side="left", fill="x", expand=True)
         populate_model_menu(initial_model_ids)
+        custom_model_row = tk.Frame(win, bg=BG)
+        custom_model_row.pack(fill="x", padx=18, pady=(5, 0))
+        tk.Label(
+            custom_model_row, text="СВІЙ ID МОДЕЛІ", bg=BG, fg=CYAN_DIM,
+            font=("Consolas", 8),
+        ).pack(side="left", padx=(0, 8))
+        custom_model_var = tk.StringVar(value="")
+        custom_model_entry = tk.Entry(
+            custom_model_row, textvariable=custom_model_var, bg=PANEL, fg=TEXT,
+            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+        )
+        custom_model_entry.pack(side="left", fill="x", expand=True, ipady=5)
+        self._bind_clipboard_shortcuts(custom_model_entry)
+        tk.Label(
+            win,
+            text="Для свого провайдера введи custom/<model> — напр. custom/gpt-4o-mini.",
+            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+        ).pack(anchor="w", padx=18, pady=(2, 0))
         free_models_status = tk.Label(
             win, text="Безкоштовні моделі ще не оновлено.", bg=BG, fg=MUTED,
             font=("Segoe UI", 8),
@@ -10219,6 +11032,77 @@ class JarvisApp:
         ha_token_entry.pack(fill="x", padx=18, ipady=6)
         self._bind_clipboard_shortcuts(ha_token_entry)
 
+        tk.Label(win, text="ФІЧІ JARVIS", bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+        clip_hist_var = tk.BooleanVar(
+            value=bool(self.cfg.get("clipboard_history", True))
+        )
+        watch_dl_var = tk.BooleanVar(value=bool(self.cfg.get("watch_downloads")))
+        hud_var = tk.BooleanVar(value=bool(self.cfg.get("hud_enabled")))
+        tg_enabled_var = tk.BooleanVar(value=bool(self.cfg.get("telegram_enabled")))
+        features_row = tk.Frame(win, bg=BG)
+        features_row.pack(fill="x", padx=18)
+        for text, variable in (
+            ("Історія буфера", clip_hist_var),
+            ("Стежити за «Завантаженнями»", watch_dl_var),
+            ("HUD-орб", hud_var),
+            ("Telegram-бот", tg_enabled_var),
+        ):
+            tk.Checkbutton(
+                features_row, text=text, variable=variable, bg=BG, fg=TEXT,
+                selectcolor=PANEL, activebackground=BG, activeforeground=CYAN,
+                font=("Segoe UI", 9),
+            ).pack(side="left", padx=(0, 12))
+
+        tg_row = tk.Frame(win, bg=BG)
+        tg_row.pack(fill="x", padx=18, pady=(6, 0))
+        tk.Label(tg_row, text="TELEGRAM · ТОКЕН", bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 8)).pack(anchor="w")
+        tg_token_var = tk.StringVar(value=str(self.cfg.get("telegram_token") or ""))
+        tg_token_entry = tk.Entry(
+            tg_row, textvariable=tg_token_var, bg=PANEL, fg=TEXT, show="•",
+            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+        )
+        tg_token_entry.pack(fill="x", ipady=5)
+        self._bind_clipboard_shortcuts(tg_token_entry)
+
+        tg_chat_var = tk.StringVar(value=str(self.cfg.get("telegram_chat_id") or ""))
+        tg_chat_row = tk.Frame(win, bg=BG)
+        tg_chat_row.pack(fill="x", padx=18, pady=(6, 0))
+        tk.Label(tg_chat_row, text="TELEGRAM · CHAT ID", bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 8)).pack(side="left", padx=(0, 8))
+        tg_chat_entry = tk.Entry(
+            tg_chat_row, textvariable=tg_chat_var, bg=PANEL, fg=TEXT,
+            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+        )
+        tg_chat_entry.pack(side="left", fill="x", expand=True, ipady=5)
+        self._bind_clipboard_shortcuts(tg_chat_entry)
+
+        brief_row = tk.Frame(win, bg=BG)
+        brief_row.pack(fill="x", padx=18, pady=(6, 0))
+        tk.Label(brief_row, text="БРИФІНГ · МІСТО", bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 8)).pack(side="left", padx=(0, 8))
+        brief_city_var = tk.StringVar(
+            value=str(self.cfg.get("briefing_city") or "Київ")
+        )
+        brief_city_entry = tk.Entry(
+            brief_row, textvariable=brief_city_var, bg=PANEL, fg=TEXT,
+            insertbackground=CYAN, relief="flat", font=("Consolas", 9), width=18,
+        )
+        brief_city_entry.pack(side="left", ipady=5)
+        self._bind_clipboard_shortcuts(brief_city_entry)
+        tk.Label(brief_row, text="ЧАС", bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 8)).pack(side="left", padx=(12, 8))
+        brief_time_var = tk.StringVar(
+            value=str(self.cfg.get("briefing_time") or "09:00")
+        )
+        brief_time_entry = tk.Entry(
+            brief_row, textvariable=brief_time_var, bg=PANEL, fg=TEXT,
+            insertbackground=CYAN, relief="flat", font=("Consolas", 9), width=8,
+        )
+        brief_time_entry.pack(side="left", ipady=5)
+        self._bind_clipboard_shortcuts(brief_time_entry)
+
         def save():
             self.cfg["openrouter_key"] = key_var.get().strip()
             self.cfg["gemini_api_key"] = gemini_key_var.get().strip()
@@ -10228,7 +11112,8 @@ class JarvisApp:
                 self.cfg[field] = var.get().strip()
             selected_label = model_var.get().strip()
             self.cfg["model"] = (
-                model_ids_by_label.get(selected_label, selected_label)
+                custom_model_var.get().strip()
+                or model_ids_by_label.get(selected_label, selected_label)
                 or DEFAULT_CONFIG["model"]
             )
             self.cfg["roblox_private_server"] = roblox_server_var.get().strip()
@@ -10254,6 +11139,14 @@ class JarvisApp:
             self.cfg["plugins_enabled"] = bool(plugins_var.get())
             self.cfg["home_assistant_url"] = ha_url_var.get().strip()
             self.cfg["home_assistant_token"] = ha_token_var.get().strip()
+            self.cfg["clipboard_history"] = bool(clip_hist_var.get())
+            self.cfg["watch_downloads"] = bool(watch_dl_var.get())
+            self.cfg["hud_enabled"] = bool(hud_var.get())
+            self.cfg["telegram_enabled"] = bool(tg_enabled_var.get())
+            self.cfg["telegram_token"] = tg_token_var.get().strip()
+            self.cfg["telegram_chat_id"] = tg_chat_var.get().strip()
+            self.cfg["briefing_city"] = brief_city_var.get().strip() or "Київ"
+            self.cfg["briefing_time"] = brief_time_var.get().strip() or "09:00"
             save_config(self.cfg)
             self.brain.cfg = self.cfg
             self.voice.cfg = self.cfg
@@ -10265,6 +11158,9 @@ class JarvisApp:
             self._configure_hotkey()
             self._configure_wake_word()
             self._update_gaming_label()
+            self._apply_hud()
+            self._restart_telegram()
+            self._restart_downloads_watch()
             try:
                 self.tools.load_plugins()
             except Exception:

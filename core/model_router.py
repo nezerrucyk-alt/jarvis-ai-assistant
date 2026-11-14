@@ -81,6 +81,12 @@ class ModelRouter:
             "url_field": "cursor_api_url",
             "model_field": "cursor_model",
         },
+        "custom": {
+            "url": "",
+            "url_field": "custom_api_url",
+            "key_field": "custom_api_key",
+            "model_field": "custom_model",
+        },
         "openrouter": {
             "url": "https://openrouter.ai/api/v1/chat/completions",
             "key_field": "openrouter_key",
@@ -173,6 +179,8 @@ class ModelRouter:
                 custom_model = str(self.config.get(model_field) or "").strip()
                 if custom_model:
                     api_model = custom_model
+            if not url:
+                return []
             if not provider["key_field"]:
                 return [(url, api_model, "ollama")]
             return [

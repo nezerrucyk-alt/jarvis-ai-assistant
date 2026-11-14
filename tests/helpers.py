@@ -35,6 +35,7 @@ JARVIS_PATH_VARS = (
     "AUTOMATIONS_PATH",
     "CHATS_PATH",
     "CUSTOMIZATION_PATH",
+    "CLIPBOARD_PATH",
     "ICON_PATH",
 )
 
@@ -75,6 +76,7 @@ def install_temp_paths(jarvis_module, tmp_dir: Path, config: Optional[dict] = No
     jarvis_module.AUTOMATIONS_PATH = tmp_dir / "automations.json"
     jarvis_module.CHATS_PATH = tmp_dir / "chats.json"
     jarvis_module.CUSTOMIZATION_PATH = tmp_dir / "customization.json"
+    jarvis_module.CLIPBOARD_PATH = tmp_dir / "clipboard.json"
     jarvis_module.ICON_PATH = tmp_dir / "missing_icon.ico"  # не читаємо реальну іконку
 
     cfg = dict(TEST_CONFIG)
