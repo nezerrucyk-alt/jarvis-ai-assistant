@@ -1,8 +1,21 @@
-# J.A.R.V.I.S. — що змінилося (версія 2.1.0)
+# J.A.R.V.I.S. — що змінилося (версія 2.2.0)
 
-Оновлено: 11.11.2026
+Оновлено: 14.11.2026
 
 ## Головне в цьому білді
+
+- Wake word «Hey Jarvis»: локальний openWakeWord, резервний VAD + Google STT, cooldown і до трьох реплік продовження без натискання кнопки.
+- Повний офлайн-режим: Ollama для Brain, опційні whisper.cpp для STT і Piper для TTS; хмарні ключі ігноруються.
+- Довготривала пам'ять із локальними хеш-embeddings `hash-v1` (384 виміри): до промпту потрапляють найрелевантніші записи, а не останні 30.
+- Планові автоматизації: `once`, `daily`, `weekly`, `every`; дії `prompt` і `notify`; вікно менеджера й три інструменти. Без свавільного shell.
+- Локальний marketplace плагінів: JSON-реєстр, перевірка SHA256, ліміт розміру, захист від path traversal і явне підтвердження.
+- Вкладка «Кастомізація»: теми, пресети, порядок блоків, шрифти, анімації, живе прев'ю й редактор кастомного коду.
+- Повний прогін тестів: **197 тестів OK**.
+- Реліз: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.2.0
+
+## Попередній білд — 2.1.0
+
+Оновлено: 11.11.2026
 
 - Новий інтерфейс «Command Deck»: бокова навігація, reactor-hero, стрічка діалогу, черга завдань і нижній командний рядок. Мінімум 900×640, стандарт 1240×860.
 - Нижній composer: `+` для файлів/скріншотів/буфера, вибір моделі, вибір режиму (додано «Макс»), «У чергу», стрілка надсилання; Enter / Shift+Enter / Ctrl+Enter.
@@ -74,15 +87,17 @@
 - Home Assistant ще не підключений: потрібно вписати URL і токен у Налаштуваннях.
 
 ## Що далі
-1. Підключити Home Assistant і протестувати на реальному інстансі.
-2. Відкликати старий ключ Ashna.
-3. Додати Intel-збірку macOS (зараз лише Apple Silicon).
-4. За бажанням: Pro-сторінка, автооновлення exe.
+1. Живий тест мікрофона: «Hey Jarvis», поріг `wake_word_threshold`, cooldown і три репліки продовження.
+2. Перевірити офлайн-режим на реальній Ollama; за бажанням підключити whisper.cpp/Piper.
+3. Перевірити marketplace (встановлення/видалення, SHA256 mismatch) і автоматизації (once/daily/weekly/every).
+4. Розібрати 10 Dependabot PR і оновити залежності, якщо CI зелений.
+5. Home Assistant URL/токен, ротація ключа Ashna, Android CI, Intel macOS і комерційний підпис.
 
 ## Публікація
 - Сайт: https://nezerrucyk-alt.github.io/jarvis-ai-assistant/
-- Реліз: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.0.0
+- Реліз: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.2.0
 - Ассети:
-  - `JARVIS.exe` — Windows 10/11 x64, 89 393 601 байт, SHA256 `1465CCC7AFF82355953E47E319FCACE1FA512BD2358C3C82B71B771073A190DB`.
-  - `JARVIS-macOS.zip` — macOS 11+ Apple Silicon, 75 877 396 байт, SHA256 `C1349A2A1990F65802B36A9F118BEE9CEAEDB1C8ADD1B391403A65062FE387B7`.
-  - `JARVIS-Linux.tar.gz` — Linux x86_64, 105 176 023 байт, SHA256 `543687CD00A2B15D8119348DBCFE9A352BF544186C39C041DABA8D3C3B21AAA0`.
+  - `JARVIS-Windows.exe` — Windows 10/11 x64, 98 732 260 байт, SHA256 `9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A`.
+  - `JARVIS-macOS.zip` — macOS 11+ Apple Silicon, 81 075 776 байт, SHA256 `3DD71456378108316122B3B0720085E70D75649C05B66529DE820BB087CB5D11`.
+  - `JARVIS-Linux.tar.gz` — Linux x86_64, 110 618 107 байт, SHA256 `933D05E6E17FBDE348BC48FE711F4C3409215302F08D1068B06EC4C577BBF060`.
+- `SHA256SUMS.txt` і GitHub build provenance опубліковані; атестації пройшли.

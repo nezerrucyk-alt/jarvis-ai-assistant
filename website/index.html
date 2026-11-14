@@ -74,7 +74,7 @@
     <div class="wrap">
       <div class="hero-grid">
         <div>
-          <div class="badge"><span class="pulse"></span> <span data-en="Windows · macOS · Linux">Windows · macOS · Linux</span> · <span data-en="version">версія</span> <span data-release-version>2.1.0</span></div>
+          <div class="badge"><span class="pulse"></span> <span data-en="Windows · macOS · Linux">Windows · macOS · Linux</span> · <span data-en="version">версія</span> <span data-release-version>2.2.0</span></div>
           <h1>
             <span data-en="Your voice.">Твій голос.</span><br>
             <span class="gradient-text" data-en="Your computer. One Jarvis.">Твій комп'ютер. Один Джарвіс.</span>
@@ -451,8 +451,8 @@
             <li data-en="Intel Mac build added to the release matrix; the Android APK stays experimental and no longer blocks desktop releases.">Збірку для Intel Mac додано до матриці релізу; Android APK лишається експериментальним і більше не блокує десктопні релізи.</li>
           </ul>
         </article>
-        <article class="release upcoming">
-          <div class="release-head"><strong>2.2.0</strong><time datetime="2026-11-12">12.11.2026</time><span class="release-badge" data-en="in progress">у підготовці</span></div>
+        <article class="release latest">
+          <div class="release-head"><strong>2.2.0</strong><time datetime="2026-11-14">14.11.2026</time><span class="release-badge" data-en="new">нове</span></div>
           <ul>
             <li data-en="New Customize tab: theme colors, presets, block order and visibility, fonts, animations and a live preview — all without editing code.">Нова вкладка «Кастомізація»: кольори теми, пресети, порядок і видимість блоків, шрифти, анімації та живе прев'ю — без редагування коду.</li>
             <li data-en="Custom code editor with a preview pane and an explicit enable switch; settings persist in %APPDATA%\Jarvis\customization.json and apply without a restart.">Редактор кастомного коду з вікном прев'ю й окремим перемикачем; налаштування зберігаються в %APPDATA%\Jarvis\customization.json і застосовуються без перезапуску.</li>
@@ -462,11 +462,11 @@
             <li data-en="Scheduled automations: once, daily, weekly and interval schedules with prompt or notify actions, a manager window and three new tools. No arbitrary shell execution.">Заплановані автоматизації: розклади once, daily, weekly та interval із діями prompt або notify, вікно менеджера й три нові інструменти. Без свавільного виконання shell-команд.</li>
             <li data-en="Local plugin marketplace with a JSON registry, SHA256 verification, code size limits, path-traversal protection and explicit confirmation before install.">Локальний marketplace плагінів із JSON-реєстром, перевіркою SHA256, обмеженням розміру, захистом від path traversal і явним підтвердженням перед встановленням.</li>
             <li data-en="Offline mode routes every request to local Ollama models, ignores cloud keys, and supports optional whisper.cpp STT and Piper TTS with honest fallbacks.">Офлайн-режим спрямовує всі запити до локальних моделей Ollama, ігнорує хмарні ключі та підтримує опційні whisper.cpp STT і Piper TTS із чесними fallback.</li>
-            <li data-en="Windows, macOS and Linux builds are published after the release workflow finishes; this entry becomes the latest release then.">Збірки для Windows, macOS і Linux публікуються після завершення release-workflow; тоді цей запис стане останнім релізом.</li>
+            <li data-en="Windows, macOS and Linux builds are published with SHA256SUMS.txt and GitHub build provenance; the download cards and verification section below show the new hashes.">Збірки для Windows, macOS і Linux опубліковані разом із SHA256SUMS.txt і GitHub-атестаціями походження; картки завантаження й секція перевірки нижче показують нові хеші.</li>
           </ul>
         </article>
-        <article class="release latest">
-          <div class="release-head"><strong>2.1.0</strong><time datetime="2026-11-11">11.11.2026</time><span class="release-badge" data-en="new">нове</span></div>
+        <article class="release">
+          <div class="release-head"><strong>2.1.0</strong><time datetime="2026-11-11">11.11.2026</time><span class="release-badge" data-en="previous">попередній</span></div>
           <ul>
             <li data-en="New Command Deck interface: sidebar navigation, reactor hero, dialogue stream, task queue and bottom command bar. Minimum 900×640, standard 1240×860.">Новий інтерфейс Command Deck: бокова навігація, reactor-hero, стрічка діалогу, черга завдань і нижній командний рядок. Мінімум 900×640, стандарт 1240×860.</li>
             <li data-en="Composer with + attachments (files, screenshots, clipboard), model and mode pickers, queue button and send arrow. Enter to send, Shift+Enter for a new line, Ctrl+Enter to queue.">Composer із кнопкою «+» для файлів, скріншотів і буфера, вибором моделі й режиму, кнопкою черги та стрілкою надсилання. Enter — надіслати, Shift+Enter — новий рядок, Ctrl+Enter — у чергу.</li>
@@ -736,8 +736,8 @@
             <p data-en="Pick your system. No installer, no account, no subscription. Keys and chats stay on your machine.">Обери свою систему. Без інсталятора, акаунта й підписки. Ключі та чати залишаються на твоєму ПК.</p>
           </div>
           <div class="download-info">
-            <div><span data-en="Version">Версія</span><strong data-release-version>2.1.0</strong></div>
-            <div><span data-en="Last update">Оновлено</span><strong><time data-release-date datetime="2026-11-11">11.11.2026</time></strong></div>
+            <div><span data-en="Version">Версія</span><strong data-release-version>2.2.0</strong></div>
+            <div><span data-en="Last update">Оновлено</span><strong><time data-release-date datetime="2026-11-14">14.11.2026</time></strong></div>
             <div><span data-en="Downloads">Завантажень</span><strong id="downloadCount">—</strong></div>
           </div>
         </div>
@@ -750,13 +750,13 @@
             <h3>Windows</h3>
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub">Windows 10/11 x64 · .exe</p>
-            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>89.6 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-11">11.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.1.0/JARVIS.exe">
+            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>98.7 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
+            <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.2.0/JARVIS-Windows.exe">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-en="Download .exe">Завантажити .exe</span>
             </a>
-            <button class="sha js-sha" type="button" data-sha="6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC" title="Скопіювати SHA256">SHA256 6D31F77B…1A3EC</button>
+            <button class="sha js-sha" type="button" data-sha="9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A" title="Скопіювати SHA256">SHA256 9970333D…8296A</button>
           </article>
 
           <article class="platform-card">
@@ -766,16 +766,16 @@
             <h3>macOS</h3>
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub" data-en="macOS 11+ · Apple Silicon · .zip">macOS 11+ · Apple Silicon · .zip</p>
-            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>75.7 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-11">11.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="macos" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.1.0/JARVIS-macOS.zip">
+            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>81.1 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
+            <a class="btn btn-primary js-download" data-download="macos" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.2.0/JARVIS-macOS.zip">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-en="Download .zip">Завантажити .zip</span>
             </a>
             <a class="platform-alt js-download js-optional-download" data-download="macos-intel" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/latest/download/JARVIS-macOS-Intel.zip" hidden>
               <span data-en="Intel Mac build →">Збірка для Intel Mac →</span>
             </a>
-            <button class="sha js-sha" type="button" data-sha="E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE" title="Скопіювати SHA256">SHA256 E8652BFD…19ABE</button>
+            <button class="sha js-sha" type="button" data-sha="3DD71456378108316122B3B0720085E70D75649C05B66529DE820BB087CB5D11" title="Скопіювати SHA256">SHA256 3DD71456…CB5D11</button>
           </article>
 
           <article class="platform-card">
@@ -785,13 +785,13 @@
             <h3>Linux</h3>
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub">Linux x86_64 · .tar.gz</p>
-            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>105.3 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-11">11.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="linux" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.1.0/JARVIS-Linux.tar.gz">
+            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>110.6 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
+            <a class="btn btn-primary js-download" data-download="linux" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.2.0/JARVIS-Linux.tar.gz">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-en="Download .tar.gz">Завантажити .tar.gz</span>
             </a>
-            <button class="sha js-sha" type="button" data-sha="928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0" title="Скопіювати SHA256">SHA256 928B932B…337F0</button>
+            <button class="sha js-sha" type="button" data-sha="933D05E6E17FBDE348BC48FE711F4C3409215302F08D1068B06EC4C577BBF060" title="Скопіювати SHA256">SHA256 933D05E6…BBF060</button>
           </article>
         </div>
 
@@ -852,20 +852,20 @@
 
       <div class="verify-hashes" data-reveal>
         <div class="verify-hashes-head">
-          <h3 data-en="SHA256 for v2.1.0">SHA256 для v2.1.0</h3>
+          <h3 data-en="SHA256 for v2.2.0">SHA256 для v2.2.0</h3>
           <span class="mono" data-en="Click to copy">Клікни, щоб скопіювати</span>
         </div>
         <div class="verify-hash-row">
           <span>Windows · JARVIS.exe</span>
-          <button class="sha js-sha" type="button" data-sha="6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC">6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC</button>
+          <button class="sha js-sha" type="button" data-sha="9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A">9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A</button>
         </div>
         <div class="verify-hash-row">
           <span>macOS · JARVIS-macOS.zip</span>
-          <button class="sha js-sha" type="button" data-sha="E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE">E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE</button>
+          <button class="sha js-sha" type="button" data-sha="3DD71456378108316122B3B0720085E70D75649C05B66529DE820BB087CB5D11">3DD71456378108316122B3B0720085E70D75649C05B66529DE820BB087CB5D11</button>
         </div>
         <div class="verify-hash-row">
           <span>Linux · JARVIS-Linux.tar.gz</span>
-          <button class="sha js-sha" type="button" data-sha="928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0">928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0</button>
+          <button class="sha js-sha" type="button" data-sha="933D05E6E17FBDE348BC48FE711F4C3409215302F08D1068B06EC4C577BBF060">933D05E6E17FBDE348BC48FE711F4C3409215302F08D1068B06EC4C577BBF060</button>
         </div>
       </div>
 
@@ -987,7 +987,7 @@
 
     <div class="footer-bottom">
       <span>© 2026 J.A.R.V.I.S. · <span data-en="Not affiliated with Microsoft or Roblox Corporation.">Не пов'язаний із Microsoft чи Roblox Corporation.</span></span>
-      <span class="mono">WINDOWS · MACOS · LINUX · V<span data-release-version>2.1.0</span> · <span id="footerDownloads">—</span> DOWNLOADS</span>
+      <span class="mono">WINDOWS · MACOS · LINUX · V<span data-release-version>2.2.0</span> · <span id="footerDownloads">—</span> DOWNLOADS</span>
     </div>
   </div>
 </footer>
@@ -1074,8 +1074,8 @@
   "name": "J.A.R.V.I.S.",
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Windows 10, Windows 11, macOS 11+, Linux",
-  "softwareVersion": "2.1.0",
-  "fileSize": "89.6MB",
+  "softwareVersion": "2.2.0",
+  "fileSize": "98.7MB",
   "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
   "description": "Voice-controlled AI assistant for Windows, macOS and Linux with plugins, screen vision, translation and local plugins. Full PC control and Roblox Studio on Windows.",
   "sameAs": ["https://www.tiktok.com/@nezer_kicc"]

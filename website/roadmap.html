@@ -94,7 +94,7 @@
           <div class="roadmap-column">
             <div class="roadmap-column-head">
               <h2 data-en="Product">Продукт</h2>
-              <span class="roadmap-count">8</span>
+              <span class="roadmap-count">4</span>
             </div>
             <article class="roadmap-card done">
               <h3 data-en="Customize tab">Вкладка «Кастомізація»</h3>
@@ -118,7 +118,7 @@
           <div class="roadmap-column">
             <div class="roadmap-column-head">
               <h2 data-en="Website">Сайт</h2>
-              <span class="roadmap-count">7</span>
+              <span class="roadmap-count">4</span>
             </div>
             <article class="roadmap-card done">
               <h3 data-en="Premium redesign">Преміум-редизайн</h3>
@@ -141,8 +141,13 @@
           <div class="roadmap-column">
             <div class="roadmap-column-head">
               <h2 data-en="Infrastructure">Інфраструктура</h2>
-              <span class="roadmap-count">6</span>
+              <span class="roadmap-count">4</span>
             </div>
+            <article class="roadmap-card done">
+              <h3 data-en="Release 2.2.0">Реліз 2.2.0</h3>
+              <p data-en="Windows, macOS and Linux builds are published with SHA256SUMS.txt and GitHub build provenance. Wake word, offline mode, memory embeddings, automations and the plugin marketplace shipped in this release.">Збірки для Windows, macOS і Linux опубліковані з SHA256SUMS.txt і GitHub-атестаціями походження. Wake word, офлайн-режим, пам'ять із embeddings, автоматизації й marketplace уже випущені.</p>
+              <span class="roadmap-tag" data-en="2.2.0">2.2.0</span>
+            </article>
             <article class="roadmap-card done">
               <h3 data-en="SHA256SUMS + attestations">SHA256SUMS + атестації</h3>
               <p data-en="Every release publishes hashes and GitHub build provenance so users can verify the binary.">Кожен реліз публікує хеші й GitHub build provenance, щоб користувач міг перевірити бінарник.</p>
@@ -169,14 +174,9 @@
         <div class="roadmap-grid">
           <div class="roadmap-column">
             <div class="roadmap-column-head">
-              <h2 data-en="Release 2.2.0">Реліз 2.2.0</h2>
-              <span class="roadmap-count">3</span>
+              <h2 data-en="After 2.2.0">Після 2.2.0</h2>
+              <span class="roadmap-count">2</span>
             </div>
-            <article class="roadmap-card progress">
-              <h3 data-en="Build and publish 2.2.0">Зібрати й опублікувати 2.2.0</h3>
-              <p data-en="Code and tests are ready; the Windows/macOS/Linux builds are published by the release workflow after the tag.">Код і тести готові; збірки Windows/macOS/Linux публікуються release-workflow після тегу.</p>
-              <span class="roadmap-tag" data-en="in progress">у роботі</span>
-            </article>
             <article class="roadmap-card progress">
               <h3 data-en="Intel macOS build">Збірка для Intel macOS</h3>
               <p data-en="A macos-13 runner is added to the matrix so Intel Macs get a native build instead of Apple Silicon only.">До матриці додано runner macos-13, щоб Intel Mac отримав нативну збірку, а не лише Apple Silicon.</p>
@@ -191,33 +191,33 @@
 
           <div class="roadmap-column">
             <div class="roadmap-column-head">
-              <h2 data-en="Batch 2 · 2.2.0">Batch 2 · 2.2.0</h2>
+              <h2 data-en="2.2.0 · shipped">2.2.0 · випущено</h2>
               <span class="roadmap-count">5</span>
             </div>
-            <article class="roadmap-card progress">
+            <article class="roadmap-card done">
               <h3 data-en="Wake word + VAD">Wake word + VAD</h3>
-              <p data-en="«Hey Jarvis» without a button is implemented with a local openWakeWord backend, an STT fallback, cooldown and up to three follow-up phrases. It still needs a live microphone test and a release.">«Hey Jarvis» без кнопки реалізовано з локальним бекендом openWakeWord, резервним STT, затримкою від повторів і до трьох реплік продовження. Лишився тест із живим мікрофоном і реліз.</p>
-              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+              <p data-en="Shipped in 2.2.0 with a local openWakeWord backend, an STT fallback, cooldown and up to three follow-up phrases. A live microphone test on your hardware is still recommended.">Випущено в 2.2.0 з локальним бекендом openWakeWord, резервним STT, затримкою від повторів і до трьох реплік продовження. Живий тест мікрофона на своєму обладнанні все ще рекомендований.</p>
+              <span class="roadmap-tag" data-en="shipped">випущено</span>
             </article>
-            <article class="roadmap-card progress">
+            <article class="roadmap-card done">
               <h3 data-en="Fully offline mode">Повний офлайн-режим</h3>
-              <p data-en="Local whisper.cpp STT, Piper TTS and Ollama routing are implemented. The user supplies the binaries and models; nothing is downloaded automatically. Waiting for the 2.2.0 release.">Локальні whisper.cpp STT, Piper TTS і маршрутизація Ollama реалізовані. Бінарники й моделі надає користувач; нічого не завантажується автоматично. Чекає на реліз 2.2.0.</p>
-              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+              <p data-en="Shipped in 2.2.0. Local whisper.cpp STT, Piper TTS and Ollama routing; the user supplies the binaries and models, and nothing is downloaded automatically.">Випущено в 2.2.0. Локальні whisper.cpp STT, Piper TTS і маршрутизація Ollama; бінарники й моделі надає користувач, нічого не завантажується автоматично.</p>
+              <span class="roadmap-tag" data-en="shipped">випущено</span>
             </article>
-            <article class="roadmap-card progress">
+            <article class="roadmap-card done">
               <h3 data-en="Memory with embeddings">Пам'ять із embeddings</h3>
-              <p data-en="Local hash embeddings rank saved memories by meaning and inject the top eight into the prompt. No neural model and no network. Waiting for the 2.2.0 release.">Локальні хеш-embeddings ранжують збережені записи за змістом і додають вісім найкращих до запиту. Без нейромережі й мережі. Чекає на реліз 2.2.0.</p>
-              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+              <p data-en="Shipped in 2.2.0. Local hash embeddings rank saved memories by meaning and inject the top eight into the prompt. No neural model and no network.">Випущено в 2.2.0. Локальні хеш-embeddings ранжують збережені записи за змістом і додають вісім найкращих до запиту. Без нейромережі й мережі.</p>
+              <span class="roadmap-tag" data-en="shipped">випущено</span>
             </article>
-            <article class="roadmap-card progress">
+            <article class="roadmap-card done">
               <h3 data-en="Scheduled automations">Автоматизації за розкладом</h3>
-              <p data-en="Once, daily, weekly and interval schedules with prompt or notify actions, a manager window and three tools. No arbitrary shell execution. Waiting for the 2.2.0 release.">Розклади once, daily, weekly та interval із діями prompt або notify, вікно менеджера й три інструменти. Без свавільного shell. Чекає на реліз 2.2.0.</p>
-              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+              <p data-en="Shipped in 2.2.0. Once, daily, weekly and interval schedules with prompt or notify actions, a manager window and three tools. No arbitrary shell execution.">Випущено в 2.2.0. Розклади once, daily, weekly та interval із діями prompt або notify, вікно менеджера й три інструменти. Без свавільного shell.</p>
+              <span class="roadmap-tag" data-en="shipped">випущено</span>
             </article>
-            <article class="roadmap-card progress">
+            <article class="roadmap-card done">
               <h3 data-en="Plugin marketplace">Маркетплейс плагінів</h3>
-              <p data-en="A local JSON registry with SHA256 verification, size limits, path-traversal protection and explicit confirmation. No server and no auto-install. Waiting for the 2.2.0 release.">Локальний JSON-реєстр із перевіркою SHA256, обмеженням розміру, захистом від path traversal і явним підтвердженням. Без сервера й авто-встановлення. Чекає на реліз 2.2.0.</p>
-              <span class="roadmap-tag" data-en="in progress">у роботі</span>
+              <p data-en="Shipped in 2.2.0. A local JSON registry with SHA256 verification, size limits, path-traversal protection and explicit confirmation. No server and no auto-install.">Випущено в 2.2.0. Локальний JSON-реєстр із перевіркою SHA256, обмеженням розміру, захистом від path traversal і явним підтвердженням. Без сервера й авто-встановлення.</p>
+              <span class="roadmap-tag" data-en="shipped">випущено</span>
             </article>
           </div>
 
