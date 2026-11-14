@@ -1,6 +1,10 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-11 (реліз 2.1.0)
+Оновлено: 2026-11-14. Поточна гілка: `main`, останній відомий коміт: `3258ae8`
+(Batch 2: offline mode, memory embeddings, automations and marketplace).
+
+Версія в коді: **2.2.0** (`APP_VERSION`, `modules.__version__`).
+Публічний реліз: **v2.1.0** — v2.2.0 ще не зібраний і не опублікований.
 
 ## Де що лежить
 
@@ -11,123 +15,218 @@
 | Віртуальне середовище | `C:\Users\nezer\Jarvis\.venv\` |
 | Збірка | `C:\Users\nezer\Jarvis\dist\JARVIS.exe` |
 | Робоча копія | `C:\Users\nezer\Jarvis\JARVIS.exe` |
-| Копія на робочому столі | `C:\Users\nezer\OneDrive\Desktop\JARVIS.exe` |
 | Конфіг і ключі | `C:\Users\nezer\AppData\Roaming\Jarvis\config.json` |
 | Історія чатів | `C:\Users\nezer\AppData\Roaming\Jarvis\chats.json` |
-| Лог | `C:\Users\nezer\AppData\Roaming\Jarvis\jarvis.log` |
+| Пам'ять | `C:\Users\nezer\AppData\Roaming\Jarvis\memory.json` |
+| Нагадування | `C:\Users\nezer\AppData\Roaming\Jarvis\reminders.json` |
+| Автоматизації | `C:\Users\nezer\AppData\Roaming\Jarvis\automations.json` |
+| Кастомізація | `C:\Users\nezer\AppData\Roaming\Jarvis\customization.json` |
 | Плагіни | `C:\Users\nezer\AppData\Roaming\Jarvis\plugins\` |
-| Нотатки плагіна | `C:\Users\nezer\AppData\Roaming\Jarvis\notes.json` |
+| Лог | `C:\Users\nezer\AppData\Roaming\Jarvis\jarvis.log` |
 | Сайт | `C:\Users\nezer\Jarvis\website\` |
-| Скріншоти й відео сайту | `C:\Users\nezer\Jarvis\website\assets\` |
-| Генератор пояснювального відео | `C:\Users\nezer\AppData\Local\Temp\opencode\make_howto_video.py` (+ `howto_common.py`, `howto_scenes_a-d.py`) |
+| Marketplace-реєстр | `C:\Users\nezer\Jarvis\assets\marketplace\registry.json` |
+| Marketplace-плагіни | `C:\Users\nezer\Jarvis\assets\marketplace\plugins\` |
 | GitHub-репозиторій | `nezerrucyk-alt/jarvis-ai-assistant` |
 | GitHub Pages | `https://nezerrucyk-alt.github.io/jarvis-ai-assistant/` |
-| GitHub Release | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.0.0` |
-| GitHub Pages workflow | `C:\Users\nezer\Jarvis\.github\workflows\pages.yml` |
-| Демо-профіль для скріншотів | `C:\Users\nezer\AppData\Local\Temp\opencode\jarvis_demo\Jarvis\` |
+| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.1.0` |
 | Лог останньої збірки | `C:\Users\nezer\Jarvis\build_last.log` |
 | Журнал змін | `C:\Users\nezer\Jarvis\CHANGES_SUMMARY.md` |
+| Стан проєкту | `C:\Users\nezer\Jarvis\JARVIS_STATE.md` (цей файл) |
 
-## Актуальний білд
+## Актуальний білд і реліз
 
-Windows (локальна збірка):
-- Файл: `C:\Users\nezer\Jarvis\dist\JARVIS.exe`
-- Розмір: **89 523 472 байт** (85.4 MB)
-- SHA256: **0D2AC79E449A4A63E8CEEC175006AE148A13733B19566497B01649DDEBCD53FA**
-- Версія: 2.0.0 (з фічами оновлення/трею) від 10.11.2026
-- Скопійований у `JARVIS.exe`, на робочий стіл і в `website\downloads\JARVIS.exe` (усі хеші збігаються).
-- Запуск перевірено: 5 плагінів / 9 інструментів, трей активний, без traceback.
+Опублікований v2.1.0 (станом на 2026-11-14):
 
-macOS і Linux (з GitHub Actions, реліз v2.0.0):
-- `JARVIS-macOS.zip` — 75 877 396 байт, SHA256 `C1349A2A1990F65802B36A9F118BEE9CEAEDB1C8ADD1B391403A65062FE387B7`
-- `JARVIS-Linux.tar.gz` — 105 176 023 байт, SHA256 `543687CD00A2B15D8119348DBCFE9A352BF544186C39C041DABA8D3C3B21AAA0`
-- macOS: тільки Apple Silicon (arm64, M1–M4), `.app` без підпису.
-- Linux: x86_64, один виконуваний файл `JARVIS`, потрібні X11/XWayland і аудіо-бібліотеки (`libportaudio2`, `libasound2`).
+- Windows `JARVIS.exe` — 89 567 989 байт,
+  SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`.
+- macOS `JARVIS-macOS.zip` — 75 728 703 байти,
+  SHA256 `E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE`.
+- Linux `JARVIS-Linux.tar.gz` — 105 274 532 байти,
+  SHA256 `928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0`.
+- macOS: Apple Silicon; Intel-збірка додана в матрицю, але артефакту ще немає.
+- Windows/macOS непідписані; SmartScreen і Gatekeeper попереджають.
 
-## Команда збірки
+`website/index.html` має статичні fallback-значення 2.1.0 / 11.11.2026.
+JS підтягує останній non-prerelease реліз GitHub; після публікації v2.2.0
+сторінка автоматично покаже 2.2.0, але статичні хеші треба оновити вручну.
+
+## Що зроблено у 2.2.0 (Batch 1 + Batch 2)
+
+### Сайт, SEO, інфраструктура (Batch 1, коміт `8259a81`)
+
+- Преміум-редизайн: aurora-фон, скляна навігація, hero з orbit-кільцями,
+  Command Deck, scroll-reveal, spotlight-картки, лічильники, TikTok.
+- 3D-анімація логотипа JARVIS: повноекранний skippable-overlay, один раз за
+  сесію на початку сторінки, повтор по кліку на логотип, поважає
+  `prefers-reduced-motion`. Майстер: `assets/logo/`, веб-копії: `website/assets/`.
+- Реальні відгуки через публічні GitHub issues з маркером
+  `<!-- jarvis-review -->`: нік, оцінка 1–5, текст до 5000 символів, середній
+  рейтинг, кеш 10 хвилин.
+- Окрема сторінка `website/docs.html`: Plugin API, Android bridge, провайдери,
+  Roblox MCP, Customize, безпека, troubleshooting; пошук «/» і scrollspy.
+- Секція перевірки збірок: `SHA256SUMS.txt`, команди `Get-FileHash` /
+  `shasum` / `sha256sum`, `gh attestation verify`, чесна примітка про
+  відсутність комерційного підпису. `docs/CODE_SIGNING.md` виправлено:
+  заявка SignPath **ще не подана**.
+- `website/roadmap.html`: випущене / у роботі / заплановано / заблоковане.
+- `sitemap.xml`, `robots.txt`, canonical, OG/Twitter-обкладинка, FAQ JSON-LD.
+- CI: `tests.yml` (Windows обов'язковий, macOS/Linux advisory), `pip-audit`,
+  `review-triage.yml`, Dependabot, `SECURITY.md`.
+- `release.yml`: `SHA256SUMS.txt`, `actions/attest-build-provenance@v2`,
+  Intel macOS (`macos-13`), Android experimental з `continue-on-error`.
+- Автооновлення приймає і `JARVIS-Windows.exe`, і `JARVIS.exe`.
+
+### Голос і офлайн (Batch 2)
+
+- Wake word «Hey Jarvis»: `modules/voice/wake.py`.
+  - Основний бекенд — openWakeWord (офлайн), модель `hey_jarvis_v0.1.onnx`
+    завантажується в `DATA_DIR/wakeword`.
+  - Без openWakeWord — резервний VAD + Google STT (потрібен інтернет).
+  - `WakeGate`: нормалізація тексту, фрази, cooldown, пауза під час відповіді.
+  - Після відповіді — до 3 реплік продовження без натискання кнопки.
+  - Налаштування: `wake_word`, `wake_word_continuous`, `wake_word_model`,
+    `wake_word_threshold`, `wake_word_cooldown`.
+  - `requirements-wake.txt` — опційний extra; у основний `requirements.txt`
+    openWakeWord не входить, тому зібраний exe використовує STT fallback.
+- Офлайн-режим: `modules/voice/offline.py`.
+  - whisper.cpp (`whisper-cli`) для STT, Piper для TTS; шляхи задаються
+    вручну, нічого не завантажується автоматично.
+  - `stt_backend` / `tts_backend`: `auto`, `google`/`offline`.
+  - В офлайн-режимі хмарні STT/TTS не використовуються.
+  - Brain у `offline_mode` ходить лише до Ollama; будь-яка назва
+    `ollama/<model>` приймається, URL — `offline_ollama_url`.
+  - Vision-моделі Ollama визначаються евристично за назвою
+    (`llava`, `moondream`, `gemma3`, `qwen2-vl` тощо).
+  - Якщо Ollama/модель недоступні — зрозуміла помилка, без тихого fallback
+    у хмару.
+
+### Пам'ять, автоматизації, marketplace (Batch 2)
+
+- `core/memory_index.py`: локальні детерміновані хеш-embeddings `hash-v1`
+  (384 виміри, BLAKE2b, слова + біграми + триграми). Косинусна схожість,
+  топ-8 релевантних записів у промпті замість останніх 30. Без мережі й
+  без завантаження нейромережі. Старі записи отримують embedding автоматично.
+  У менеджері пам'яті є семантичний пошук.
+- `core/automations.py`: розклади `once YYYY-MM-DDTHH:MM`, `daily 09:00`,
+  `weekly mon 09:00`, `every 30m`; дії `prompt` і `notify`; ліміт 100 задач,
+  текст до 500 символів, інтервал 5 хв – 7 днів. Планувальник — у процесі
+  Jarvis кожні 20 с, без фонового демона. Інструменти:
+  `automation_create`, `automation_list`, `automation_cancel`.
+  Вікно менеджера — бічна панель «Автоматизації».
+- `core/marketplace.py`: локальний JSON-реєстр, перевірка id/назви/файлу/
+  SHA256, ліміт 512 КБ, захист від path traversal, атомарне копіювання,
+  явне підтвердження. Вікно «Плагіни»: встановити / видалити / свій `.py` /
+  папка / перезавантажити. Сервера й авто-встановлення немає.
+- `assets/marketplace/registry.json` + 3 приклади: `hello_market.py`,
+  `quick_note.py`, `word_stats.py`. Хеші збігаються.
+- `.gitattributes`: `assets/marketplace/plugins/*.py -text`, щоб Windows
+  checkout не змінював байти й SHA256 не ламався.
+
+### Налаштування, UI, документація
+
+- Вкладка «Кастомізація»: теми, пресети, порядок/видимість блоків, шрифти,
+  анімації, живе прев'ю, редактор кастомного коду з прев'ю. Зберігається в
+  `customization.json`, застосовується без перезапуску. `SYSTEM_PROMPT`
+  знає про цю вкладку й не має казати, що її не існує.
+- Нові пункти бічної панелі: «Автоматизації», «Плагіни»; додано в
+  `core/customization.py`.
+- Налаштування: чекбокс офлайн-режиму, поле моделі, URL Ollama, вибір
+  STT/TTS-бекенду, шляхи до whisper.cpp/Piper і моделей, кнопка «Перевірити».
+- `SYSTEM_PROMPT` оновлено: пам'ять із embeddings, автоматизації,
+  marketplace, офлайн-режим, нові інструменти.
+- Сайт: 4 нові картки можливостей, 5 нових пунктів changelog 2.2.0,
+  FAQ + FAQ JSON-LD, docs-секції `#offline`, `#automations`, `#marketplace`,
+  roadmap Batch 2 у «у роботі».
+
+## Тести та перевірки
+
+- Повний прогін: `.\.venv\Scripts\python.exe -m unittest discover -s tests`
+  → **197 тестів OK** (2026-11-14).
+- Нові тести:
+  - `tests/test_31_wake_word.py` — 15 тестів.
+  - `tests/test_32_memory_index.py` — 12 тестів.
+  - `tests/test_33_automations.py` — 17 тестів.
+  - `tests/test_34_marketplace.py` — 9 тестів.
+  - `tests/test_35_offline_voice.py` — 8 тестів.
+  - `tests/test_36_offline_routing.py` — 6 тестів.
+- `tests/test_10_jarvis_app.py`: headless-перевірка, що діалог налаштувань
+  містить офлайн-контроли.
+- Website audit: `.\.venv\Scripts\python.exe build\check_website.py`
+  → 1440 і 390 px, 0 JS/console errors, 0 горизонтального overflow,
+  docs search працює. Звіт: `build/webcheck/report.json`.
+- HTML/JSON-LD: без дублів `id`, валідний JSON-LD на index/docs/roadmap.
+- `node --check website/assets/app.js` — OK; YAML workflows — OK.
+- Live-сайт після деплою `3258ae8`: картки офлайн/пам'ять/автоматизації/
+  marketplace, FAQ і docs-секції присутні.
+
+## Стан CI
+
+- `Publish download site` для `3258ae8` — success, сайт задеплоєно.
+- `Tests` для `3258ae8` був у черзі й скасований (не через падіння тестів;
+  перед ним у черзі було 10 Dependabot-прогонів). Потрібен повторний прогін
+  після наступного коміту.
+- `058b54a`: Pages — success, Tests — cancelled (те саме).
+- Dependabot відкрив 10 PR: pillow, sounddevice, numpy, requests, pyttsx3,
+  actions/attest-build-provenance, configure-pages, setup-node,
+  github-script, upload-pages-artifact. Їх треба перевірити окремо.
+
+## Що ще зробити
+
+1. Дочекатися зеленого `Tests` на Windows для останнього коміту.
+2. Зібрати v2.2.0 Windows `.exe`, перевірити запуск і оновити:
+   `APP_VERSION` уже 2.2.0; розмір/SHA256/дату в трьох картках сайту;
+   статичні fallback-версії; JSON-LD `softwareVersion`.
+3. Запустити `release.yml` (тег `v2.2.0`), дочекатися Windows/macOS/Linux
+   артефактів, `SHA256SUMS.txt` і GitHub attestations.
+4. Перевірити live-сайт після релізу: версія, дата, посилання, хеші.
+5. Живий тест мікрофона: «Hey Jarvis», поріг `wake_word_threshold`,
+   cooldown, 3 репліки продовження. Без openWakeWord — перевірити STT fallback.
+6. Перевірити офлайн-режим на реальній Ollama; за бажанням підключити
+   whisper.cpp/Piper і протестувати голос без інтернету.
+7. Перевірити marketplace: встановлення/видалення прикладів, SHA256 mismatch,
+   локальний `.py`.
+8. Перевірити автоматизації: once/daily/weekly/every, prompt/notify,
+   перезапуск Jarvis, пропущені слоти.
+9. Розібрати Dependabot PR і оновити залежності, якщо CI зелений.
+10. Home Assistant URL/токен — досі не налаштовано.
+11. Відкликати/перегенерувати ключ Ashna, який був показаний у чаті.
+12. Android APK CI — експериментальний, зеленої збірки немає.
+13. Intel macOS — артефакт ще не опублікований.
+14. Комерційний підпис — немає; заявка SignPath не подана.
+
+## Важливі нюанси
+
+- PowerShell у консолі плутає кирилицю; логи/JSON читати Python-ом з
+  `encoding="utf-8"`, файли писати через write-tool або UTF-8 Python.
+- Перед заміною exe зупиняти всі `JARVIS.exe` (onefile = батько + дитина).
+- Плагіни не вбудовані в exe: читаються з `%APPDATA%\Jarvis\plugins` під час
+  старту або після `plugin_reload`.
+- Marketplace-хеші чутливі до байтів: не редагувати файли плагінів без
+  перегенерації `registry.json`; `.gitattributes` зберігає LF.
+- `render_custom_code` обмежений, але це не повноцінна пісочниця.
+- Автоматизації працюють лише коли Jarvis відкритий; фонового сервісу немає.
+- Офлайн-режим не завантажує whisper.cpp/Piper; без них — лише текст.
+- openWakeWord не входить у основний `requirements.txt`; для офлайн wake word
+  треба `pip install -r requirements-wake.txt`.
+- GitHub Pages підставляє `__GITHUB_REPOSITORY__` / `__SITE_URL__` у
+  HTML/XML/TXT через `pages.yml`; локально JS має fallback.
+- `website/downloads/JARVIS.exe` ігнорується git.
+- macOS/Linux: чат, голос, плагіни, vision, переклад, Home Assistant;
+  повне керування ПК, глобальні гарячі клавіші, ґеймерський оверлей і
+  Roblox Studio — лише Windows.
+- `release.yml`: Android не блокує публікацію desktop-ассетів завдяки
+  `if: always() && needs.desktop.result == 'success'`.
+- `requirements.txt`: `pycaw`/`comtypes` лише для Windows.
+- Відгуки: унікальна марка `<!-- jarvis-review -->`, GitHub Issues API без
+  токена (60 запитів/год), кеш 10 хв.
+
+## Команда збірки Windows
 
 ```powershell
 cd C:\Users\nezer\Jarvis
 & ".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean --onefile --windowed --name JARVIS --icon "assets\jarvis.ico" --add-data "assets;assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all cryptography --collect-all psutil --collect-all pycaw --collect-all comtypes --collect-all pystray --hidden-import PIL.Image --hidden-import pystray._win32 --hidden-import modules.mobile_bridge --hidden-import modules.coding_workspace jarvis.py
 ```
 
-Після збірки:
-1. Закрити всі `JARVIS.exe` (onefile = батько + дитина).
-2. Скопіювати `dist\JARVIS.exe` у `C:\Users\nezer\Jarvis\JARVIS.exe`, на робочий стіл і в `website\downloads\JARVIS.exe`.
-3. Запустити, почекати 10–15 с, перевірити хвіст `jarvis.log`.
-4. Оновити розмір і SHA256 у трьох картках завантаження на сайті (`website/index.html`, клас `platform-card`).
-
-## Що вже зроблено
-
-- Голосовий асистент: STT → LLM → TTS, чат, історія, багато моделей/провайдерів з failover.
-- Керування ПК: команди PowerShell, файли, програми, гучність, медіа, вікна.
-- Запуск програм за назвою: Start Menu, App Paths, реєстр, типові папки, транслітерація й fuzzy-пошук.
-- Roblox Studio через офіційний `StudioMCP.exe` (stdio JSON-RPC).
-- Vision (`Ctrl+Alt+S`) через xKiro Command A Vision.
-- Переклад екрана (`Ctrl+Alt+T`) з overlay.
-- Режим ґеймера й тихі підказки поверх гри.
-- Smart Home через Home Assistant REST API (потрібно вписати URL і токен).
-- Android bridge (`modules/mobile_bridge.py`) — виправлено імпорт cryptography.
-- Налаштування: прокручуваний діалог, закріплені кнопки ЗБЕРЕГТИ/СКАСУВАТИ.
-- 5 локальних плагінів: `quick_notes.py`, `weather.py`, `currency.py`, `pc_stats.py`, `roblox_status.py` (9 інструментів).
-- Статус Roblox переведено на робочий status.io API.
-- Виправлено порядок ініціалізації `_ui_queue`, через який застосунок падав під час завантаження плагінів.
-- Інтерактивне оновлення: кнопка «⬆ Оновлення» / голос → перевірка GitHub Releases → діалог «Завантажити й перезавантажити?» → стрім-завантаження з перевіркою розміру/SHA256 → прихований PowerShell-updater (чекає виходу всіх `JARVIS.exe`, замінює exe з backup+rollback, запускає новий). Працює лише для exe; `.old` чиститься на старті.
-- Автоперевірка оновлень на старті (9 с) + клікабельний банер у вікні (конфіг `auto_update_check`).
-- Трей-іконка (pystray): закриття згортає у трей, меню «Відкрити / Перевірити оновлення / Вихід» (конфіг `minimize_to_tray`, graceful-fallback якщо pystray недоступний).
-- Переклад екрана: 19 мов (було 4) — додано FR/ES/IT/PT/CS/SK/RO/BG/TR/NL/ZH/JA/KO.
-- STT/TTS: 14 мов і 30 голосів edge_tts (було 3 мови / 8 голосів).
-- Home Assistant: крім on/off/toggle/brightness/scene/script — клімат (set_temp, hvac), cover open/close/stop, lock/unlock, media play/pause/next/previous, vacuum_start/dock, camera.
-- `check_update` інструмент для LLM + 27 регресійних тестів у `tests/test_16_updates_and_languages.py`.
-- Сайт: темна тема, hero, можливості, провайдери, скріншоти, демо-відео, плагіни, changelog, інструкція, сценарії використання, FAQ, лічильник завантажень, UA/EN.
-- Встановлення на сайті розділене на вкладки Windows / macOS / Linux: 3 кроки для Windows, 4 для macOS і Linux, окремі застереження (SmartScreen, Gatekeeper, X11/Wayland).
-- Три картки завантаження з розмірами й копіюванням SHA256; посилання на релізні ассети підставляються з GitHub API, є fallback на `releases/latest/download/...`.
-- Секцію вигаданих відгуків замінено на чесні «Сценарії використання» з посиланням на GitHub issues.
-- Пояснювальне відео: `website/assets/how-it-works.mp4` (2:02, 1920×1080, 30 fps, H.264/AAC, ~7.4 MB, українська озвучка `uk-UA-OstapNeural`), постер `how-it-works-poster.jpg` (1920×1080, ~163 KB), субтитри `how-it-works.uk.vtt` / `how-it-works.en.vtt` (30/31 репліка, пропорційний таймінг).
-- Секція `#demo` використовує нове відео з двома доріжками субтитрів; старий 30-секундний `demo.mp4` більше не підключений.
-- Локальна перевірка сайту через Playwright: 1440×7801, усі секції рендеряться, 0 console errors, 0 failed requests, відео `readyState=4`, мобільна ширина 390 без горизонтального скролу, перемикання трьох вкладок ОС і правильні посилання на всі три ассети.
-- Відео опубліковано на GitHub Pages (коміти `5b76d12`, `8d236b6`); live-перевірка: `readyState=4`, 1920×1080, 122.97 с, 2 доріжки субтитрів, EN-перемикач, мобільна 390 без overflow, 0 console errors.
-
-## Command Deck / нові провайдери (2.1.0)
-
-- Новий UI «Command Deck»: темно-синій фон, бокова навігація 232 px, компактний reactor-hero, стрічка діалогу, черга завдань, нижній командний рядок. Мінімум 900×640, стандарт 1240×860.
-- Нижній composer: `+` (файл / скріншот / буфер), модель, режим (додано «Макс»), «У чергу», стрілка надсилання. Enter — надіслати, Shift+Enter — новий рядок, Ctrl+Enter — у чергу.
-- Вкладення: до 8 файлів; зображення стискаються в JPEG і йдуть як `image_url` (OpenAI) або base64-блок (Anthropic), текстові файли — у fenced-блок; назви зберігаються в історії чату.
-- Черга: in-memory, знімок тексту/вкладень/моделі/режиму/озвучення; запускається після завершення поточної відповіді.
-- Прямі провайдери: OpenAI (`gpt-6.1-sol`, `gpt-5.6-sol`, `gpt-5.3-codex`), Anthropic (`claude-opus-5.5`, `claude-sonnet-5.5`, `claude-haiku-5`, нативний Messages API + tool loop), xAI (`grok-4.7`, `grok-4.7-fast`), Moonshot (`kimi-k3`, `kimi-k2.7-code`), Qwen/DashScope (`qwen3.8-max`, `qwen3-coder-plus`, `qwen3-vl-plus`), Cursor (`composer-2.5`, експериментальний OpenAI-сумісний endpoint через `cursor_api_url`/`cursor_model`).
-- Налаштування: додано поля ключів усіх нових провайдерів, Cursor URL/model, оновлено `selftest` і тест з’єднання.
-- `core/config.py` і `core/model_router.py` синхронізовано: нові провайдери, `max` режим, Anthropic payload, Cursor endpoint/model.
-- Додано `tests/test_17_providers_queue.py`: 8 тестів на провайдерів, Anthropic-конвертацію, vision/text-вкладення, чергу й модель/режим.
-- Сайт оновлено: нові скріншоти Command Deck і налаштувань, 78 моделей, 16 провайдерів, нові chips, changelog 2.1.0.
-- Сайт передизайнено (коміт `a39ed1f`): aurora-фон, скляна навігація, hero з tilt-мокапом і orbit-кільцями, секція `#deck` з макетом Command Deck (черга + composer), scroll-reveal, spotlight-картки, анімовані лічильники, рекомендована ОС, копіювання коду плагіна, прогрес скролу й кнопка «вгору».
-- У футері — блок «Соцмережі творця» з TikTok `https://www.tiktok.com/@nezer_kicc` (`target="_blank"`, `rel="noopener"`), також доданий у JSON-LD `sameAs`.
-- Перевірка редизайну Playwright/Edge: 0 console errors, 0 failed requests, 0 горизонтального overflow на 1440 і 390, UA/EN, мобільне меню, копіювання коду, відео `readyState=4`.
-- Windows-збірка: `dist/JARVIS.exe`, 89 567 989 байт, SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`. Версія `APP_VERSION = "2.1.0"`.
-- Реліз `v2.1.0`: https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.1.0
-  - `JARVIS.exe` — 89 567 989 байт, SHA256 `6D31F77B8EE221062CE728D6747A1C2E6213DBEEC40FE7532A86EAF40431A3EC`.
-  - `JARVIS-macOS.zip` — 75 728 703 байти, SHA256 `E8652BFD32E9338D316ACBE2E27B8329E3AC9804B539FF369105B4A0D5D19ABE`.
-  - `JARVIS-Linux.tar.gz` — 105 274 532 байти, SHA256 `928B932B8DBB9FD75CCA790DE063D36566A05938D4FA517EB48EE828553337F0`.
-- Повний прогін тестів: 115 тестів, 2 давні failures у `test_15_security` (перевірки `os.startfile` і тексту відмови `_write_file`), які відтворюються на HEAD `8d236b6`. Тест версії `modules` оновлено під 2.1.0.
-
-## Що ще зробити
-
-1. Підключити Home Assistant (URL + токен) і протестувати на реальному інстансі.
-2. Відкликати/перегенерувати ключ Ashna, який був показаний у чаті.
-3. Додати Intel-збірку macOS (зараз лише Apple Silicon) або позначити це на сайті ще помітніше.
-4. `release.yml` перевірено на `v2.1.0`: Android упав, desktop-збірки успішні, publish спрацював завдяки `always()`.
-5. Апдейтер, трей, автоперевірка, мови й HA вже у зібраному білді (Windows). macOS/Linux перезібрані через GitHub Actions; реліз `v2.1.0` містить усі три ассети.
-6. Сайт задеплоєно на GitHub Pages: версія 2.1.0, 78 моделей, 16 провайдерів, нові скріншоти, посилання й SHA256 збігаються з релізом. Live-перевірка: 0 console errors, 0 overflow, відео `readyState=4`.
-
-## Важливі нюанси
-
-- Плагіни не вбудовані в exe: вони читаються з `%APPDATA%\Jarvis\plugins` під час старту або після `plugin_reload`.
-- `status.roblox.com/api/v2/...` не існує; робочий endpoint — `https://api.status.io/1.0/status/59db90dbcdeb2f04dadcf16d`.
-- PowerShell у консолі плутає кирилицю; логи читати через Python з `encoding="utf-8"`.
-- Перед заміною exe зупиняти всі процеси `JARVIS.exe` (onefile запускає батька й дитину).
-- Для скріншотів використовувати `PrintWindow(hwnd, memdc, 1 | 2)`: `ImageGrab` ловить інші вікна, якщо Jarvis перекритий.
-- GitHub Pages workflow підставляє `__GITHUB_REPOSITORY__` в `index.html`; прямі посилання на релізи будуються з цього рядка, локально JS падає на `nezerrucyk-alt/jarvis-ai-assistant`.
-- `website/downloads/JARVIS.exe` ігнорується git (`.gitignore`), тому 89 MB не потраплять у репозиторій.
-- `.github/workflows/release.yml`: `publish` тепер має `if: always() && ... && needs.desktop.result == 'success'`, тому падіння Android не блокує публікацію desktop-ассетів.
-- `requirements.txt`: `pycaw` і `comtypes` позначені `; sys_platform == "win32"`, щоб не ламати Linux/macOS-збірки.
-- macOS і Linux не мають глобальних гарячих клавіш, повного керування ПК, ґеймерського оверлею та Roblox Studio — це лише Windows. Решта (чат, голос, плагіни, vision, переклад, Home Assistant) працює всюди.
-- Пояснювальне відео генерується скриптами `make_howto_video.py` + `howto_common.py` + `howto_scenes_a-d.py`; потрібні `edge-tts`, `imageio-ffmpeg`, `Pillow`, `numpy`. TTS кешується в `howto_build\voice_*.mp3`, запускати треба з `C:\Users\nezer\AppData\Local\Temp\opencode`, щоб знайшлися сусідні модулі.
+Після збірки: закрити всі `JARVIS.exe`, скопіювати `dist\JARVIS.exe` у
+`JARVIS.exe` і `website\downloads\JARVIS.exe`, запустити й перевірити хвіст
+`jarvis.log`, оновити розмір/SHA256/дату на сайті.
