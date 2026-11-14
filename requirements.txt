@@ -4,7 +4,7 @@ numpy>=2.0.0
 SpeechRecognition>=3.14.0
 edge-tts>=7.0.0
 pygame-ce>=2.5.3
-pyttsx3>=2.98
+pyttsx3>=2.99
 pillow>=13.0.0
 
 pyautogui>=0.9.54
