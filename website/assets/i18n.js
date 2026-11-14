@@ -25,6 +25,7 @@ window.SITE_LANGS = [
 
 window.SITE_I18N = {
   pl: {
+    dlLead: "Wybierz system. Bez konta i subskrypcji: instalator dla Windows, archiwa dla macOS i Linux. Klucze i czaty zostają na twoim komputerze.",
     navFeatures: "Funkcje", navPlugins: "Wtyczki", navReviews: "Opinie", navVideos: "Wideo",
     navDocs: "Dokumentacja", navRoadmap: "Roadmapa", navChangelog: "Zmiany", navInstall: "Instalacja",
     navDownload: "Pobierz", dlBadge: "Najnowsza stabilna wersja", dlTitle: "Zabierz Jarvisa do siebie.",
@@ -37,6 +38,7 @@ window.SITE_I18N = {
     fCreator: "Media twórcy", fAuthor: "Autor"
   },
   de: {
+    dlLead: "Wähle dein System. Kein Konto, kein Abo: ein Windows-Installer, Archive für macOS und Linux. Schlüssel und Chats bleiben auf deinem PC.",
     navFeatures: "Funktionen", navPlugins: "Plugins", navReviews: "Bewertungen", navVideos: "Videos",
     navDocs: "Dokumentation", navRoadmap: "Roadmap", navChangelog: "Änderungen", navInstall: "Installation",
     navDownload: "Herunterladen", dlBadge: "Neueste stabile Version", dlTitle: "Hol dir Jarvis.",
@@ -49,6 +51,7 @@ window.SITE_I18N = {
     fCreator: "Creator-Socials", fAuthor: "Autor"
   },
   fr: {
+    dlLead: "Choisissez votre système. Sans compte ni abonnement : un installateur Windows, des archives pour macOS et Linux. Les clés et les chats restent sur votre machine.",
     navFeatures: "Fonctionnalités", navPlugins: "Plugins", navReviews: "Avis", navVideos: "Vidéos",
     navDocs: "Documentation", navRoadmap: "Feuille de route", navChangelog: "Changements",
     navInstall: "Installation", navDownload: "Télécharger", dlBadge: "Dernière version stable",
@@ -61,6 +64,7 @@ window.SITE_I18N = {
     fStatus: "Statut", fLatest: "Dernière version", fCreator: "Réseaux du créateur", fAuthor: "Auteur"
   },
   es: {
+    dlLead: "Elige tu sistema. Sin cuenta ni suscripción: instalador para Windows, archivos para macOS y Linux. Las claves y los chats se quedan en tu equipo.",
     navFeatures: "Funciones", navPlugins: "Plugins", navReviews: "Reseñas", navVideos: "Vídeos",
     navDocs: "Documentación", navRoadmap: "Hoja de ruta", navChangelog: "Cambios",
     navInstall: "Instalación", navDownload: "Descargar", dlBadge: "Última versión estable",
@@ -73,6 +77,7 @@ window.SITE_I18N = {
     fLatest: "Última versión", fCreator: "Redes del creador", fAuthor: "Autor"
   },
   it: {
+    dlLead: "Scegli il tuo sistema. Nessun account, nessun abbonamento: un installer per Windows, archivi per macOS e Linux. Chiavi e chat restano sul tuo PC.",
     navFeatures: "Funzioni", navPlugins: "Plugin", navReviews: "Recensioni", navVideos: "Video",
     navDocs: "Documentazione", navRoadmap: "Roadmap", navChangelog: "Modifiche",
     navInstall: "Installazione", navDownload: "Scarica", dlBadge: "Ultima versione stabile",
@@ -85,6 +90,7 @@ window.SITE_I18N = {
     fLatest: "Ultima versione", fCreator: "Social del creatore", fAuthor: "Autore"
   },
   pt: {
+    dlLead: "Escolhe o teu sistema. Sem conta nem subscrição: instalador para Windows, arquivos para macOS e Linux. As chaves e os chats ficam no teu PC.",
     navFeatures: "Funcionalidades", navPlugins: "Plugins", navReviews: "Avaliações",
     navVideos: "Vídeos", navDocs: "Documentação", navRoadmap: "Roteiro",
     navChangelog: "Alterações", navInstall: "Instalação", navDownload: "Transferir",
@@ -98,6 +104,7 @@ window.SITE_I18N = {
     fCreator: "Redes do criador", fAuthor: "Autor"
   },
   nl: {
+    dlLead: "Kies je systeem. Geen account, geen abonnement: een Windows-installer, archieven voor macOS en Linux. Sleutels en chats blijven op je pc.",
     navFeatures: "Functies", navPlugins: "Plugins", navReviews: "Beoordelingen", navVideos: "Video's",
     navDocs: "Documentatie", navRoadmap: "Roadmap", navChangelog: "Wijzigingen",
     navInstall: "Installatie", navDownload: "Downloaden", dlBadge: "Nieuwste stabiele versie",
@@ -110,6 +117,7 @@ window.SITE_I18N = {
     fLatest: "Nieuwste release", fCreator: "Socials van de maker", fAuthor: "Auteur"
   },
   cs: {
+    dlLead: "Vyber si systém. Bez účtu a předplatného: instalátor pro Windows, archivy pro macOS a Linux. Klíče a chaty zůstávají na tvém PC.",
     navFeatures: "Funkce", navPlugins: "Pluginy", navReviews: "Recenze", navVideos: "Videa",
     navDocs: "Dokumentace", navRoadmap: "Roadmapa", navChangelog: "Změny", navInstall: "Instalace",
     navDownload: "Stáhnout", dlBadge: "Nejnovější stabilní sestavení", dlTitle: "Vezmi si Jarvis domů.",
@@ -122,6 +130,7 @@ window.SITE_I18N = {
     fCreator: "Sociální sítě tvůrce", fAuthor: "Autor"
   },
   sk: {
+    dlLead: "Vyber si systém. Bez účtu a predplatného: inštalátor pre Windows, archívy pre macOS a Linux. Kľúče a chaty zostávajú na tvojom PC.",
     navFeatures: "Funkcie", navPlugins: "Pluginy", navReviews: "Recenzie", navVideos: "Videá",
     navDocs: "Dokumentácia", navRoadmap: "Roadmapa", navChangelog: "Zmeny", navInstall: "Inštalácia",
     navDownload: "Stiahnuť", dlBadge: "Najnovšie stabilné zostavenie", dlTitle: "Vezmi si Jarvisa domov.",
@@ -134,6 +143,7 @@ window.SITE_I18N = {
     fCreator: "Sociálne siete tvorcu", fAuthor: "Autor"
   },
   hu: {
+    dlLead: "Válaszd ki a rendszered. Fiók és előfizetés nélkül: Windows-telepítő, archívumok macOS-hez és Linuxhoz. A kulcsok és chatek a gépeden maradnak.",
     navFeatures: "Funkciók", navPlugins: "Bővítmények", navReviews: "Vélemények", navVideos: "Videók",
     navDocs: "Dokumentáció", navRoadmap: "Ütemterv", navChangelog: "Változások",
     navInstall: "Telepítés", navDownload: "Letöltés", dlBadge: "Legújabb stabil build",
@@ -147,6 +157,7 @@ window.SITE_I18N = {
     fAuthor: "Szerző"
   },
   ro: {
+    dlLead: "Alege-ți sistemul. Fără cont și abonament: instalator pentru Windows, arhive pentru macOS și Linux. Cheile și conversațiile rămân pe PC-ul tău.",
     navFeatures: "Funcții", navPlugins: "Pluginuri", navReviews: "Recenzii", navVideos: "Videoclipuri",
     navDocs: "Documentație", navRoadmap: "Foaie de parcurs", navChangelog: "Modificări",
     navInstall: "Instalare", navDownload: "Descarcă", dlBadge: "Cea mai recentă versiune stabilă",
@@ -159,6 +170,7 @@ window.SITE_I18N = {
     fCreator: "Rețelele creatorului", fAuthor: "Autor"
   },
   bg: {
+    dlLead: "Избери своята система. Без акаунт и абонамент: инсталатор за Windows, архиви за macOS и Linux. Ключовете и чатовете остават на твоя компютър.",
     navFeatures: "Функции", navPlugins: "Плъгини", navReviews: "Отзиви", navVideos: "Видеа",
     navDocs: "Документация", navRoadmap: "Пътна карта", navChangelog: "Промени",
     navInstall: "Инсталация", navDownload: "Изтегляне", dlBadge: "Последна стабилна версия",
@@ -171,6 +183,7 @@ window.SITE_I18N = {
     fCreator: "Социални мрежи на създателя", fAuthor: "Автор"
   },
   el: {
+    dlLead: "Διάλεξε το σύστημά σου. Χωρίς λογαριασμό και συνδρομή: εγκαταστάτης για Windows, αρχεία για macOS και Linux. Τα κλειδιά και οι συνομιλίες μένουν στον υπολογιστή σου.",
     navFeatures: "Λειτουργίες", navPlugins: "Πρόσθετα", navReviews: "Κριτικές", navVideos: "Βίντεο",
     navDocs: "Τεκμηρίωση", navRoadmap: "Χάρτης πορείας", navChangelog: "Αλλαγές",
     navInstall: "Εγκατάσταση", navDownload: "Λήψη", dlBadge: "Τελευταία σταθερή έκδοση",
@@ -183,6 +196,7 @@ window.SITE_I18N = {
     fCreator: "Κοινωνικά του δημιουργού", fAuthor: "Συγγραφέας"
   },
   sv: {
+    dlLead: "Välj ditt system. Inget konto, ingen prenumeration: ett Windows-installationsprogram, arkiv för macOS och Linux. Nycklar och chattar stannar på din dator.",
     navFeatures: "Funktioner", navPlugins: "Plugin", navReviews: "Recensioner", navVideos: "Videor",
     navDocs: "Dokumentation", navRoadmap: "Färdplan", navChangelog: "Ändringar",
     navInstall: "Installation", navDownload: "Ladda ner", dlBadge: "Senaste stabila versionen",
@@ -195,6 +209,7 @@ window.SITE_I18N = {
     fLatest: "Senaste versionen", fCreator: "Skaparens sociala medier", fAuthor: "Skapare"
   },
   da: {
+    dlLead: "Vælg dit system. Ingen konto, intet abonnement: en Windows-installer, arkiver til macOS og Linux. Nøgler og chats bliver på din pc.",
     navFeatures: "Funktioner", navPlugins: "Plugins", navReviews: "Anmeldelser", navVideos: "Videoer",
     navDocs: "Dokumentation", navRoadmap: "Roadmap", navChangelog: "Ændringer",
     navInstall: "Installation", navDownload: "Download", dlBadge: "Nyeste stabile version",
@@ -207,6 +222,7 @@ window.SITE_I18N = {
     fLatest: "Nyeste udgivelse", fCreator: "Skaberens sociale medier", fAuthor: "Skaber"
   },
   fi: {
+    dlLead: "Valitse järjestelmäsi. Ei tiliä, ei tilausta: Windows-asennusohjelma, arkistot macOS:lle ja Linuxille. Avaimet ja chatit pysyvät koneellasi.",
     navFeatures: "Ominaisuudet", navPlugins: "Liitännäiset", navReviews: "Arvostelut",
     navVideos: "Videot", navDocs: "Dokumentaatio", navRoadmap: "Tiekartta",
     navChangelog: "Muutokset", navInstall: "Asennus", navDownload: "Lataa",
@@ -220,6 +236,7 @@ window.SITE_I18N = {
     fCreator: "Tekijän some", fAuthor: "Tekijä"
   },
   no: {
+    dlLead: "Velg systemet ditt. Ingen konto, ingen abonnement: en Windows-installasjon, arkiver for macOS og Linux. Nøkler og chatter blir på PC-en din.",
     navFeatures: "Funksjoner", navPlugins: "Plugin-moduler", navReviews: "Anmeldelser",
     navVideos: "Videoer", navDocs: "Dokumentasjon", navRoadmap: "Veikart",
     navChangelog: "Endringer", navInstall: "Installasjon", navDownload: "Last ned",
@@ -233,6 +250,7 @@ window.SITE_I18N = {
     fCreator: "Skaperens sosiale medier", fAuthor: "Skaper"
   },
   hr: {
+    dlLead: "Odaberi svoj sustav. Bez računa i pretplate: instalacijski program za Windows, arhive za macOS i Linux. Ključevi i razgovori ostaju na tvom PC-u.",
     navFeatures: "Značajke", navPlugins: "Dodaci", navReviews: "Recenzije", navVideos: "Videozapisi",
     navDocs: "Dokumentacija", navRoadmap: "Plan razvoja", navChangelog: "Promjene",
     navInstall: "Instalacija", navDownload: "Preuzmi", dlBadge: "Najnovija stabilna verzija",

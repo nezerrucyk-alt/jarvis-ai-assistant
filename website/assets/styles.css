@@ -2097,7 +2097,7 @@ footer::before {
   .download-panel { padding: 30px; }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1180px) {
   .nav-links {
     display: none;
     position: absolute;
