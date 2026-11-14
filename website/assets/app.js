@@ -36,15 +36,27 @@
   const descUk = descMeta ? descMeta.content : "";
   const descEn =
     "J.A.R.V.I.S. is a desktop voice AI assistant for Windows, macOS and Linux: chat, voice, plugins, screen vision, translation and 78 models.";
+  const I18N = window.SITE_I18N || {};
+  const LANG_LIST =
+    (window.SITE_LANGS && window.SITE_LANGS.length ? window.SITE_LANGS : [["uk", "Українська"], ["en", "English"]]);
+
+  function translated(lang, key, fallback) {
+    const table = I18N[lang];
+    if (table && key && table[key]) return table[key];
+    return fallback;
+  }
 
   function setLanguage(lang) {
-    const isEn = lang === "en";
-    document.documentElement.lang = isEn ? "en" : "uk";
+    if (!LANG_LIST.some(([code]) => code === lang)) lang = "uk";
+    const isUk = lang === "uk";
+    document.documentElement.lang = lang;
     document.querySelectorAll("[data-en]").forEach((node) => {
       if (!originalText.has(node)) {
         originalText.set(node, node.innerHTML);
       }
-      node.innerHTML = isEn ? node.dataset.en : originalText.get(node);
+      node.innerHTML = isUk
+        ? originalText.get(node)
+        : translated(lang, node.dataset.i18n, node.dataset.en);
     });
     document.querySelectorAll("[data-en-placeholder]").forEach((node) => {
       if (!originalPlaceholder.has(node)) {
@@ -52,16 +64,18 @@
       }
       node.setAttribute(
         "placeholder",
-        isEn ? node.dataset.enPlaceholder : originalPlaceholder.get(node)
+        isUk ? originalPlaceholder.get(node) : node.dataset.enPlaceholder
       );
     });
+    const select = document.getElementById("langSelect");
+    if (select) select.value = lang;
     document.querySelectorAll("[data-lang]").forEach((button) => {
       const active = button.dataset.lang === lang;
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
-    document.title = isEn ? titleEn : titleUk;
-    if (descMeta) descMeta.content = isEn ? descEn : descUk;
+    document.title = isUk ? titleUk : titleEn;
+    if (descMeta) descMeta.content = isUk ? descUk : descEn;
     try {
       localStorage.setItem("jarvis-lang", lang);
     } catch (_) {
@@ -69,9 +83,16 @@
     }
   }
 
-  document.querySelectorAll("[data-lang]").forEach((button) => {
-    button.addEventListener("click", () => setLanguage(button.dataset.lang));
-  });
+  const langSelect = document.getElementById("langSelect");
+  if (langSelect) {
+    LANG_LIST.forEach(([code, label]) => {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = label;
+      langSelect.appendChild(option);
+    });
+    langSelect.addEventListener("change", () => setLanguage(langSelect.value));
+  }
 
   let savedLang = "uk";
   try {
@@ -79,7 +100,7 @@
   } catch (_) {
     /* private mode */
   }
-  setLanguage(savedLang === "en" ? "en" : "uk");
+  setLanguage(LANG_LIST.some(([code]) => code === savedLang) ? savedLang : "uk");
 
   /* ── mobile menu ─────────────────────────────────────── */
   const menuButton = document.getElementById("menuBtn");

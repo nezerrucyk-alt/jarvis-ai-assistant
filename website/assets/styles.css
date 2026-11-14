@@ -273,6 +273,35 @@ img, video { max-width: 100%; display: block; }
 
 .lang-switch button.active { background: var(--blue); color: #fff; }
 
+.lang-switch select {
+  border: 0;
+  background: transparent;
+  color: #e7ecf7;
+  padding: 6px 24px 6px 9px;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 750;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 12px) 52%, calc(100% - 8px) 52%;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+  max-width: 148px;
+}
+
+.lang-switch select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.lang-switch select option {
+  background: #10141f;
+  color: #e7ecf7;
+}
+
 .nav-cta { margin-left: 7px; }
 
 .menu-btn {

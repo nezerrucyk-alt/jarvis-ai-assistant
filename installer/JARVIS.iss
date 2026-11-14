@@ -1,5 +1,5 @@
 #define MyAppName "JARVIS"
-#define MyAppVersion "2.3.1"
+#define MyAppVersion "2.4.0"
 #define MyAppPublisher "nezerrucyk-alt"
 #define MyAppURL "https://nezerrucyk-alt.github.io/jarvis-ai-assistant/"
 #define MyAppExeName "JARVIS.exe"
@@ -13,9 +13,9 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}issues
 AppUpdatesURL=https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases
-VersionInfoVersion=2.3.1.0
+VersionInfoVersion=2.4.0.0
 VersionInfoProductName=JARVIS
-VersionInfoProductVersion=2.3.1
+VersionInfoProductVersion=2.4.0
 VersionInfoCompany={#MyAppPublisher}
 DefaultDirName={autopf}\JARVIS
 DefaultGroupName=JARVIS

@@ -52,19 +52,18 @@
       J.A.R.V.I.S. <span>for Desktop</span>
     </a>
     <nav class="nav-links" id="navLinks" aria-label="Головна навігація">
-      <a href="#features" data-en="Features">Можливості</a>
-      <a href="#plugins" data-en="Plugins">Плагіни</a>
-      <a href="#reviews" data-en="Reviews">Відгуки</a>
-      <a href="#videos" data-en="Videos">Відео</a>
-      <a href="docs.html" data-en="Docs">Доки</a>
-      <a href="roadmap.html" data-en="Roadmap">Roadmap</a>
-      <a href="#changelog" data-en="Changelog">Зміни</a>
-      <a href="#install" data-en="Install">Встановлення</a>
-      <a class="btn btn-primary btn-small nav-cta" href="#download" data-en="Download">Завантажити</a>
+      <a href="#features" data-i18n="navFeatures" data-en="Features">Можливості</a>
+      <a href="#plugins" data-i18n="navPlugins" data-en="Plugins">Плагіни</a>
+      <a href="#reviews" data-i18n="navReviews" data-en="Reviews">Відгуки</a>
+      <a href="#videos" data-i18n="navVideos" data-en="Videos">Відео</a>
+      <a href="docs.html" data-i18n="navDocs" data-en="Docs">Доки</a>
+      <a href="roadmap.html" data-i18n="navRoadmap" data-en="Roadmap">Roadmap</a>
+      <a href="#changelog" data-i18n="navChangelog" data-en="Changelog">Зміни</a>
+      <a href="#install" data-i18n="navInstall" data-en="Install">Встановлення</a>
+      <a class="btn btn-primary btn-small nav-cta" href="#download" data-i18n="navDownload" data-en="Download">Завантажити</a>
     </nav>
     <div class="lang-switch" role="group" aria-label="Language">
-      <button type="button" data-lang="uk" class="active">UA</button>
-      <button type="button" data-lang="en">EN</button>
+      <select id="langSelect" aria-label="Language"></select>
     </div>
     <button class="menu-btn" id="menuBtn" type="button" aria-label="Меню" aria-expanded="false">☰</button>
   </div>
@@ -86,7 +85,7 @@
           <div class="hero-actions">
             <a class="btn btn-primary js-download" href="#download">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span data-en="Download">Завантажити</span>
+              <span data-i18n="navDownload" data-en="Download">Завантажити</span>
             </a>
             <a class="btn btn-ghost" href="#demo">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -427,7 +426,7 @@
   <section class="section" id="changelog">
     <div class="wrap">
       <div class="section-head" data-reveal>
-        <span class="kicker" data-en="Changelog">Журнал змін</span>
+        <span class="kicker" data-i18n="navChangelog" data-en="Changelog">Журнал змін</span>
         <h2 data-en="What changed recently.">Що змінилося останнім часом.</h2>
         <p data-en="Every build is tested on Windows 11 before it reaches the download button.">Кожен білд перевіряється на Windows 11 перед тим, як потрапити до кнопки завантаження.</p>
         <a class="btn btn-ghost btn-small" href="roadmap.html" style="margin-top:14px" data-en="Full roadmap →">Повна roadmap →</a>
@@ -671,7 +670,7 @@
   <section class="section" id="reviews">
     <div class="wrap">
       <div class="section-head" data-reveal>
-        <span class="kicker" data-en="Reviews">Відгуки</span>
+        <span class="kicker" data-i18n="navReviews" data-en="Reviews">Відгуки</span>
         <h2 data-en="Real people. Real builds.">Реальні люди. Реальні збірки.</h2>
         <p data-en="Reviews are public GitHub issues. The site only reads what users posted — no fake testimonials and no silent editing.">Відгуки — це публічні GitHub issues. Сайт лише читає те, що написали користувачі: без вигаданих відгуків і тихого редагування.</p>
       </div>
@@ -752,14 +751,14 @@
       <div class="download-panel" data-reveal>
         <div class="download-head">
           <div>
-            <span class="badge"><span class="pulse"></span> <span data-en="Latest stable build">Останній стабільний білд</span></span>
-            <h2 style="margin-top:16px" data-en="Take Jarvis home.">Забери Джарвіса собі.</h2>
+            <span class="badge"><span class="pulse"></span> <span data-i18n="dlBadge" data-en="Latest stable build">Останній стабільний білд</span></span>
+            <h2 style="margin-top:16px" data-i18n="dlTitle" data-en="Take Jarvis home.">Забери Джарвіса собі.</h2>
             <p data-en="Pick your system. No account, no subscription: a Windows installer, archives for macOS and Linux. Keys and chats stay on your machine.">Обери свою систему. Без акаунта й підписки: інсталятор для Windows, архіви для macOS і Linux. Ключі та чати залишаються на твоєму ПК.</p>
           </div>
           <div class="download-info">
-            <div><span data-en="Version">Версія</span><strong data-release-version>2.3.1</strong></div>
-            <div><span data-en="Last update">Оновлено</span><strong><time data-release-date datetime="2026-11-14">14.11.2026</time></strong></div>
-            <div><span data-en="Downloads">Завантажень</span><strong id="downloadCount">—</strong></div>
+            <div><span data-i18n="dlVersion" data-en="Version">Версія</span><strong data-release-version>2.3.1</strong></div>
+            <div><span data-i18n="dlUpdated" data-en="Last update">Оновлено</span><strong><time data-release-date datetime="2026-11-14">14.11.2026</time></strong></div>
+            <div><span data-i18n="dlDownloads" data-en="Downloads">Завантажень</span><strong id="downloadCount">—</strong></div>
           </div>
         </div>
 
@@ -771,11 +770,11 @@
             <h3>Windows</h3>
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub" data-en="Windows 10/11 x64 · installer .exe">Windows 10/11 x64 · інсталятор .exe</p>
-            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>96.0 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
+            <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>96.0 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
             <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.3.1/JARVIS-Setup.exe">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span data-en="Download installer">Завантажити інсталятор</span>
+              <span data-i18n="dlInstaller" data-en="Download installer">Завантажити інсталятор</span>
             </a>
             <button class="sha js-sha" type="button" data-sha="8B875C87CB5A351769E3E139A1C9CB6882B5D49FE70998CBB9738A66EAAF6C5D" title="Скопіювати SHA256">SHA256 8B875C87…AF6C5D</button>
           </article>
@@ -787,11 +786,11 @@
             <h3>macOS</h3>
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub" data-en="macOS 11+ · Apple Silicon · .zip">macOS 11+ · Apple Silicon · .zip</p>
-            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>81.1 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
+            <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>81.1 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
             <a class="btn btn-primary js-download" data-download="macos" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.3.1/JARVIS-macOS.zip">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span data-en="Download .zip">Завантажити .zip</span>
+              <span data-i18n="dlZip" data-en="Download .zip">Завантажити .zip</span>
             </a>
             <a class="platform-alt js-download js-optional-download" data-download="macos-intel" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/latest/download/JARVIS-macOS-Intel.zip" hidden>
               <span data-en="Intel Mac build →">Збірка для Intel Mac →</span>
@@ -806,11 +805,11 @@
             <h3>Linux</h3>
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub">Linux x86_64 · .tar.gz</p>
-            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>110.7 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
+            <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>110.7 MB</strong></div>
+            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
             <a class="btn btn-primary js-download" data-download="linux" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.3.1/JARVIS-Linux.tar.gz">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span data-en="Download .tar.gz">Завантажити .tar.gz</span>
+              <span data-i18n="dlTar" data-en="Download .tar.gz">Завантажити .tar.gz</span>
             </a>
             <button class="sha js-sha" type="button" data-sha="BAA906B95E382C7C6F0E957604C57DE5D551FBE281F74FDEB0D1C07BB41F8F1B" title="Скопіювати SHA256">SHA256 BAA906B9…F8F1B</button>
           </article>
@@ -820,11 +819,11 @@
           <div class="download-actions">
             <a class="btn btn-ghost" href="https://github.com/__GITHUB_REPOSITORY__" target="_blank" rel="noopener">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.55v-2.14c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.38-5.25 5.67.41.35.78 1.05.78 2.12v3.14c0 .3.21.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
-              <span data-en="Source on GitHub">Код на GitHub</span>
+              <span data-i18n="srcGithub" data-en="Source on GitHub">Код на GitHub</span>
             </a>
             <a class="btn btn-ghost" href="https://github.com/__GITHUB_REPOSITORY__/issues/new?title=Jarvis%20Pro%20/%20support" target="_blank" rel="noopener">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>
-              <span data-en="Support / Pro">Підтримка / Pro</span>
+              <span data-i18n="supportPro" data-en="Support / Pro">Підтримка / Pro</span>
             </a>
           </div>
           <p class="pro-tag"><strong>PRO</strong> <span data-en="Priority builds, custom plugins and personal setup — via GitHub issues.">Пріоритетні білди, кастомні плагіни й персональне налаштування — через GitHub issues.</span></p>
@@ -838,8 +837,8 @@
       <div class="download-panel" data-reveal>
         <div class="download-head">
           <div>
-            <span class="badge"><span class="pulse"></span> <span data-en="TikTok">TikTok</span></span>
-            <h2 style="margin-top:16px" data-en="See it in action.">Подивись, як це працює.</h2>
+            <span class="badge"><span class="pulse"></span> <span data-i18n="ttTiktok" data-en="TikTok">TikTok</span></span>
+            <h2 style="margin-top:16px" data-i18n="ttTitle" data-en="See it in action.">Подивись, як це працює.</h2>
             <p data-en="Two short vertical videos: a site walkthrough and the 2.3.0 feature drop. Download the MP4 or watch on TikTok.">Два короткі вертикальні відео: екскурсія сайтом і нові фічі 2.3.0. Завантаж MP4 або дивись у TikTok.</p>
           </div>
           <div class="download-info">
@@ -853,10 +852,10 @@
             <p class="platform-sub" data-en="Site walkthrough · 30.9 s">Огляд сайту · 30.9 с</p>
             <div class="platform-meta"><span data-en="Resolution">Роздільність</span><strong>1080×1920</strong></div>
             <a class="btn btn-primary" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.3.0/JARVIS-TikTok-01.mp4" download>
-              <span data-en="Download MP4">Завантажити MP4</span>
+              <span data-i18n="ttMp4" data-en="Download MP4">Завантажити MP4</span>
             </a>
             <a class="platform-alt" href="https://www.tiktok.com/@jarvisnewera" target="_blank" rel="noopener">
-              <span data-en="Watch on TikTok →">Дивитись у TikTok →</span>
+              <span data-i18n="ttWatch" data-en="Watch on TikTok →">Дивитись у TikTok →</span>
             </a>
           </article>
           <article class="platform-card">
@@ -864,16 +863,16 @@
             <p class="platform-sub" data-en="Clipboard, briefing, HUD, Telegram · 31.2 s">Буфер, брифінг, HUD, Telegram · 31.2 с</p>
             <div class="platform-meta"><span data-en="Resolution">Роздільність</span><strong>1080×1920</strong></div>
             <a class="btn btn-primary" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.3.0/JARVIS-TikTok-02.mp4" download>
-              <span data-en="Download MP4">Завантажити MP4</span>
+              <span data-i18n="ttMp4" data-en="Download MP4">Завантажити MP4</span>
             </a>
             <a class="platform-alt" href="https://www.tiktok.com/@jarvisnewera" target="_blank" rel="noopener">
-              <span data-en="Watch on TikTok →">Дивитись у TikTok →</span>
+              <span data-i18n="ttWatch" data-en="Watch on TikTok →">Дивитись у TikTok →</span>
             </a>
           </article>
           <article class="platform-card">
             <h3 data-en="Follow the build">Стежити за розробкою</h3>
             <p class="platform-sub">GitHub · TikTok</p>
-            <div class="platform-meta"><span data-en="Author">Автор</span><strong>@nezerrucyk-alt</strong></div>
+            <div class="platform-meta"><span data-i18n="fAuthor" data-en="Author">Автор</span><strong>@nezerrucyk-alt</strong></div>
             <a class="btn btn-primary" href="https://github.com/nezerrucyk-alt" target="_blank" rel="noopener">
               <span>GitHub</span>
             </a>
@@ -1024,17 +1023,17 @@
         <p class="small muted" style="margin:12px 0 0;max-width:320px" data-en="A local-first voice assistant for Windows, macOS and Linux. Built for people who want their computer to listen.">Локальний голосовий асистент для Windows, macOS і Linux. Для тих, хто хоче, щоб комп'ютер слухав.</p>
       </div>
       <div>
-        <h4 data-en="Product">Продукт</h4>
-        <a href="#features" data-en="Features">Можливості</a>
-        <a href="#plugins" data-en="Plugins">Плагіни</a>
-        <a href="#reviews" data-en="Reviews">Відгуки</a>
-        <a href="#videos" data-en="Videos">Відео</a>
-        <a href="roadmap.html" data-en="Roadmap">Roadmap</a>
-        <a href="#changelog" data-en="Changelog">Зміни</a>
-        <a href="#download" data-en="Download">Завантажити</a>
+        <h4 data-i18n="fProduct" data-en="Product">Продукт</h4>
+        <a href="#features" data-i18n="navFeatures" data-en="Features">Можливості</a>
+        <a href="#plugins" data-i18n="navPlugins" data-en="Plugins">Плагіни</a>
+        <a href="#reviews" data-i18n="navReviews" data-en="Reviews">Відгуки</a>
+        <a href="#videos" data-i18n="navVideos" data-en="Videos">Відео</a>
+        <a href="roadmap.html" data-i18n="navRoadmap" data-en="Roadmap">Roadmap</a>
+        <a href="#changelog" data-i18n="navChangelog" data-en="Changelog">Зміни</a>
+        <a href="#download" data-i18n="navDownload" data-en="Download">Завантажити</a>
       </div>
       <div>
-        <h4 data-en="Resources">Ресурси</h4>
+        <h4 data-i18n="fResources" data-en="Resources">Ресурси</h4>
         <a href="https://github.com/__GITHUB_REPOSITORY__" target="_blank" rel="noopener">GitHub</a>
         <a href="https://github.com/__GITHUB_REPOSITORY__/issues" target="_blank" rel="noopener" data-en="Issues & support">Issues і підтримка</a>
         <a href="docs.html" data-en="API & plugin docs">Документація API</a>
@@ -1042,8 +1041,8 @@
         <a href="#faq">FAQ</a>
       </div>
       <div>
-        <h4 data-en="Status">Статус</h4>
-        <a href="https://github.com/__GITHUB_REPOSITORY__/releases" target="_blank" rel="noopener" data-en="Latest release">Останній реліз</a>
+        <h4 data-i18n="fStatus" data-en="Status">Статус</h4>
+        <a href="https://github.com/__GITHUB_REPOSITORY__/releases" target="_blank" rel="noopener" data-i18n="fLatest" data-en="Latest release">Останній реліз</a>
         <a href="docs.html#plugins" data-en="Plugin docs">Документація плагінів</a>
         <a href="#verify" data-en="Verify a build">Перевірка збірки</a>
         <a href="https://github.com/__GITHUB_REPOSITORY__/blob/main/CHANGES_SUMMARY.md" target="_blank" rel="noopener" data-en="Full changelog">Повний changelog</a>
@@ -1052,7 +1051,7 @@
 
     <div class="creator-socials">
       <div class="creator-copy">
-        <span class="creator-kicker" data-en="Creator socials">Соцмережі творця</span>
+        <span class="creator-kicker" data-i18n="fCreator" data-en="Creator socials">Соцмережі творця</span>
         <p data-en="Dev logs, release notes and behind-the-scenes — follow the build.">Девлоги, нотатки про релізи й закулісся — слідкуй за розробкою.</p>
       </div>
       <a class="social-link" href="https://www.tiktok.com/@jarvisnewera" target="_blank" rel="noopener" aria-label="TikTok — @jarvisnewera">
@@ -1178,6 +1177,7 @@
   <img id="lightboxImg" src="" alt="">
 </div>
 
+<script src="assets/i18n.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

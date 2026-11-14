@@ -76,6 +76,7 @@ from core.automations import (
     due_automations,
 )
 from core.memory_index import ensure_embedding, memory_prompt, rank_memories
+import core.i18n as i18n
 import core.clipboard_history as clipboard_store
 import core.file_organizer as file_organizer
 import core.proactive as proactive
@@ -92,7 +93,7 @@ from core.marketplace import (
 from modules.voice.wake import WakeWordListener
 
 APP_NAME = "Jarvis"
-APP_VERSION = "2.3.1"
+APP_VERSION = "2.4.0"
 GITHUB_REPO = "nezerrucyk-alt/jarvis-ai-assistant"
 APP_DIR = Path(__file__).resolve().parent
 if os.name == "nt":
@@ -928,6 +929,7 @@ DEFAULT_CONFIG = {
     "plugins_enabled": True,
     "auto_update_check": True,
     "minimize_to_tray": True,
+    "ui_language": "uk",
     "clipboard_history": True,
     "clipboard_limit": 120,
     "watch_downloads": False,
@@ -5360,6 +5362,9 @@ class JarvisApp:
         self.voice = Voice(self.cfg)
         self.ears = Ears(self.cfg)
         self.vision = Vision(self.cfg, self._tool_log)
+        self.ui_lang = i18n.normalize_language(self.cfg.get("ui_language"))
+        SIDEBAR_LABELS.clear()
+        SIDEBAR_LABELS.update(i18n.sidebar_labels(self.ui_lang))
         self.tools = PcTools(
             self.request_confirmation,
             self._tool_log,
@@ -5492,28 +5497,28 @@ class JarvisApp:
             return button
 
         section("CORE")
-        self.side_voice_btn = nav("◉   Голосовий режим", self._on_mic, True)
-        self.scan_btn = nav("◈   Сканувати екран", self._on_scan, True)
-        self.translate_btn = nav("⇄   Перекласти екран", self._on_translate, True)
-        self.new_chat_btn = nav("＋   Нова розмова", self._new_conversation)
-        self.clipboard_btn = nav("📋   Буфер обміну", self.open_clipboard_manager)
-        self.briefing_btn = nav("☀   Ранковий брифінг", self.open_briefing)
+        self.side_voice_btn = nav(f"◉   {self.tr('sidebar.voice')}", self._on_mic, True)
+        self.scan_btn = nav(f"◈   {self.tr('sidebar.scan')}", self._on_scan, True)
+        self.translate_btn = nav(f"⇄   {self.tr('sidebar.translate')}", self._on_translate, True)
+        self.new_chat_btn = nav(f"＋   {self.tr('sidebar.new_chat')}", self._new_conversation)
+        self.clipboard_btn = nav(f"📋   {self.tr('sidebar.clipboard')}", self.open_clipboard_manager)
+        self.briefing_btn = nav(f"☀   {self.tr('sidebar.briefing')}", self.open_briefing)
 
         section("SYSTEM")
-        self.settings_btn = nav("⚙   Налаштування", self.open_settings)
-        self.customize_btn = nav("✦   Кастомізація", self.open_customize, True)
-        self.update_btn = nav("⬆   Оновлення", self._on_check_update, True)
-        self.memory_btn = nav("◇   Моя пам'ять", self.open_memory_manager)
-        self.reminders_btn = nav("◷   Нагадування", self.open_reminders_manager)
-        self.automations_btn = nav("⟳   Автоматизації", self.open_automations_manager)
-        self.organizer_btn = nav("🗂   Порядок файлів", self.open_organizer)
-        self.plugins_btn = nav("🧩   Плагіни", self.open_marketplace)
-        self.gaming_btn = nav("🎮   Режим ґеймера", self._toggle_gaming_mode)
+        self.settings_btn = nav(f"⚙   {self.tr('sidebar.settings')}", self.open_settings)
+        self.customize_btn = nav(f"✦   {self.tr('sidebar.customize')}", self.open_customize, True)
+        self.update_btn = nav(f"⬆   {self.tr('sidebar.update')}", self._on_check_update, True)
+        self.memory_btn = nav(f"◇   {self.tr('sidebar.memory')}", self.open_memory_manager)
+        self.reminders_btn = nav(f"◷   {self.tr('sidebar.reminders')}", self.open_reminders_manager)
+        self.automations_btn = nav(f"⟳   {self.tr('sidebar.automations')}", self.open_automations_manager)
+        self.organizer_btn = nav(f"🗂   {self.tr('sidebar.organizer')}", self.open_organizer)
+        self.plugins_btn = nav(f"🧩   {self.tr('sidebar.plugins')}", self.open_marketplace)
+        self.gaming_btn = nav(f"🎮   {self.tr('sidebar.gaming')}", self._toggle_gaming_mode)
 
         section("RECENT")
         self.history_list = tk.Frame(side_inner, bg=SIDEBAR)
         self.history_list.pack(fill="x", padx=8)
-        self.history_btn = nav("▤   Вся історія", self.open_chat_history)
+        self.history_btn = nav(f"▤   {self.tr('sidebar.history')}", self.open_chat_history)
 
         self.sidebar_buttons = {
             "voice": self.side_voice_btn,
@@ -5570,7 +5575,7 @@ class JarvisApp:
         )
         self.side_status_dot.pack(side="left", padx=(1, 6))
         self.side_status_label = tk.Label(
-            status_row, text="СИСТЕМА ГОТОВА", bg=PANEL_ALT, fg=MUTED,
+            status_row, text=self.tr("status.system_ready"), bg=PANEL_ALT, fg=MUTED,
             font=("Consolas", 7),
         )
         self.side_status_label.pack(side="left")
@@ -5582,14 +5587,14 @@ class JarvisApp:
         )
         self.mobile_btn.pack(fill="x", padx=4)
         self.mute_btn = tk.Button(
-            side_bottom, text="Звук: увімкнено", command=self._toggle_mute,
+            side_bottom, text=self.tr("status.sound_on"), command=self._toggle_mute,
             bg=PANEL_ALT, fg=MUTED, activebackground=LINE, activeforeground=CYAN,
             relief="flat", bd=0, anchor="w", font=("Segoe UI", 8),
             padx=8, pady=5, cursor="hand2",
         )
         self.mute_btn.pack(fill="x", padx=4)
         self.access_label = tk.Label(
-            side_bottom, text="ДОСТУП: ПОВНИЙ", bg=PANEL_ALT, fg=GOLD,
+            side_bottom, text=self.tr("status.access_full"), bg=PANEL_ALT, fg=GOLD,
             font=("Consolas", 7), anchor="w",
         )
         self.access_label.pack(fill="x", padx=8, pady=(4, 8))
@@ -6908,7 +6913,7 @@ class JarvisApp:
             return
         enabled = bool(self.cfg.get("gaming_mode"))
         self.gaming_btn.config(
-            text="🎮   Ґеймер: увімкнено" if enabled else "🎮   Режим ґеймера",
+            text="🎮   Ґеймер: увімкнено" if enabled else f"🎮   {self.tr('sidebar.gaming')}",
             fg=CYAN if enabled else TEXT,
         )
 
@@ -6984,8 +6989,32 @@ class JarvisApp:
 
         self.root.after(delay_ms, go)
 
+    def tr(self, key: str) -> str:
+        return i18n.t(key, self.ui_lang)
+
+    def _apply_ui_language(self) -> None:
+        self.ui_lang = i18n.normalize_language(self.cfg.get("ui_language"))
+        labels = i18n.sidebar_labels(self.ui_lang)
+        SIDEBAR_LABELS.clear()
+        SIDEBAR_LABELS.update(labels)
+        icons = {
+            "voice": "◉", "scan": "◈", "translate": "⇄", "new_chat": "＋",
+            "clipboard": "📋", "briefing": "☀", "settings": "⚙", "customize": "✦",
+            "update": "⬆", "memory": "◇", "reminders": "◷", "automations": "⟳",
+            "organizer": "🗂", "plugins": "🧩", "gaming": "🎮", "history": "▤",
+        }
+        for key, button in getattr(self, "sidebar_buttons", {}).items():
+            if key in icons:
+                button.config(text=f"{icons[key]}   {labels.get(key, key)}")
+        try:
+            self.side_status_label.config(text=self.tr("status.system_ready"))
+        except Exception:  # noqa: BLE001
+            pass
+        self._update_mute_btn()
+        self._update_access_label()
+
     def set_status(self, text: str, color: str = MUTED) -> None:
-        text = str(text)
+        text = i18n.translate_status(str(text), self.ui_lang)
         self._status_color = color
         short = text if len(text) <= 40 else text[:39].rstrip() + "…"
         self.status.config(text=short, fg=color)
@@ -7415,9 +7444,9 @@ class JarvisApp:
 
     def _update_mute_btn(self) -> None:
         if self.cfg.get("mute"):
-            self.mute_btn.config(text="Звук: вимкнено", fg=RED)
+            self.mute_btn.config(text=self.tr("status.sound_off"), fg=RED)
         else:
-            self.mute_btn.config(text="Звук: увімкнено", fg=MUTED)
+            self.mute_btn.config(text=self.tr("status.sound_on"), fg=MUTED)
 
     def _toggle_mute(self) -> None:
         self.cfg["mute"] = not bool(self.cfg.get("mute"))
@@ -7430,9 +7459,9 @@ class JarvisApp:
 
     def _update_access_label(self) -> None:
         if self.cfg.get("full_access", True):
-            self.access_label.config(text="ДОСТУП: ПОВНИЙ", fg=GOLD)
+            self.access_label.config(text=self.tr("status.access_full"), fg=GOLD)
         else:
-            self.access_label.config(text="ДОСТУП: ОБМЕЖЕНИЙ", fg=MUTED)
+            self.access_label.config(text=self.tr("status.access_limited"), fg=MUTED)
 
     def _on_mode_change(self, label: str) -> None:
         mode = RESPONSE_MODE_BY_LABEL.get(label, "natural")
@@ -10761,6 +10790,21 @@ class JarvisApp:
         roblox_server_entry.pack(fill="x", padx=18, ipady=6)
         self._bind_clipboard_shortcuts(roblox_server_entry)
 
+        tk.Label(win, text=self.tr("settings.ui_language").upper(), bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+        ui_lang_by_label = {label: code for code, label in i18n.UI_LANGUAGES}
+        ui_lang_by_code = {code: label for code, label in i18n.UI_LANGUAGES}
+        ui_lang_var = tk.StringVar(value=ui_lang_by_code.get(self.ui_lang, "Українська"))
+        ui_lang_box = tk.OptionMenu(
+            win, ui_lang_var, *[label for _, label in i18n.UI_LANGUAGES]
+        )
+        ui_lang_box.config(bg=PANEL, fg=TEXT, activebackground="#25304F",
+                           activeforeground=CYAN, relief="flat", highlightthickness=0,
+                           font=("Consolas", 9), anchor="w")
+        ui_lang_box["menu"].config(bg=PANEL, fg=TEXT, activebackground="#25304F",
+                                   activeforeground=CYAN)
+        ui_lang_box.pack(fill="x", padx=18)
+
         row = tk.Frame(win, bg=BG)
         row.pack(fill="x", padx=18, pady=(12, 0))
 
@@ -11121,6 +11165,7 @@ class JarvisApp:
             )
             self.cfg["roblox_private_server"] = roblox_server_var.get().strip()
             self.cfg["language"] = lang_var.get()
+            self.cfg["ui_language"] = ui_lang_by_label.get(ui_lang_var.get(), "uk")
             self.cfg["voice"] = voice_var.get()
             self.cfg["mute"] = bool(mute_var.get())
             self.cfg["always_on_top"] = bool(top_var.get())
@@ -11157,6 +11202,7 @@ class JarvisApp:
             self.root.attributes("-topmost", bool(self.cfg["always_on_top"]))
             self._update_mute_btn()
             self._update_access_label()
+            self._apply_ui_language()
             self._update_provider_chip()
             self._configure_hotkey()
             self._configure_wake_word()

@@ -66,6 +66,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "always_on_top": False,
     "max_history": 12,
     "greet": True,
+    "ui_language": "uk",
     # ── поведінка та доступ ──
     "full_access": True,
     "roblox_private_server": "https://www.roblox.com/private-server/configure/4284643793",
