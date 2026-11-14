@@ -1,10 +1,10 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-14 (реліз 2.3.1). Поточна гілка: `main`, останній релізний
-коміт: `bd74be8` (тег `v2.3.1`).
+Оновлено: 2026-11-14 (реліз 2.4.0). Поточна гілка: `main`, останній релізний
+коміт: `19d9769` (тег `v2.4.0`).
 
 Версія в коді: **2.3.0** (`APP_VERSION`, `modules.__version__`).
-Публічний реліз: **v2.3.1** (14.11.2026).
+Публічний реліз: **v2.4.0** (14.11.2026).
 
 ## Де що лежить
 
@@ -29,24 +29,24 @@
 | Marketplace-плагіни | `C:\Users\nezer\Jarvis\assets\marketplace\plugins\` |
 | GitHub-репозиторій | `nezerrucyk-alt/jarvis-ai-assistant` |
 | GitHub Pages | `https://nezerrucyk-alt.github.io/jarvis-ai-assistant/` |
-| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.3.1` |
+| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.4.0` |
 | Лог останньої збірки | `C:\Users\nezer\Jarvis\build_last.log` |
 | Журнал змін | `C:\Users\nezer\Jarvis\CHANGES_SUMMARY.md` |
 | Стан проєкту | `C:\Users\nezer\Jarvis\JARVIS_STATE.md` (цей файл) |
 
 ## Актуальний білд і реліз
 
-Опублікований v2.3.1 (14.11.2026):
+Опублікований v2.4.0 (14.11.2026):
 
-- Windows `JARVIS-Windows.exe` — 98 778 739 байт,
-  SHA256 `8B887077860E7F2A5198D5FB0E73B56EAD5E0B7B10758D46DE7FDB10F6AB6976`.
-- Windows installer `JARVIS-Setup.exe` — 95 988 122 байти,
-  SHA256 `8B875C87CB5A351769E3E139A1C9CB6882B5D49FE70998CBB9738A66EAAF6C5D`;
+- Windows `JARVIS-Windows.exe` — 98 783 510 байт,
+  SHA256 `DE7677F12AD74C359DADBFF50C0D953341D32AC666330C717D20898367AA6859`.
+- Windows installer `JARVIS-Setup.exe` — 95 992 642 байти,
+  SHA256 `6E4DEB14333DDE2795ABB6B8D07E6A1292ED3FBC19772C66CAF297581C1C3A5B`;
   тепер збирається в CI кроком `Build Windows installer` (Inno Setup 6).
-- macOS `JARVIS-macOS.zip` — 81 123 864 байти,
-  SHA256 `555C96F0CF4338D9BCE3437656FB9B158BD41627B634B2039496FD794EDD1B04`.
-- Linux `JARVIS-Linux.tar.gz` — 110 662 392 байти,
-  SHA256 `BAA906B95E382C7C6F0E957604C57DE5D551FBE281F74FDEB0D1C07BB41F8F1B`.
+- macOS `JARVIS-macOS.zip` — 81 131 041 байт,
+  SHA256 `C674C236DABF76A1C465F1375C57D4D35716021272CB1011B73CF1FCA5586FDD`.
+- Linux `JARVIS-Linux.tar.gz` — 110 669 567 байт,
+  SHA256 `10FFF4B74974959DC74C256DB24A8C7F14F33D09C851430124DF0A4255B3DE59`.
 - `SHA256SUMS.txt` — 337 байтів; GitHub build provenance/атестації створені
   для всіх збірок.
 - Відео лежать у релізі v2.3.0: `JARVIS-TikTok-01.mp4` (4 807 200 Б),
@@ -54,13 +54,16 @@
   `#videos` із завантаженням.
 - Патч 2.3.1: динамічні підписи версії в UI, брифінг лише для читання,
   експоненційний відступ Telegram-полінгу (3–30 с).
+- 2.4.0: лендінг на 20 європейських мовах (`website/assets/i18n.js`),
+  інтерфейс застосунку (сайдбар, статуси, селектор мови) — 6 мов
+  (`core/i18n.py`, `ui_language` у config.json); 247 тестів.
 - Intel macOS і Android — необов'язкові, не блокують реліз.
 - Windows/macOS непідписані; SmartScreen і Gatekeeper попереджають.
 - Локальні `dist\JARVIS.exe` і `JARVIS.exe` — збірка до фінальних правок;
   еталон — релізний `JARVIS-Windows.exe`.
 
-`website/index.html` оновлено на 2.3.1 / 14.11.2026: кнопки ведуть на v2.3.1,
-Windows — `JARVIS-Setup.exe` 96.0 MB із новим SHA256, changelog 2.3.1, секція
+`website/index.html` оновлено на 2.4.0 / 14.11.2026: кнопки ведуть на v2.3.1,
+Windows — `JARVIS-Setup.exe` 96.0 MB із новим SHA256, changelog 2.4.0, секція
 відео з MP4 та посилання на GitHub автора (`@nezerrucyk-alt`). JS і далі
 підтягує останній non-prerelease реліз і віддає перевагу setup-ассету.
 
