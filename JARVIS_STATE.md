@@ -1,10 +1,10 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-14 (2.3.0, локальна збірка). Поточна гілка: `main`, останній
-коміт: `effcded`; зміни 2.3.0 у робочій копії ще не закомічені й не опубліковані.
+Оновлено: 2026-11-14 (реліз 2.3.0). Поточна гілка: `main`, останній релізний
+коміт: `f389b31` (тег `v2.3.0`).
 
 Версія в коді: **2.3.0** (`APP_VERSION`, `modules.__version__`).
-Публічний реліз — досі **v2.2.0** (14.11.2026); 2.3.0 існує лише як локальна збірка.
+Публічний реліз: **v2.3.0** (14.11.2026).
 
 ## Де що лежить
 
@@ -29,39 +29,39 @@
 | Marketplace-плагіни | `C:\Users\nezer\Jarvis\assets\marketplace\plugins\` |
 | GitHub-репозиторій | `nezerrucyk-alt/jarvis-ai-assistant` |
 | GitHub Pages | `https://nezerrucyk-alt.github.io/jarvis-ai-assistant/` |
-| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.2.0` |
+| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.3.0` |
 | Лог останньої збірки | `C:\Users\nezer\Jarvis\build_last.log` |
 | Журнал змін | `C:\Users\nezer\Jarvis\CHANGES_SUMMARY.md` |
 | Стан проєкту | `C:\Users\nezer\Jarvis\JARVIS_STATE.md` (цей файл) |
 
 ## Актуальний білд і реліз
 
-Опублікований v2.2.0 (14.11.2026):
+Опублікований v2.3.0 (14.11.2026):
 
-- Windows `JARVIS-Windows.exe` — 98 732 260 байт,
-  SHA256 `9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A`.
-- Windows installer `JARVIS-Setup.exe` (Inno Setup 6, установка для поточного
-  користувача без UAC, деінсталятор і ярлики) — 95 940 222 байти,
-  SHA256 `2DB84FBF46014EDF6EE5387E80577B028A55F60FB1AE5118794F08098579D0E4`;
-  додано в реліз v2.2.0 14.11.2026, `SHA256SUMS.txt` оновлено (337 байтів).
-- macOS `JARVIS-macOS.zip` — 81 075 776 байт,
-  SHA256 `3DD71456378108316122B3B0720085E70D75649C05B66529DE820BB087CB5D11`.
-- Linux `JARVIS-Linux.tar.gz` — 110 618 107 байт,
-  SHA256 `933D05E6E17FBDE348BC48FE711F4C3409215302F08D1068B06EC4C577BBF060`.
-- `SHA256SUMS.txt` — 254 байти; GitHub build provenance/атестації пройшли.
-  Хеші перевірено завантаженням усіх трьох ассетів — збігаються; API
-  підтверджує по одній атестації для Windows, macOS і Linux.
-- macOS: Apple Silicon; Intel — окремий необов'язковий job `macos-15-intel`,
-  артефакт ще не опублікований і не блокує реліз.
-- Android APK — експериментальний, не блокує desktop-реліз.
+- Windows `JARVIS-Windows.exe` — 98 777 319 байт,
+  SHA256 `4C2D2572FBE93499EDBA40BFB45C889BF0C8BDB20F928C8F44B908CF3680823D`.
+- Windows installer `JARVIS-Setup.exe` — 95 986 026 байт,
+  SHA256 `DCD59D951450999E5A4188BC2DCF337ECB7395A7436E699898F68CADD1DC3FD2`;
+  тепер збирається в CI кроком `Build Windows installer` (Inno Setup 6).
+- macOS `JARVIS-macOS.zip` — 81 123 655 байт,
+  SHA256 `2943F42990BC994D1098799D52DCE5C6EB94D12917110E1198B282F33E09D2E2`.
+- Linux `JARVIS-Linux.tar.gz` — 110 663 326 байт,
+  SHA256 `C4FAC660F0128522FC06004B6A0BCF8FD8FC15A843CF68589A0029745BD662A7`.
+- `SHA256SUMS.txt` — 337 байтів; GitHub build provenance/атестації створені
+  для всіх збірок.
+- Відео в релізі: `JARVIS-TikTok-01.mp4` (4 807 200 Б), `JARVIS-TikTok-02.mp4`
+  (1 919 281 Б) та дві обкладинки; сайт має секцію `#videos` із завантаженням.
+- Intel macOS і Android — необов'язкові, не блокують реліз.
 - Windows/macOS непідписані; SmartScreen і Gatekeeper попереджають.
+- Локальні `dist\JARVIS.exe` і `JARVIS.exe` — збірка до фінальних правок;
+  еталон — релізний `JARVIS-Windows.exe`.
 
-`website/index.html` оновлено на статичні fallback-значення 2.2.0 / 14.11.2026,
-кнопка Windows веде на `JARVIS-Setup.exe`, розмір 95.9 MB і новий SHA256. JS
-усе одно підтягує останній non-prerelease реліз GitHub і віддає перевагу
-setup-ассету над портативним exe.
+`website/index.html` оновлено на 2.3.0 / 14.11.2026: кнопки ведуть на v2.3.0,
+Windows — `JARVIS-Setup.exe` 96.0 MB із новим SHA256, changelog 2.3.0, секція
+відео з MP4 та посилання на GitHub автора (`@nezerrucyk-alt`). JS і далі
+підтягує останній non-prerelease реліз і віддає перевагу setup-ассету.
 
-## Що нового у 2.3.0 (локальна збірка, не опублікована)
+## Що нового у 2.3.0 (випущено 14.11.2026)
 
 - Провайдери: свій OpenAI-сумісний endpoint (`custom_provider_name`,
   `custom_api_url`, `custom_api_key`, `custom_model`, `custom_vision`) і модель
