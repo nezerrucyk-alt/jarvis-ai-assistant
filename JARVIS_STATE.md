@@ -1,7 +1,7 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-14. Поточна гілка: `main`, останній коміт: `c7f04bb`
-(реліз v2.2.0 + виправлення release-workflow).
+Оновлено: 2026-11-14. Поточна гілка: `main`, останній коміт: `c9828b9`
+(реліз v2.2.0, оновлений сайт, Dependabot-залежності).
 
 Версія в коді: **2.2.0** (`APP_VERSION`, `modules.__version__`).
 Публічний реліз: **v2.2.0** (14.11.2026) — Windows, macOS Apple Silicon і Linux.
@@ -75,8 +75,8 @@ non-prerelease реліз GitHub, якщо він новіший.
 - `sitemap.xml`, `robots.txt`, canonical, OG/Twitter-обкладинка, FAQ JSON-LD.
 - CI: `tests.yml` (Windows обов'язковий, macOS/Linux advisory), `pip-audit`,
   `review-triage.yml`, Dependabot, `SECURITY.md`.
-- `release.yml`: `SHA256SUMS.txt`, `actions/attest-build-provenance@v2`,
-  Intel macOS (`macos-13`), Android experimental з `continue-on-error`.
+- `release.yml`: `SHA256SUMS.txt`, `actions/attest-build-provenance@v4`,
+  Intel macOS (`macos-15-intel`), Android experimental з `continue-on-error`.
 - Автооновлення приймає і `JARVIS-Windows.exe`, і `JARVIS.exe`.
 
 ### Голос і офлайн (Batch 2)
@@ -159,23 +159,28 @@ non-prerelease реліз GitHub, якщо він новіший.
   docs search працює. Звіт: `build/webcheck/report.json`.
 - HTML/JSON-LD: без дублів `id`, валідний JSON-LD на index/docs/roadmap.
 - `node --check website/assets/app.js` — OK; YAML workflows — OK.
-- Live-сайт після деплою `3258ae8`: картки офлайн/пам'ять/автоматизації/
-  marketplace, FAQ і docs-секції присутні.
+- Live-сайт після деплою `fe9e7f4`: версія 2.2.0, дата 14.11.2026,
+  посилання `v2.2.0`, нові SHA256, roadmap із «2.2.0 · випущено»;
+  плейсхолдери `__GITHUB_REPOSITORY__` / `__SITE_URL__` замінені.
 
 ## Стан CI
 
-- `Cross-platform release` для `c7f04bb` (тег `v2.2.0`) — **success**:
-  Windows/macOS/Linux зібрано, `Publish GitHub release` успішний,
-  `SHA256SUMS.txt` і GitHub build provenance/атестації створені.
+- `Cross-platform release` для `c7f04bb` (тег `v2.2.0`): job
+  `Publish GitHub release` — **success**, Windows/macOS/Linux зібрано,
+  `SHA256SUMS.txt` і GitHub build provenance/атестації створені. Сам run
+  пізніше скасовано, бо необов'язковий Intel-джоб завис на `macos-13`.
 - Перший прогін `c313b52` опублікував реліз, але впав на атестації:
   бракувало дозволу `attestations: write`. Виправлено в `c7f04bb`.
-- `Tests` для `c7f04bb`: Windows — success, Website syntax — success,
-  Dependency audit — success, Ubuntu — advisory failure, macOS — у процесі.
 - `release.yml` більше не чекає на Android/Intel: `publish` має
   `needs: [desktop]`, тому необов'язкові job не блокують реліз.
-- Dependabot відкрив 10 PR: pillow, sounddevice, numpy, requests, pyttsx3,
-  actions/attest-build-provenance, configure-pages, setup-node,
-  github-script, upload-pages-artifact. Їх треба перевірити окремо.
+  Intel-джоб переведено на підтримуваний `macos-15-intel`.
+- `Tests` для `c9828b9`: Windows — success, Website syntax — success,
+  Dependency audit — success; Ubuntu — advisory failure, macOS — у процесі.
+- Dependabot: усі 10 PR розібрано. Злито pillow 13, sounddevice 0.5.6,
+  requests 2.34.2, pyttsx3 2.99 і п'ять GitHub Actions bump-ів
+  (attest v4, setup-node v7, github-script v9, configure-pages v6,
+  upload-pages-artifact v5). PR із numpy 2.5.4 закрито: він вимагає
+  Python >=3.12, а матриця збірок на Python 3.11.
 
 ## Що ще зробити
 
@@ -183,8 +188,8 @@ non-prerelease реліз GitHub, якщо він новіший.
 2. ~~Оновити статичні версії/дати/хеші/посилання на сайті~~ — зроблено.
 3. ~~Додати `attestations: write` і прибрати блокування релізу Android/Intel~~
    — зроблено в `c7f04bb`.
-4. Перевірити live-сайт після деплою: версія 2.2.0, дата 14.11.2026,
-   посилання `v2.2.0`, хеші, roadmap.
+4. ~~Перевірити live-сайт після деплою~~ — версія, дата, посилання, хеші
+   й roadmap перевірені 14.11.2026.
 5. Живий тест мікрофона: «Hey Jarvis», поріг `wake_word_threshold`,
    cooldown, 3 репліки продовження. Без openWakeWord — перевірити STT fallback.
 6. Перевірити офлайн-режим на реальній Ollama; за бажанням підключити
@@ -193,7 +198,8 @@ non-prerelease реліз GitHub, якщо він новіший.
    локальний `.py`.
 8. Перевірити автоматизації: once/daily/weekly/every, prompt/notify,
    перезапуск Jarvis, пропущені слоти.
-9. Розібрати Dependabot PR і оновити залежності, якщо CI зелений.
+9. ~~Розібрати Dependabot PR~~ — 7 злито, 3 закрито; numpy 2.5.x відкладено
+   до переходу збірок на Python 3.12.
 10. Home Assistant URL/токен — досі не налаштовано.
 11. Відкликати/перегенерувати ключ Ashna, який був показаний у чаті.
 12. Android APK CI — експериментальний, зеленої збірки немає.
