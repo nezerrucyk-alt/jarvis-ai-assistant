@@ -92,7 +92,7 @@ from core.marketplace import (
 from modules.voice.wake import WakeWordListener
 
 APP_NAME = "Jarvis"
-APP_VERSION = "2.3.0"
+APP_VERSION = "2.3.1"
 GITHUB_REPO = "nezerrucyk-alt/jarvis-ai-assistant"
 APP_DIR = Path(__file__).resolve().parent
 if os.name == "nt":
@@ -5466,7 +5466,7 @@ class JarvisApp:
             font=("Segoe UI", 12, "bold"),
         ).pack(anchor="w")
         tk.Label(
-            brand_text, text="COMMAND DECK · v2.3", bg=SIDEBAR, fg=MUTED,
+            brand_text, text=f"COMMAND DECK · v{APP_VERSION}", bg=SIDEBAR, fg=MUTED,
             font=("Consolas", 7),
         ).pack(anchor="w", pady=(2, 0))
 
@@ -5888,7 +5888,7 @@ class JarvisApp:
         self.footer = tk.Frame(main, bg=BG)
         self.footer.pack(fill="x", padx=28, pady=(0, 8))
         tk.Label(
-            self.footer, text="J.A.R.V.I.S. · MULTI-PROVIDER AI · v2.3",
+            self.footer, text=f"J.A.R.V.I.S. · MULTI-PROVIDER AI · v{APP_VERSION}",
             bg=BG, fg=MUTED, font=("Consolas", 7),
         ).pack(side="left")
         tk.Label(
@@ -9438,12 +9438,15 @@ class JarvisApp:
         )
         text_box.pack(fill="both", expand=True, padx=18, pady=10)
         text_box.insert("1.0", "Збираю дані…")
+        text_box.config(state="disabled")
         status = tk.Label(win, text="", bg=BG, fg=CYAN_DIM, font=("Segoe UI", 8))
         status.pack(anchor="w", padx=18)
 
         def fill(value: str) -> None:
+            text_box.config(state="normal")
             text_box.delete("1.0", "end")
             text_box.insert("1.0", value)
+            text_box.config(state="disabled")
             status.config(text="Готово.")
 
         def run_now() -> None:

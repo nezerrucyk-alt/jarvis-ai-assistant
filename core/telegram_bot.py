@@ -131,6 +131,7 @@ class TelegramBot:
 
     def run_forever(self, stop_event: threading.Event) -> None:
         offset: Optional[int] = None
+        delay = 3.0
         while not stop_event.is_set():
             try:
                 messages, last_id = self.poll_once(offset)
@@ -146,9 +147,11 @@ class TelegramBot:
                         self.handler(self, message)
                     except Exception:  # noqa: BLE001 — one bad message must not stop the bot
                         logger.exception("Telegram handler failed")
+                delay = 3.0
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Telegram polling failed: %s", exc)
-                stop_event.wait(3.0)
+                stop_event.wait(delay)
+                delay = min(delay * 2, 30.0)
 
     def _reject(self, chat_id: str | int) -> None:
         try:
