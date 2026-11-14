@@ -1,5 +1,5 @@
 requests>=2.32.0
-sounddevice>=0.5.0
+sounddevice>=0.5.6
 numpy>=2.0.0
 SpeechRecognition>=3.14.0
 edge-tts>=7.0.0
