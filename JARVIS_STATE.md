@@ -44,6 +44,8 @@
 - Linux `JARVIS-Linux.tar.gz` — 110 618 107 байт,
   SHA256 `933D05E6E17FBDE348BC48FE711F4C3409215302F08D1068B06EC4C577BBF060`.
 - `SHA256SUMS.txt` — 254 байти; GitHub build provenance/атестації пройшли.
+  Хеші перевірено завантаженням усіх трьох ассетів — збігаються; API
+  підтверджує по одній атестації для Windows, macOS і Linux.
 - macOS: Apple Silicon; Intel — окремий необов'язковий job `macos-15-intel`,
   артефакт ще не опублікований і не блокує реліз.
 - Android APK — експериментальний, не блокує desktop-реліз.
