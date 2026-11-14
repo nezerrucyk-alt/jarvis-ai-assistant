@@ -44,7 +44,7 @@
 - Linux `JARVIS-Linux.tar.gz` — 110 618 107 байт,
   SHA256 `933D05E6E17FBDE348BC48FE711F4C3409215302F08D1068B06EC4C577BBF060`.
 - `SHA256SUMS.txt` — 254 байти; GitHub build provenance/атестації пройшли.
-- macOS: Apple Silicon; Intel — окремий необов'язковий job `macos-13`,
+- macOS: Apple Silicon; Intel — окремий необов'язковий job `macos-15-intel`,
   артефакт ще не опублікований і не блокує реліз.
 - Android APK — експериментальний, не блокує desktop-реліз.
 - Windows/macOS непідписані; SmartScreen і Gatekeeper попереджають.
@@ -222,7 +222,8 @@ non-prerelease реліз GitHub, якщо він новіший.
   Roblox Studio — лише Windows.
 - `release.yml`: `publish` має `needs: [desktop]` і умову
   `if: always() && needs.desktop.result == 'success'`; Android та Intel macOS
-  не блокують реліз. Для атестацій потрібен дозвіл `attestations: write`.
+  не блокують реліз. Intel-джоб тепер на `macos-15-intel` (старий `macos-13`
+  більше не доступний). Для атестацій потрібен дозвіл `attestations: write`.
 - Windows-ассет релізу називається `JARVIS-Windows.exe`; автооновлення
   приймає і його, і `JARVIS.exe` (другий має пріоритет).
 - `requirements.txt`: `pycaw`/`comtypes` лише для Windows.

@@ -72,9 +72,9 @@ jobs:
 
   desktop-intel:
     name: Build desktop (macOS Intel, optional)
-    # macos-13 may be retired; Intel must never block the required builds.
+    # Intel macOS is a bonus artifact; it must never block the required builds.
     continue-on-error: true
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
       - name: Install macOS audio library
