@@ -127,7 +127,9 @@ jobs:
   publish:
     name: Publish GitHub release
     if: always() && startsWith(github.ref, 'refs/tags/') && needs.desktop.result == 'success'
-    needs: [desktop, desktop-intel, android]
+    # Only the required desktop matrix gates publishing. Android and Intel
+    # macOS are experimental/optional and must never hold a release hostage.
+    needs: [desktop]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
