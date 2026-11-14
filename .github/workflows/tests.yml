@@ -27,6 +27,8 @@ jobs:
           - os: ubuntu-22.04
             experimental: true
     runs-on: ${{ matrix.os }}
+    # Keep advisory macOS/Linux jobs from hanging a whole workflow run.
+    timeout-minutes: 25
     # Windows is the primary target and must stay green.
     # macOS/Linux run in advisory mode until the platform-specific tests are fixed.
     continue-on-error: ${{ matrix.experimental }}

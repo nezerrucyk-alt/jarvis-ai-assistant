@@ -45,7 +45,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name JARVIS --icon assets/jarvis.ico --add-data "assets;assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all pyttsx3 jarvis.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name JARVIS --icon assets/jarvis.ico --add-data "assets;assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all pyttsx3 --collect-all cryptography --collect-all psutil --collect-all pycaw --collect-all comtypes --collect-all pystray --hidden-import PIL.Image --hidden-import pystray._win32 --hidden-import modules.mobile_bridge --hidden-import modules.coding_workspace --hidden-import modules.voice.offline jarvis.py
           New-Item -ItemType Directory -Force release | Out-Null
           Copy-Item dist/JARVIS.exe release/JARVIS-Windows.exe
       - name: Build macOS app
