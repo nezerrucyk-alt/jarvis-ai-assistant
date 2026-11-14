@@ -1,7 +1,7 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-14. Поточна гілка: `main`, останній коміт: `c9828b9`
-(реліз v2.2.0, оновлений сайт, Dependabot-залежності).
+Оновлено: 2026-11-14. Поточна гілка: `main`, останній коміт: `effcded`
+(реліз v2.2.0, оновлений сайт, Dependabot-залежності, Windows-інсталятор).
 
 Версія в коді: **2.2.0** (`APP_VERSION`, `modules.__version__`).
 Публічний реліз: **v2.2.0** (14.11.2026) — Windows, macOS Apple Silicon і Linux.
@@ -39,6 +39,10 @@
 
 - Windows `JARVIS-Windows.exe` — 98 732 260 байт,
   SHA256 `9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A`.
+- Windows installer `JARVIS-Setup.exe` (Inno Setup 6, установка для поточного
+  користувача без UAC, деінсталятор і ярлики) — 95 940 222 байти,
+  SHA256 `2DB84FBF46014EDF6EE5387E80577B028A55F60FB1AE5118794F08098579D0E4`;
+  додано в реліз v2.2.0 14.11.2026, `SHA256SUMS.txt` оновлено (337 байтів).
 - macOS `JARVIS-macOS.zip` — 81 075 776 байт,
   SHA256 `3DD71456378108316122B3B0720085E70D75649C05B66529DE820BB087CB5D11`.
 - Linux `JARVIS-Linux.tar.gz` — 110 618 107 байт,
@@ -52,8 +56,9 @@
 - Windows/macOS непідписані; SmartScreen і Gatekeeper попереджають.
 
 `website/index.html` оновлено на статичні fallback-значення 2.2.0 / 14.11.2026,
-нові посилання `v2.2.0`, розміри й SHA256. JS усе одно підтягує останній
-non-prerelease реліз GitHub, якщо він новіший.
+кнопка Windows веде на `JARVIS-Setup.exe`, розмір 95.9 MB і новий SHA256. JS
+усе одно підтягує останній non-prerelease реліз GitHub і віддає перевагу
+setup-ассету над портативним exe.
 
 ## Що зроблено у 2.2.0 (Batch 1 + Batch 2)
 
@@ -248,3 +253,16 @@ cd C:\Users\nezer\Jarvis
 Після збірки: закрити всі `JARVIS.exe`, скопіювати `dist\JARVIS.exe` у
 `JARVIS.exe` і `website\downloads\JARVIS.exe`, запустити й перевірити хвіст
 `jarvis.log`, оновити розмір/SHA256/дату на сайті.
+
+Інсталятор Windows (Inno Setup 6):
+
+```powershell
+cd C:\Users\nezer\Jarvis
+New-Item -ItemType Directory -Force installer\payload | Out-Null
+Copy-Item dist\JARVIS.exe installer\payload\JARVIS-Windows.exe
+& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer\JARVIS.iss
+```
+
+Результат — `dist\JARVIS-Setup.exe`; ассет заливається в реліз через GitHub API,
+`installer/payload/` у git ігнорується. Інсталятор не має build provenance —
+його перевіряють лише за SHA256.
