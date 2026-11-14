@@ -21,8 +21,6 @@ jobs:
             artifact: windows
           - os: macos-latest
             artifact: macos
-          - os: macos-13
-            artifact: macos-intel
           - os: ubuntu-22.04
             artifact: linux
     runs-on: ${{ matrix.os }}
@@ -71,6 +69,31 @@ jobs:
           path: release/*
           if-no-files-found: error
 
+  desktop-intel:
+    name: Build desktop (macOS Intel, optional)
+    # macos-13 may be retired; Intel must never block the required builds.
+    continue-on-error: true
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install macOS audio library
+        run: brew install portaudio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install application and packager
+        run: python -m pip install -r requirements.txt pyinstaller
+      - name: Build macOS app
+        run: |
+          python -m PyInstaller --noconfirm --clean --windowed --onedir --name JARVIS --add-data "assets:assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all pyttsx3 jarvis.py
+          mkdir -p release
+          ditto -c -k --sequesterRsrc --keepParent dist/JARVIS.app "release/JARVIS-macOS-Intel.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-macos-intel
+          path: release/*
+          if-no-files-found: error
+
   android:
     name: Build Android APK (experimental)
     runs-on: ubuntu-22.04
@@ -104,7 +127,7 @@ jobs:
   publish:
     name: Publish GitHub release
     if: always() && startsWith(github.ref, 'refs/tags/') && needs.desktop.result == 'success'
-    needs: [desktop, android]
+    needs: [desktop, desktop-intel, android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
