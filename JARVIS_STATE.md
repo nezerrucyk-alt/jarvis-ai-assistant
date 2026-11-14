@@ -102,6 +102,9 @@ Windows — `JARVIS-Setup.exe` 96.0 MB із новим SHA256, changelog 2.4.0, 
   `cover.png`. Копії готового відео: `C:\Users\nezer\Downloads\JARVIS_TikTok_01*`.
 - Концепція — анти-слоп у дусі референсу Unslop: без стокових 3D і градієнтів
   в оздобленні, великі підписи, чесні факти. Музику додавати в самому TikTok.
+- Третє відео (2.4.0): `build	iktok_24\jarvis_tiktok_03.mp4` — 26.4 с,
+  реальні кадри сайту німецькою/польською та застосунку з локалізованим
+  меню; ассети `JARVIS-TikTok-03.mp4` і cover у релізі v2.4.0.
 - Друге відео (2.3.0): `build\tiktok_23\jarvis_tiktok_02.mp4` — 1080×1920,
   31.2 с, сцени: 2.3.0, буфер обміну, брифінг, HUD, Telegram, CTA. Реальні
   вікна зняті `capture_features.py` (PrintWindow, демо-дані, без ключів),

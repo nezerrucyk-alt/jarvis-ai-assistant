@@ -93,7 +93,7 @@ from core.marketplace import (
 from modules.voice.wake import WakeWordListener
 
 APP_NAME = "Jarvis"
-APP_VERSION = "2.4.0"
+APP_VERSION = "2.4.1"
 GITHUB_REPO = "nezerrucyk-alt/jarvis-ai-assistant"
 APP_DIR = Path(__file__).resolve().parent
 if os.name == "nt":
@@ -5580,7 +5580,7 @@ class JarvisApp:
         )
         self.side_status_label.pack(side="left")
         self.mobile_btn = tk.Button(
-            side_bottom, text="ANDROID: ПІДКЛЮЧИТИ", command=self._toggle_mobile_bridge,
+            side_bottom, text=self.tr("sidebar.android_connect"), command=self._toggle_mobile_bridge,
             bg=PANEL_ALT, fg=CYAN_DIM, activebackground=LINE, activeforeground=CYAN,
             relief="flat", bd=0, anchor="w", font=("Segoe UI", 8),
             padx=8, pady=5, cursor="hand2",
@@ -5668,19 +5668,18 @@ class JarvisApp:
             hero_text, text="J.A.R.V.I.S.  /  COMMAND DECK", bg=BG, fg=CYAN_DIM,
             font=("Consolas", 7, "bold"),
         ).pack(anchor="w")
-        tk.Label(
-            hero_text, text="Чим допомогти, сер?", bg=BG, fg=TEXT,
+        self._welcome_title = tk.Label(
+            hero_text, text=self.tr("welcome.title"), bg=BG, fg=TEXT,
             font=("Segoe UI", 19, "bold"),
-        ).pack(anchor="w", pady=(1, 1))
-        tk.Label(
+        )
+        self._welcome_title.pack(anchor="w", pady=(1, 1))
+        self._welcome_sub = tk.Label(
             hero_text,
-            text=(
-                "Голос, чат, керування ПК, Roblox Studio і багато моделей — "
-                "в одному командному центрі."
-            ),
+            text=self.tr("welcome.subtitle"),
             bg=BG, fg=MUTED, font=("Segoe UI", 9),
             wraplength=560, justify="left",
-        ).pack(anchor="w")
+        )
+        self._welcome_sub.pack(anchor="w")
 
         # ── кастомний блок, який малює код користувача ──────────────────────
         self.custom_panel = tk.Frame(
@@ -5783,11 +5782,12 @@ class JarvisApp:
             composer_head, text="COMMAND INPUT", bg=PANEL, fg=CYAN_DIM,
             font=("Consolas", 7, "bold"),
         ).pack(side="left")
-        tk.Label(
+        self._composer_hint = tk.Label(
             composer_head,
-            text="Enter — надіслати  ·  Ctrl+Enter — у чергу",
+            text=self.tr("composer.hint"),
             bg=PANEL, fg=MUTED, font=("Consolas", 7),
-        ).pack(side="right")
+        )
+        self._composer_hint.pack(side="right")
 
         self.attach_panel = tk.Frame(self.composer, bg=PANEL)
         attach_head = tk.Frame(self.attach_panel, bg=PANEL)
@@ -5835,15 +5835,16 @@ class JarvisApp:
         self.attach_btn.pack(side="left", padx=(0, 6))
 
         self.speak_var = tk.BooleanVar(value=not bool(self.cfg.get("mute")))
-        tk.Checkbutton(
-            composer_actions, text="Озвучити",
+        self._speak_check = tk.Checkbutton(
+            composer_actions, text=self.tr("composer.speak"),
             variable=self.speak_var, bg=PANEL, fg=MUTED,
             selectcolor=BG, activebackground=PANEL,
             activeforeground=CYAN, highlightthickness=0, bd=0,
             font=("Segoe UI", 8), cursor="hand2",
-        ).pack(side="left", padx=(0, 4))
+        )
+        self._speak_check.pack(side="left", padx=(0, 4))
         self.mic_btn = tk.Button(
-            composer_actions, text="◉  Голос", command=self._on_mic,
+            composer_actions, text=f"◉  {self.tr('composer.voice')}", command=self._on_mic,
             bg=PANEL_ALT, fg=CYAN, activebackground=LINE,
             activeforeground=CYAN, relief="flat", bd=0,
             font=("Segoe UI", 8, "bold"), padx=9, pady=5,
@@ -5860,7 +5861,7 @@ class JarvisApp:
         )
         self.send_btn.pack(side="right", padx=(6, 0))
         self.queue_btn = tk.Button(
-            composer_actions, text="У чергу", command=self._enqueue_current,
+            composer_actions, text=self.tr("composer.queue"), command=self._enqueue_current,
             bg=PANEL_ALT, fg=GOLD, activebackground=LINE,
             activeforeground=GOLD, relief="flat", bd=0,
             font=("Segoe UI", 8), padx=9, pady=5, cursor="hand2",
@@ -5938,7 +5939,7 @@ class JarvisApp:
         self._update_provider_chip()
         self._render_queue()
         self._render_attachments()
-        self._log("sys", "J.A.R.V.I.S. онлайн. Системи готові, сер.")
+        self._log("sys", self.tr("system.online"))
         self.set_status("Готовий, сер.", MUTED)
         try:
             self.entry.focus_set()
@@ -6358,7 +6359,7 @@ class JarvisApp:
             return
         self._entry_placeholder = True
         self.entry.delete("1.0", "end")
-        self.entry.insert("1.0", self.ENTRY_PLACEHOLDER)
+        self.entry.insert("1.0", self.tr("composer.placeholder"))
         self.entry.config(fg=MUTED)
 
     def _on_entry_focus_in(self, _event=None):
@@ -7010,6 +7011,23 @@ class JarvisApp:
             self.side_status_label.config(text=self.tr("status.system_ready"))
         except Exception:  # noqa: BLE001
             pass
+        for attr, key in (
+            ("_welcome_title", "welcome.title"),
+            ("_welcome_sub", "welcome.subtitle"),
+            ("_composer_hint", "composer.hint"),
+            ("_speak_check", "composer.speak"),
+        ):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                widget.config(text=self.tr(key))
+        try:
+            self.mic_btn.config(text=f"◉  {self.tr('composer.voice')}")
+            self.queue_btn.config(text=self.tr("composer.queue"))
+            self.mobile_btn.config(text=self.tr("sidebar.android_connect"))
+        except Exception:  # noqa: BLE001
+            pass
+        if getattr(self, "_entry_placeholder", False):
+            self._show_entry_placeholder()
         self._update_mute_btn()
         self._update_access_label()
 
@@ -7370,7 +7388,7 @@ class JarvisApp:
             else:
                 self._new_chat_record()
                 self._render_chat_log(self.current_chat or {})
-                self._log("sys", "J.A.R.V.I.S. онлайн. Системи готові, сер.")
+                self._log("sys", self.tr("system.online"))
             self._update_chat_title()
             self._render_history_sidebar()
         except Exception:
@@ -7404,7 +7422,7 @@ class JarvisApp:
         """Створює чисту розмову без перевірки зайнятості (для відновлення після видалення)."""
         self._new_chat_record()
         self._render_chat_log(self.current_chat or {})
-        self._log("sys", "Нова розмова. Історію контексту очищено.")
+        self._log("sys", self.tr("system.new_chat"))
         self._update_chat_title()
         self._render_history_sidebar()
 
@@ -7851,7 +7869,7 @@ class JarvisApp:
 
         def stop_bridge():
             self.mobile_bridge.stop()
-            self.mobile_btn.config(text="ANDROID: ПІДКЛЮЧИТИ", fg=CYAN_DIM)
+            self.mobile_btn.config(text=self.tr("sidebar.android_connect"), fg=CYAN_DIM)
             win.destroy()
             self.set_status("Android-підключення вимкнено", MUTED)
 
