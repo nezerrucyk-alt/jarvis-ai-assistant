@@ -190,7 +190,7 @@
     document.querySelectorAll("[data-release-sums]")
   );
   const fallbackLinks = {
-    windows: `https://github.com/${repoSlug}/releases/latest/download/JARVIS.exe`,
+    windows: `https://github.com/${repoSlug}/releases/latest/download/JARVIS-Setup.exe`,
     macos: `https://github.com/${repoSlug}/releases/latest/download/JARVIS-macOS.zip`,
     linux: `https://github.com/${repoSlug}/releases/latest/download/JARVIS-Linux.tar.gz`,
   };
@@ -323,6 +323,7 @@
 
       let total = 0;
       const found = {};
+      const foundWeight = {};
       const ordered = [
         latest,
         ...releases.filter((release) => release !== latest),
@@ -332,8 +333,11 @@
         (release.assets || []).forEach((asset) => {
           total += Number(asset.download_count || 0);
           ["windows", "macos-intel", "macos", "linux"].forEach((platform) => {
-            if (!found[platform] && matchesPlatform(platform, asset.name)) {
+            if (!matchesPlatform(platform, asset.name)) return;
+            const weight = /setup|installer/i.test(asset.name || "") ? 2 : 1;
+            if (weight > (foundWeight[platform] || 0)) {
               found[platform] = asset.browser_download_url;
+              foundWeight[platform] = weight;
             }
           });
         });

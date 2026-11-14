@@ -542,8 +542,8 @@
         <div class="steps">
           <article class="step">
             <div class="step-num">01</div>
-            <h3 data-en="Download the .exe">Завантаж .exe</h3>
-            <p data-en="Grab JARVIS.exe (about 89 MB) and put it anywhere — Desktop, D:\Tools, a USB drive.">Завантаж JARVIS.exe (близько 89 МБ) і поклади будь-куди — на робочий стіл, у D:\Tools або на флешку.</p>
+            <h3 data-en="Download the installer">Завантаж інсталятор</h3>
+            <p data-en="Grab JARVIS-Setup.exe (about 96 MB), run the wizard and choose your shortcuts.">Завантаж JARVIS-Setup.exe (близько 96 МБ), запусти майстер і обери ярлики.</p>
           </article>
           <article class="step">
             <div class="step-num">02</div>
@@ -556,7 +556,7 @@
             <p data-en="Press Ctrl+Alt+J or the mic button and say: «відкрий Roblox Studio». Or type in the chat. That's it.">Натисни Ctrl+Alt+J або кнопку мікрофона й скажи: «відкрий Roblox Studio». Або пиши в чаті. Готово.</p>
           </article>
         </div>
-        <div class="note" data-en="Windows SmartScreen may warn about an unsigned .exe. Click «More info» → «Run anyway». The source code is open on GitHub, and the SHA256 is published below.">Windows SmartScreen може попередити про непідписаний .exe. Натисни «Докладніше» → «Все одно запустити». Код відкритий на GitHub, а SHA256 опублікований нижче.</div>
+        <div class="note" data-en="Windows SmartScreen may warn about an unsigned installer. Click «More info» → «Run anyway». The source code is open on GitHub, and the SHA256 is published below.">Windows SmartScreen може попередити про непідписаний інсталятор. Натисни «Докладніше» → «Все одно запустити». Код відкритий на GitHub, а SHA256 опублікований нижче.</div>
       </div>
 
       <div class="os-pane" data-os-pane="macos" role="tabpanel" hidden>
@@ -733,7 +733,7 @@
           <div>
             <span class="badge"><span class="pulse"></span> <span data-en="Latest stable build">Останній стабільний білд</span></span>
             <h2 style="margin-top:16px" data-en="Take Jarvis home.">Забери Джарвіса собі.</h2>
-            <p data-en="Pick your system. No installer, no account, no subscription. Keys and chats stay on your machine.">Обери свою систему. Без інсталятора, акаунта й підписки. Ключі та чати залишаються на твоєму ПК.</p>
+            <p data-en="Pick your system. No account, no subscription: a Windows installer, archives for macOS and Linux. Keys and chats stay on your machine.">Обери свою систему. Без акаунта й підписки: інсталятор для Windows, архіви для macOS і Linux. Ключі та чати залишаються на твоєму ПК.</p>
           </div>
           <div class="download-info">
             <div><span data-en="Version">Версія</span><strong data-release-version>2.2.0</strong></div>
@@ -749,14 +749,14 @@
             </div>
             <h3>Windows</h3>
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
-            <p class="platform-sub">Windows 10/11 x64 · .exe</p>
-            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>98.7 MB</strong></div>
+            <p class="platform-sub" data-en="Windows 10/11 x64 · installer .exe">Windows 10/11 x64 · інсталятор .exe</p>
+            <div class="platform-meta"><span data-en="Size">Розмір</span><strong>95.9 MB</strong></div>
             <div class="platform-updated"><span class="pulse"></span> <span data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.2.0/JARVIS-Windows.exe">
+            <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.2.0/JARVIS-Setup.exe">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span data-en="Download .exe">Завантажити .exe</span>
+              <span data-en="Download installer">Завантажити інсталятор</span>
             </a>
-            <button class="sha js-sha" type="button" data-sha="9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A" title="Скопіювати SHA256">SHA256 9970333D…8296A</button>
+            <button class="sha js-sha" type="button" data-sha="2DB84FBF46014EDF6EE5387E80577B028A55F60FB1AE5118794F08098579D0E4" title="Скопіювати SHA256">SHA256 2DB84FBF…79D0E4</button>
           </article>
 
           <article class="platform-card">
@@ -832,7 +832,7 @@
           <span class="verify-step">02</span>
           <h3 data-en="Compute the hash">Порахуй хеш</h3>
           <div class="verify-cmds">
-            <div class="verify-cmd"><span>Windows · PowerShell</span><code>Get-FileHash .\JARVIS.exe -Algorithm SHA256</code></div>
+            <div class="verify-cmd"><span>Windows · PowerShell</span><code>Get-FileHash .\JARVIS-Setup.exe -Algorithm SHA256</code></div>
             <div class="verify-cmd"><span>macOS</span><code>shasum -a 256 JARVIS-macOS.zip</code></div>
             <div class="verify-cmd"><span>Linux</span><code>sha256sum JARVIS-Linux.tar.gz</code></div>
           </div>
@@ -841,8 +841,8 @@
         <article class="verify-card">
           <span class="verify-step">03</span>
           <h3 data-en="Check provenance">Перевір походження</h3>
-          <p data-en="With GitHub CLI, verify that the file was attested by this repository's release workflow:">Через GitHub CLI перевір, що файл атестований release-workflow цього репозиторію:</p>
-          <div class="verify-cmd"><code>gh attestation verify JARVIS.exe --repo __GITHUB_REPOSITORY__</code></div>
+          <p data-en="The portable JARVIS-Windows.exe from the release carries build provenance from this repository's workflow. The installer itself is built locally and is not attested — verify it by SHA256.">Портативний JARVIS-Windows.exe з релізу має build provenance від workflow цього репозиторію. Сам інсталятор зібраний локально й атестації не має — звіряй його за SHA256.</p>
+          <div class="verify-cmd"><code>gh attestation verify JARVIS-Windows.exe --repo __GITHUB_REPOSITORY__</code></div>
         </article>
       </div>
 
@@ -856,7 +856,11 @@
           <span class="mono" data-en="Click to copy">Клікни, щоб скопіювати</span>
         </div>
         <div class="verify-hash-row">
-          <span>Windows · JARVIS.exe</span>
+          <span>Windows · JARVIS-Setup.exe</span>
+          <button class="sha js-sha" type="button" data-sha="2DB84FBF46014EDF6EE5387E80577B028A55F60FB1AE5118794F08098579D0E4">2DB84FBF46014EDF6EE5387E80577B028A55F60FB1AE5118794F08098579D0E4</button>
+        </div>
+        <div class="verify-hash-row">
+          <span>Windows · JARVIS-Windows.exe</span>
           <button class="sha js-sha" type="button" data-sha="9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A">9970333DD0183D5EE64F8E448DAB3DCC8EE7DCD6B5CC4A6DAAFFC3C76528296A</button>
         </div>
         <div class="verify-hash-row">
@@ -1075,7 +1079,7 @@
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Windows 10, Windows 11, macOS 11+, Linux",
   "softwareVersion": "2.2.0",
-  "fileSize": "98.7MB",
+  "fileSize": "95.9MB",
   "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
   "description": "Voice-controlled AI assistant for Windows, macOS and Linux with plugins, screen vision, translation and local plugins. Full PC control and Roblox Studio on Windows.",
   "sameAs": ["https://www.tiktok.com/@nezer_kicc"]

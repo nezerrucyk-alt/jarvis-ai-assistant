@@ -64,3 +64,6 @@ AUDIT_REPORT.md
 *_token.txt
 android/local.properties
 website/downloads/*.exe
+
+# Inno Setup payload (built locally / in CI, never committed)
+installer/payload/
