@@ -95,7 +95,7 @@ from core.marketplace import (
 from modules.voice.wake import WakeWordListener
 
 APP_NAME = "Jarvis"
-APP_VERSION = "2.6.0"
+APP_VERSION = "2.6.1"
 GITHUB_REPO = "nezerrucyk-alt/jarvis-ai-assistant"
 APP_DIR = Path(__file__).resolve().parent
 if os.name == "nt":
