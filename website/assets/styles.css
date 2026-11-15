@@ -188,32 +188,15 @@ img, video { max-width: 100%; display: block; }
 }
 
 .brand-mark {
-  position: relative;
-  z-index: 0;
   display: grid;
   place-items: center;
-  width: 35px;
-  height: 35px;
-  border: 1px solid rgba(155, 168, 255, 0.46);
-  border-radius: 11px;
-  background: radial-gradient(circle at 30% 24%, rgba(123, 140, 255, 0.72), rgba(10, 13, 21, 0.95));
-  box-shadow: 0 0 26px rgba(77, 107, 254, 0.4), inset 0 0 12px rgba(170, 183, 255, 0.2);
-  color: #fff;
-  font-family: var(--mono);
-  font-size: 0.74rem;
+  width: 31px;
+  height: 31px;
+  color: var(--blue-3);
 }
 
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  z-index: -1;
-  border-radius: 14px;
-  background: conic-gradient(from 0deg, transparent 0 58%, rgba(123, 140, 255, 0.85) 72%, transparent 86%);
-  filter: blur(3px);
-  opacity: 0.75;
-  animation: spin 9s linear infinite;
-}
+.brand-mark svg { display: block; width: 100%; height: 100%; }
+.brand-mark circle { fill: var(--blue-2); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -999,17 +982,14 @@ h2 {
 .rail-logo {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   margin-bottom: 8px;
-  border: 1px solid rgba(155, 168, 255, 0.35);
-  border-radius: 8px;
-  background: radial-gradient(circle at 30% 25%, rgba(123, 140, 255, 0.6), rgba(10, 13, 21, 0.9));
-  color: #fff;
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  box-shadow: 0 0 16px rgba(77, 107, 254, 0.35);
+  color: var(--blue-3);
 }
+
+.rail-logo svg { display: block; width: 100%; height: 100%; }
+.rail-logo circle { fill: var(--blue-2); }
 
 .rail-item {
   display: grid;
