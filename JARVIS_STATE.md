@@ -1,10 +1,10 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-15 (реліз 2.6.0). Поточна гілка: `main`, останній релізний
-коміт: тег `v2.6.0`.
+Оновлено: 2026-11-15 (реліз 2.6.1). Поточна гілка: `main`, останній релізний
+коміт: `36bdf48` (тег `v2.6.1`).
 
-Версія в коді: **2.6.0** (`APP_VERSION`, `modules.__version__`).
-Публічний реліз: **v2.6.0** (15.11.2026).
+Версія в коді: **2.6.1** (`APP_VERSION`, `modules.__version__`).
+Публічний реліз: **v2.6.1** (15.11.2026).
 
 ## Де що лежить
 
@@ -29,14 +29,14 @@
 | Marketplace-плагіни | `C:\Users\nezer\Jarvis\assets\marketplace\plugins\` |
 | GitHub-репозиторій | `nezerrucyk-alt/jarvis-ai-assistant` |
 | GitHub Pages | `https://nezerrucyk-alt.github.io/jarvis-ai-assistant/` |
-| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.6.0` |
+| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.6.1` |
 | Лог останньої збірки | `C:\Users\nezer\Jarvis\build_last.log` |
 | Журнал змін | `C:\Users\nezer\Jarvis\CHANGES_SUMMARY.md` |
 | Стан проєкту | `C:\Users\nezer\Jarvis\JARVIS_STATE.md` (цей файл) |
 
 ## Актуальний білд і реліз
 
-Локальна збірка 2.6.0 (15.11.2026):
+Локальна збірка 2.6.0 (15.11.2026, до патча 2.6.1):
 
 - `dist\JARVIS.exe` — 165 963 720 байт (158.3 МБ), змінено 15.11.2026 09:56,
   PE-підсистема 2 (GUI), SHA256
@@ -48,26 +48,30 @@
 - `build_exe.py --skip-desktop-copy --kill-running` пройшов: spec-контракт,
   свіжість, PE-заголовок і GUI-підсистема перевірені.
 
-Опублікований v2.6.0 (15.11.2026, CI run 43692423417):
+Опублікований v2.6.1 (15.11.2026):
 
-- Windows portable `JARVIS-Windows.exe` — 98 808 428 байт,
-  SHA256 `d42510833bd604d5c2f71acfc98f0c008eb94828af42508dd30a4340ddec579d`.
-- Windows installer `JARVIS-Setup.exe` — 96 013 988 байт,
-  SHA256 `d2b864165266518fe2ce850eee561632f351afe18296992c8c0d4bc3de4a4660`.
-- macOS `JARVIS-macOS.zip` — 81 155 035 байт,
-  SHA256 `b8d6a86a7bb226ce0f5bf9091f100d088db61241b3877cfae406ddb6039317a3`.
-- Linux `JARVIS-Linux.tar.gz` — 110 693 820 байт,
-  SHA256 `254db2640055c5887402b6e78a038a9e0f9e9262f06ff2860abda0a656a06225`.
+- Windows portable `JARVIS-Windows.exe` — 98 838 674 байти,
+  SHA256 `b188d91e0bb088d72ce4658aafc862eaf18fabf434c661c55adc75380cd10b54`.
+- Windows installer `JARVIS-Setup.exe` — 96 048 741 байт,
+  SHA256 `b7eef361a3c76ee77ade35b5ba8c39dadcec883c0df7e9a314e0680ba0e4a151`.
+- macOS `JARVIS-macOS.zip` — 81 186 430 байт,
+  SHA256 `89fbd9bac1158cfc05fb2f9a1a64cd8839a07dde194c233ee9f6a1b2e63a1e98`.
+- Linux `JARVIS-Linux.tar.gz` — 110 723 948 байт,
+  SHA256 `df1d24ef72f1c11a7d9a9a56fd9ee830e3712e10f399b7e907d246317da0a976`.
 - `SHA256SUMS.txt` — 337 байтів; GitHub build provenance/атестації створені
   для всіх збірок.
-- TikTok #5: `JARVIS-TikTok-05.mp4` — 4 597 603 Б (1080×1920, 25.0 с,
+- Патч 2.6.1: промпт для картинки готує чат-модель (ChatGPT-стиль
+  промпт-інженер), таймаут 300 с із повторним запитом, fallback на gpt-image-1
+  без опційних параметрів на 400, явна помилка для промптів >4000 символів,
+  папка `images` тримає останні 200 файлів.
+- TikTok #5 (у релізі v2.6.0): `JARVIS-TikTok-05.mp4` — 4 597 603 Б (1080×1920, 25.0 с,
   H.264 + AAC) та `JARVIS-TikTok-05-cover.png` — 288 023 Б.
 - Intel macOS і Android у цьому релізі не з'явилися (необов'язкові jobs).
 - Рендери TikTok (`*.mp4`, `*.wav`, `*.png` у `assets/social`) не комітяться:
   у git живе лише `render_tiktok_01.py`, медіа їде в GitHub Release.
 - Windows/macOS непідписані; SmartScreen і Gatekeeper попереджають.
 
-`website/index.html` оновлено на 2.6.0 / 15.11.2026: changelog 2.6.0, кнопки
+`website/index.html` оновлено на 2.6.1 / 15.11.2026: changelog 2.6.0, кнопки
 ведуть на v2.6.0, п'яте TikTok-відео, секція відео з MP4 та посилання на
 GitHub автора (`@nezerrucyk-alt`). Хеші й розміри в блоці перевірки оновлені
 під опублікований CI-реліз. JS і далі підтягує останній non-prerelease реліз

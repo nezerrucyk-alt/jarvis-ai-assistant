@@ -26,12 +26,7 @@
 </head>
 <body class="docs-page">
 
-<div class="bg-fx" aria-hidden="true">
-  <span class="aurora a1"></span>
-  <span class="aurora a2"></span>
-  <span class="aurora a3"></span>
-  <span class="bg-grid"></span>
-</div>
+<div class="bg-fx" aria-hidden="true"></div>
 
 <header class="nav">
   <div class="wrap nav-inner">
@@ -108,7 +103,7 @@
         <a href="#troubleshooting" data-en="Troubleshooting">Проблеми</a>
       </nav>
       <div class="docs-sidebar-note">
-        <span class="mono">v2.6</span>
+        <span class="mono">v2.6.1</span>
         <p data-en="Docs match the 2.6 codebase. For older builds, check the repository tag.">Документація відповідає коду 2.6. Для старіших збірок дивись тег у репозиторії.</p>
         <a href="https://github.com/__GITHUB_REPOSITORY__" target="_blank" rel="noopener" data-en="Source on GitHub">Код на GitHub</a>
       </div>
@@ -549,7 +544,7 @@ curl -k https://192.168.1.10:8765/api/chat \
       <section id="images" class="docs-section">
         <span class="docs-kicker" data-en="10 · Image generation">10 · Генерація зображень</span>
         <h2 data-en="Draw with OpenAI Images">Малюй через OpenAI Images</h2>
-        <p data-en="Jarvis 2.6.0 can create pictures from a chat message. The generate_image tool calls OpenAI Images with gpt-image-1, saves the result to %APPDATA%\Jarvis\images and inserts a thumbnail into the conversation. Chat history keeps the path, so the picture is restored when you reopen the chat.">Jarvis 2.6.0 уміє створювати картинки з повідомлення в чаті. Інструмент generate_image викликає OpenAI Images з gpt-image-1, зберігає результат у %APPDATA%\Jarvis\images і вставляє мініатюру в розмову. Історія чату зберігає шлях, тож картинка відновлюється після повторного відкриття чату.</p>
+        <p data-en="Jarvis 2.6.1 creates pictures from a chat message. The chat model first acts as a prompt engineer and expands the idea into a detailed English prompt; then the generate_image tool calls OpenAI Images with gpt-image-1, saves the result to %APPDATA%\Jarvis\images and inserts a thumbnail into the conversation. History keeps the path, so the picture is restored on reopen.">Jarvis 2.6.1 створює картинки з повідомлення в чаті. Спершу чат-модель працює як промпт-інженер і розгортає ідею в детальний англомовний промпт; далі інструмент generate_image викликає OpenAI Images з gpt-image-1, зберігає результат у %APPDATA%\Jarvis\images і вставляє мініатюру в розмову. Історія зберігає шлях, тож картинка відновлюється після відкриття.</p>
 
         <div class="docs-table-wrap">
           <table class="docs-table">
@@ -558,11 +553,13 @@ curl -k https://192.168.1.10:8765/api/chat \
               <tr><td>image_model</td><td>gpt-image-1 · gpt-image-1-mini</td></tr>
               <tr><td>image_size</td><td>1024x1024 · 1024x1536 · 1536x1024 · auto</td></tr>
               <tr><td>image_quality</td><td>auto · low · medium · high</td></tr>
+              <tr><td>image_prompt_enhance</td><td>true · false</td></tr>
+              <tr><td>image_keep</td><td>200 (default)</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p data-en="All three settings are in Settings under «Генерація зображень · OpenAI». The same OpenAI key is used for chat models and images; without it the tool returns a clear error instead of a fake picture. Each request is billed by OpenAI.">Усі три налаштування — у Налаштуваннях у блоці «Генерація зображень · OpenAI». Той самий ключ OpenAI використовується для чат-моделей і картинок; без нього інструмент повертає зрозумілу помилку, а не вигадану картинку. Кожен запит тарифікується OpenAI.</p>
+        <p data-en="Settings live under «Генерація зображень · OpenAI». The same OpenAI key is used for chat models and images; without it the tool returns a clear error instead of a fake picture. Each request is billed by OpenAI.">Налаштування — у блоці «Генерація зображень · OpenAI». Той самий ключ OpenAI використовується для чат-моделей і картинок; без нього інструмент повертає зрозумілу помилку, а не вигадану картинку. Кожен запит тарифікується OpenAI.</p>
 
         <div class="docs-code">
           <div class="code-head">

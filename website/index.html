@@ -37,12 +37,7 @@
   </button>
 </div>
 
-<div class="bg-fx" aria-hidden="true">
-  <span class="aurora a1"></span>
-  <span class="aurora a2"></span>
-  <span class="aurora a3"></span>
-  <span class="bg-grid"></span>
-</div>
+<div class="bg-fx" aria-hidden="true"></div>
 <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
 <header class="nav">
@@ -74,10 +69,10 @@
     <div class="wrap">
       <div class="hero-grid">
         <div>
-          <div class="badge"><span class="pulse"></span> <span data-en="Windows · macOS · Linux">Windows · macOS · Linux</span> · <span data-en="version">версія</span> <span data-release-version>2.6.0</span></div>
+          <div class="badge"><span class="pulse"></span> <span data-en="Windows · macOS · Linux">Windows · macOS · Linux</span> · <span data-en="version">версія</span> <span data-release-version>2.6.1</span></div>
           <h1>
             <span data-en="Your voice.">Твій голос.</span><br>
-            <span class="gradient-text" data-en="Your computer. One Jarvis.">Твій комп'ютер. Один Джарвіс.</span>
+            <span class="hero-accent" data-en="Your computer. One Jarvis.">Твій комп'ютер. Один Джарвіс.</span>
           </h1>
           <p class="hero-lead" data-en="A desktop AI assistant for Windows, macOS and Linux: voice, chat, plugins, screen vision and translation. On Windows it also takes full control of the PC and connects to Roblox Studio. No subscription.">
             Десктопний AI-асистент для Windows, macOS і Linux: голос, чат, плагіни, зір екрана й переклад. На Windows — ще й повне керування ПК та Roblox Studio. Без підписки.
@@ -99,7 +94,6 @@
           </div>
         </div>
         <div class="hero-visual">
-          <div class="hero-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
           <div class="app-frame">
             <div class="frame-bar">
               <span class="frame-dot red"></span><span class="frame-dot yellow"></span><span class="frame-dot green"></span>
@@ -107,22 +101,6 @@
               <span class="frame-live"><i></i> LIVE</span>
             </div>
             <img src="assets/screenshot-main.png" alt="Command Deck: чат, черга завдань, вкладення, вибір моделі й режиму" width="1240" height="860">
-          </div>
-          <div class="float-card float-voice">
-            <div class="float-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-            </div>
-            <div>
-              <strong data-en="Voice mode is ready">Голосовий режим готовий</strong>
-              <span class="muted">Ctrl + Alt + J</span>
-            </div>
-          </div>
-          <div class="float-card float-failover">
-            <span class="failover-dot" aria-hidden="true"></span>
-            <div>
-              <strong data-en="Failover is active">Failover активний</strong>
-              <span class="muted">16 <span data-en="providers on standby">провайдерів у резерві</span></span>
-            </div>
           </div>
         </div>
       </div>
@@ -433,25 +411,23 @@
       </div>
       <div class="timeline" data-stagger>
         <article class="release site-update">
-          <div class="release-head"><strong data-en="Website">Сайт</strong><time datetime="2026-11-13">13.11.2026</time><span class="release-badge" data-en="site update">оновлення сайту</span></div>
+          <div class="release-head"><strong data-en="Website">Сайт</strong><time datetime="2026-11-15">15.11.2026</time><span class="release-badge" data-en="site update">оновлення сайту</span></div>
           <ul>
-            <li data-en="Premium redesign: aurora background, glass navigation, animated hero with orbit rings, scroll reveals, spotlight cards and count-up stats.">Преміум-редизайн: aurora-фон, скляна навігація, анімований hero з orbit-кільцями, scroll-reveal, spotlight-картки й анімовані лічильники.</li>
-            <li data-en="New Command Deck section with a mock of the task queue and composer.">Нова секція Command Deck із макетом черги завдань і composer.</li>
-            <li data-en="Creator socials block with a TikTok link, also added to JSON-LD sameAs.">Блок «Соцмережі творця» з посиланням на TikTok, також доданий у JSON-LD sameAs.</li>
-            <li data-en="Recommended platform detection, plugin code copy, scroll progress and back-to-top.">Визначення рекомендованої платформи, копіювання коду плагіна, прогрес скролу й кнопка «вгору».</li>
-            <li data-en="New 3D JARVIS logo animation: plays once when you land at the top, replays on logo click, can be skipped, and respects reduced-motion settings.">Нова 3D-анімація логотипа JARVIS: грає один раз під час входу на початок сторінки, повторюється кліком по логотипу, її можна пропустити, і вона поважає налаштування зменшення руху.</li>
-            <li data-en="Real user reviews via public GitHub issues: nickname, 1–5 stars, 5000-character limit, average rating and live list.">Реальні відгуки через публічні GitHub issues: нік, оцінка 1–5, ліміт 5000 символів, середній рейтинг і живий список.</li>
-            <li data-en="Separate developer docs page for the plugin API, Android bridge, AI providers, Roblox MCP and customization.">Окрема сторінка документації для API плагінів, Android-мосту, AI-провайдерів, Roblox MCP і кастомізації.</li>
-            <li data-en="Build verification section with SHA256 commands, SHA256SUMS.txt, GitHub attestations and an honest note about unsigned binaries.">Секція перевірки збірок із SHA256-командами, SHA256SUMS.txt, GitHub-атестаціями й чесною приміткою про непідписані бінарники.</li>
-            <li data-en="Version and last-update date now come from the latest GitHub release and are shown next to every download button.">Версія й дата останнього оновлення тепер беруться з останнього GitHub-релізу й показуються біля кожної кнопки завантаження.</li>
-            <li data-en="New roadmap page with shipped, active, planned and honestly blocked items.">Нова сторінка roadmap із випущеним, активним, запланованим і чесно заблокованим.</li>
-            <li data-en="Docs search with a / hotkey, section filtering and a table-of-contents scrollspy.">Пошук по документації з гарячою клавішею «/», фільтрацією розділів і scrollspy для змісту.</li>
-            <li data-en="SEO: sitemap.xml, robots.txt, canonical URLs, Open Graph/Twitter cover and FAQ schema.">SEO: sitemap.xml, robots.txt, canonical-URL, Open Graph/Twitter-обкладинка й FAQ-схема.</li>
-            <li data-en="Tests CI on every pull request, pip-audit, Dependabot and SECURITY.md; review issues are auto-labelled only when the format is valid.">CI тестів на кожен pull request, pip-audit, Dependabot і SECURITY.md; issues з відгуками автоматично отримують label лише за валідного формату.</li>
-            <li data-en="Intel Mac build added to the release matrix; the Android APK stays experimental and no longer blocks desktop releases.">Збірку для Intel Mac додано до матриці релізу; Android APK лишається експериментальним і більше не блокує десктопні релізи.</li>
+            <li data-en="New independent brand mark: an open hexagon with a solid core, used in the header, docs, favicon and social cover.">Нова незалежна марка: відкритий шестикутник із ядром — у шапці, документації, favicon і соціальній обкладинці.</li>
+            <li data-en="Quieter visual language: flat background, solid buttons, an editorial feature list instead of a wall of identical cards.">Тихіша візуальна мова: плаский фон, суцільні кнопки, редакційний список можливостей замість стіни однакових карток.</li>
+            <li data-en="Reviews strip the issue template and markdown markers before rendering, so cards show only the text people wrote.">Відгуки прибирають шаблон issue й markdown-маркери перед показом, тож у картках лишається тільки текст користувача.</li>
+            <li data-en="2.6.0 release assets, SHA256 hashes and the fifth TikTok video are published.">Опубліковані артефакти 2.6.0, SHA256-хеші й п'яте TikTok-відео.</li>
           </ul>
         </article>
         <article class="release latest">
+          <div class="release-head"><strong>2.6.1</strong><time datetime="2026-11-15">15.11.2026</time><span class="release-badge" data-en="patch">патч</span></div>
+          <ul>
+            <li data-en="Image prompts are now written by the chat model as a prompt engineer: subject, style, composition, camera, lighting, colors and mood. If the model is unavailable, the original idea is used.">Промпт для картинки тепер готує чат-модель як промпт-інженер: сюжет, стиль, композиція, камера, світло, кольори й настрій. Якщо модель недоступна — використовується початкова ідея.</li>
+            <li data-en="Stable image API: 5-minute timeout, retry on 429/5xx, automatic fallback to gpt-image-1 without optional parameters on 400, and an explicit error for prompts over 4000 characters.">Стабільніший image API: таймаут 5 хвилин, повтор на 429/5xx, автоматичний fallback на gpt-image-1 без опційних параметрів на 400 і явна помилка для промптів понад 4000 символів.</li>
+            <li data-en="The images folder keeps only the newest 200 files, so %APPDATA%\Jarvis\images no longer grows forever.">Папка зображень зберігає лише 200 останніх файлів, тож %APPDATA%\Jarvis\images більше не росте безмежно.</li>
+          </ul>
+        </article>
+        <article class="release">
           <div class="release-head"><strong>2.6.0</strong><time datetime="2026-11-15">15.11.2026</time><span class="release-badge" data-en="new">нове</span></div>
           <ul>
             <li data-en="Image generation right in the chat: ask JARVIS to draw something and it calls OpenAI Images (gpt-image-1), saves the result locally and shows it in the conversation.">Генерація картинок прямо в чаті: попроси JARVIS намалювати щось — він викликає OpenAI Images (gpt-image-1), зберігає результат локально й показує його в розмові.</li>
@@ -568,7 +544,7 @@
         <p data-en="Jarvis runs on Windows, macOS and Linux. Settings, chats and plugins live in your user data folder, so updates never wipe your data.">Jarvis працює на Windows, macOS і Linux. Налаштування, чати й плагіни лежать у папці даних користувача, тому оновлення не стирають інформацію.</p>
       </div>
 
-      <div class="os-tabs" role="tablist" data-reveal> aria-label="Операційна система">
+      <div class="os-tabs" role="tablist" data-reveal aria-label="Операційна система">
         <button class="os-tab active" type="button" role="tab" data-os-tab="windows" aria-selected="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.4 10.6 4.3v7.1H3V5.4zm9.4-1.3L21 2.8v8.6h-8.6V4.1zM3 12.6h7.6v7.1L3 18.6v-6zm9.4 0H21v8.6l-8.6-1.3v-7.3z"/></svg>
           Windows
@@ -781,7 +757,7 @@
             <p data-i18n="dlLead" data-en="Pick your system. No account, no subscription: a Windows installer, archives for macOS and Linux. Keys and chats stay on your machine.">Обери свою систему. Без акаунта й підписки: інсталятор для Windows, архіви для macOS і Linux. Ключі та чати залишаються на твоєму ПК.</p>
           </div>
           <div class="download-info">
-            <div><span data-i18n="dlVersion" data-en="Version">Версія</span><strong data-release-version>2.6.0</strong></div>
+            <div><span data-i18n="dlVersion" data-en="Version">Версія</span><strong data-release-version>2.6.1</strong></div>
             <div><span data-i18n="dlUpdated" data-en="Last update">Оновлено</span><strong><time data-release-date datetime="2026-11-15">15.11.2026</time></strong></div>
             <div><span data-i18n="dlDownloads" data-en="Downloads">Завантажень</span><strong id="downloadCount">—</strong></div>
           </div>
@@ -797,11 +773,11 @@
             <p class="platform-sub" data-en="Windows 10/11 x64 · installer .exe">Windows 10/11 x64 · інсталятор .exe</p>
             <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>96.0 MB</strong></div>
             <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-15">15.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.0/JARVIS-Setup.exe">
+            <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.1/JARVIS-Setup.exe">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-i18n="dlInstaller" data-en="Download installer">Завантажити інсталятор</span>
             </a>
-            <button class="sha js-sha" type="button" data-sha="D2B864165266518FE2CE850EEE561632F351AFE18296992C8C0D4BC3DE4A4660" title="Скопіювати SHA256">SHA256 D2B86416…4A4660</button>
+            <button class="sha js-sha" type="button" data-sha="B7EEF361A3C76EE77ADE35B5BA8C39DADCEC883C0DF7E9A314E0680BA0E4A151" title="Скопіювати SHA256">SHA256 B7EEF361…E4A151</button>
           </article>
 
           <article class="platform-card">
@@ -813,14 +789,14 @@
             <p class="platform-sub" data-en="macOS 11+ · Apple Silicon · .zip">macOS 11+ · Apple Silicon · .zip</p>
             <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>81.2 MB</strong></div>
             <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-15">15.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="macos" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.0/JARVIS-macOS.zip">
+            <a class="btn btn-primary js-download" data-download="macos" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.1/JARVIS-macOS.zip">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-i18n="dlZip" data-en="Download .zip">Завантажити .zip</span>
             </a>
             <a class="platform-alt js-download js-optional-download" data-download="macos-intel" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/latest/download/JARVIS-macOS-Intel.zip" hidden>
               <span data-en="Intel Mac build →">Збірка для Intel Mac →</span>
             </a>
-            <button class="sha js-sha" type="button" data-sha="B8D6A86A7BB226CE0F5BF9091F100D088DB61241B3877CFAE406DDB6039317A3" title="Скопіювати SHA256">SHA256 B8D6A86A…9317A3</button>
+            <button class="sha js-sha" type="button" data-sha="89FBD9BAC1158CFC05FB2F9A1A64CD8839A07DDE194C233EE9F6A1B2E63A1E98" title="Скопіювати SHA256">SHA256 89FBD9BA…3A1E98</button>
           </article>
 
           <article class="platform-card">
@@ -832,11 +808,11 @@
             <p class="platform-sub">Linux x86_64 · .tar.gz</p>
             <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>110.7 MB</strong></div>
             <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-15">15.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="linux" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.0/JARVIS-Linux.tar.gz">
+            <a class="btn btn-primary js-download" data-download="linux" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.1/JARVIS-Linux.tar.gz">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-i18n="dlTar" data-en="Download .tar.gz">Завантажити .tar.gz</span>
             </a>
-            <button class="sha js-sha" type="button" data-sha="254DB2640055C5887402B6E78A038A9E0F9E9262F06FF2860ABDA0A656A06225" title="Скопіювати SHA256">SHA256 254DB264…A06225</button>
+            <button class="sha js-sha" type="button" data-sha="DF1D24EF72F1C11A7D9A9A56FD9EE830E3712E10F399B7E907D246317DA0A976" title="Скопіювати SHA256">SHA256 DF1D24EF…A0A976</button>
           </article>
         </div>
 
@@ -983,24 +959,24 @@
 
       <div class="verify-hashes" data-reveal>
         <div class="verify-hashes-head">
-          <h3 data-en="SHA256 for v2.6.0">SHA256 для v2.6.0</h3>
+          <h3 data-en="SHA256 for v2.6.1">SHA256 для v2.6.1</h3>
           <span class="mono" data-en="Click to copy">Клікни, щоб скопіювати</span>
         </div>
         <div class="verify-hash-row">
           <span>Windows · JARVIS-Setup.exe</span>
-          <button class="sha js-sha" type="button" data-sha="D2B864165266518FE2CE850EEE561632F351AFE18296992C8C0D4BC3DE4A4660">D2B864165266518FE2CE850EEE561632F351AFE18296992C8C0D4BC3DE4A4660</button>
+          <button class="sha js-sha" type="button" data-sha="B7EEF361A3C76EE77ADE35B5BA8C39DADCEC883C0DF7E9A314E0680BA0E4A151">B7EEF361A3C76EE77ADE35B5BA8C39DADCEC883C0DF7E9A314E0680BA0E4A151</button>
         </div>
         <div class="verify-hash-row">
           <span>Windows · JARVIS-Windows.exe</span>
-          <button class="sha js-sha" type="button" data-sha="D42510833BD604D5C2F71ACFC98F0C008EB94828AF42508DD30A4340DDEC579D">D42510833BD604D5C2F71ACFC98F0C008EB94828AF42508DD30A4340DDEC579D</button>
+          <button class="sha js-sha" type="button" data-sha="B188D91E0BB088D72CE4658AAFC862EAF18FABF434C661C55ADC75380CD10B54">B188D91E0BB088D72CE4658AAFC862EAF18FABF434C661C55ADC75380CD10B54</button>
         </div>
         <div class="verify-hash-row">
           <span>macOS · JARVIS-macOS.zip</span>
-          <button class="sha js-sha" type="button" data-sha="B8D6A86A7BB226CE0F5BF9091F100D088DB61241B3877CFAE406DDB6039317A3">B8D6A86A7BB226CE0F5BF9091F100D088DB61241B3877CFAE406DDB6039317A3</button>
+          <button class="sha js-sha" type="button" data-sha="89FBD9BAC1158CFC05FB2F9A1A64CD8839A07DDE194C233EE9F6A1B2E63A1E98">89FBD9BAC1158CFC05FB2F9A1A64CD8839A07DDE194C233EE9F6A1B2E63A1E98</button>
         </div>
         <div class="verify-hash-row">
           <span>Linux · JARVIS-Linux.tar.gz</span>
-          <button class="sha js-sha" type="button" data-sha="254DB2640055C5887402B6E78A038A9E0F9E9262F06FF2860ABDA0A656A06225">254DB2640055C5887402B6E78A038A9E0F9E9262F06FF2860ABDA0A656A06225</button>
+          <button class="sha js-sha" type="button" data-sha="DF1D24EF72F1C11A7D9A9A56FD9EE830E3712E10F399B7E907D246317DA0A976">DF1D24EF72F1C11A7D9A9A56FD9EE830E3712E10F399B7E907D246317DA0A976</button>
         </div>
       </div>
 
@@ -1021,7 +997,7 @@
         </details>
         <details>
           <summary data-en="How does image generation work?">Як працює генерація картинок?</summary>
-          <p data-en="Jarvis 2.6.0 can draw from chat through OpenAI Images (gpt-image-1). It needs an OpenAI API key; images are saved to %APPDATA%\Jarvis\images and shown in the conversation. Each request is billed by OpenAI.">Jarvis 2.6.0 малює з чату через OpenAI Images (gpt-image-1). Потрібен OpenAI API-ключ; картинки зберігаються в %APPDATA%\Jarvis\images і показуються в розмові. Кожен запит тарифікується OpenAI.</p>
+          <p data-en="Jarvis 2.6.1 draws from chat through OpenAI Images (gpt-image-1). The chat model first rewrites the idea into a detailed English prompt (subject, style, composition, lighting), then gpt-image-1 renders it. It needs an OpenAI API key; images are saved to %APPDATA%\Jarvis\images (newest 200) and shown in the conversation. Each request is billed by OpenAI.">Jarvis 2.6.1 малює з чату через OpenAI Images (gpt-image-1). Спершу чат-модель переписує ідею в детальний англомовний промпт (сюжет, стиль, композиція, світло), потім gpt-image-1 рендерить. Потрібен OpenAI API-ключ; картинки зберігаються в %APPDATA%\Jarvis\images (останні 200) і показуються в розмові. Кожен запит тарифікується OpenAI.</p>
         </details>
         <details>
           <summary data-en="Does «Hey Jarvis» work without a button?">Чи працює «Hey Jarvis» без кнопки?</summary>
@@ -1134,7 +1110,7 @@
 
     <div class="footer-bottom">
       <span>© 2026 J.A.R.V.I.S. · <a href="https://github.com/nezerrucyk-alt" target="_blank" rel="noopener">Автор: nezerrucyk-alt</a> · <span data-en="Not affiliated with Microsoft or Roblox Corporation.">Не пов'язаний із Microsoft чи Roblox Corporation.</span></span>
-      <span class="mono">WINDOWS · MACOS · LINUX · V<span data-release-version>2.6.0</span> · <span id="footerDownloads">—</span> DOWNLOADS</span>
+      <span class="mono">WINDOWS · MACOS · LINUX · V<span data-release-version>2.6.1</span> · <span id="footerDownloads">—</span> DOWNLOADS</span>
     </div>
   </div>
 </footer>
@@ -1221,7 +1197,7 @@
   "name": "J.A.R.V.I.S.",
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Windows 10, Windows 11, macOS 11+, Linux",
-  "softwareVersion": "2.6.0",
+  "softwareVersion": "2.6.1",
   "author": {"@type": "Person", "name": "nezerrucyk-alt", "url": "https://github.com/nezerrucyk-alt"},
   "fileSize": "96.0MB",
   "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
