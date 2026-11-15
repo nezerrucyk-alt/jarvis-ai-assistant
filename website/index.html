@@ -74,7 +74,7 @@
     <div class="wrap">
       <div class="hero-grid">
         <div>
-          <div class="badge"><span class="pulse"></span> <span data-en="Windows · macOS · Linux">Windows · macOS · Linux</span> · <span data-en="version">версія</span> <span data-release-version>2.4.1</span></div>
+          <div class="badge"><span class="pulse"></span> <span data-en="Windows · macOS · Linux">Windows · macOS · Linux</span> · <span data-en="version">версія</span> <span data-release-version>2.6.0</span></div>
           <h1>
             <span data-en="Your voice.">Твій голос.</span><br>
             <span class="gradient-text" data-en="Your computer. One Jarvis.">Твій комп'ютер. Один Джарвіс.</span>
@@ -452,6 +452,15 @@
           </ul>
         </article>
         <article class="release latest">
+          <div class="release-head"><strong>2.6.0</strong><time datetime="2026-11-15">15.11.2026</time><span class="release-badge" data-en="new">нове</span></div>
+          <ul>
+            <li data-en="Image generation right in the chat: ask JARVIS to draw something and it calls OpenAI Images (gpt-image-1), saves the result locally and shows it in the conversation.">Генерація картинок прямо в чаті: попроси JARVIS намалювати щось — він викликає OpenAI Images (gpt-image-1), зберігає результат локально й показує його в розмові.</li>
+            <li data-en="The new generate_image tool understands prompts in Ukrainian and English, supports square, portrait and landscape formats plus four quality levels, and works even with restricted PC access.">Новий інструмент generate_image розуміє промпти українською та англійською, підтримує квадратний, портретний і альбомний формати та чотири рівні якості, і працює навіть з обмеженим доступом до ПК.</li>
+            <li data-en="Image settings (model, size, quality) live in Settings next to the OpenAI key; files go to %APPDATA%\Jarvis\images and chat history keeps the thumbnails.">Налаштування зображень (модель, розмір, якість) живуть у Налаштуваннях поруч із ключем OpenAI; файли зберігаються в %APPDATA%\Jarvis\images, а історія чату зберігає мініатюри.</li>
+            <li data-en="New 25-second TikTok intro about the Command Deck, voice, models, customization and image generation.">Нове 25-секундне TikTok-інтро про Command Deck, голос, моделі, кастомізацію й генерацію картинок.</li>
+          </ul>
+        </article>
+        <article class="release">
           <div class="release-head"><strong>2.4.1</strong><time datetime="2026-11-14">14.11.2026</time><span class="release-badge" data-en="patch">патч</span></div>
           <ul>
             <li data-en="Welcome screen, composer and system chat lines are now translated into all six interface languages.">Вітальний екран, композер і системні повідомлення чату тепер перекладені всіма шістьма мовами інтерфейсу.</li>
@@ -772,8 +781,8 @@
             <p data-i18n="dlLead" data-en="Pick your system. No account, no subscription: a Windows installer, archives for macOS and Linux. Keys and chats stay on your machine.">Обери свою систему. Без акаунта й підписки: інсталятор для Windows, архіви для macOS і Linux. Ключі та чати залишаються на твоєму ПК.</p>
           </div>
           <div class="download-info">
-            <div><span data-i18n="dlVersion" data-en="Version">Версія</span><strong data-release-version>2.4.1</strong></div>
-            <div><span data-i18n="dlUpdated" data-en="Last update">Оновлено</span><strong><time data-release-date datetime="2026-11-14">14.11.2026</time></strong></div>
+            <div><span data-i18n="dlVersion" data-en="Version">Версія</span><strong data-release-version>2.6.0</strong></div>
+            <div><span data-i18n="dlUpdated" data-en="Last update">Оновлено</span><strong><time data-release-date datetime="2026-11-15">15.11.2026</time></strong></div>
             <div><span data-i18n="dlDownloads" data-en="Downloads">Завантажень</span><strong id="downloadCount">—</strong></div>
           </div>
         </div>
@@ -787,8 +796,8 @@
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub" data-en="Windows 10/11 x64 · installer .exe">Windows 10/11 x64 · інсталятор .exe</p>
             <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>96.0 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.4.1/JARVIS-Setup.exe">
+            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-15">15.11.2026</time></div>
+            <a class="btn btn-primary js-download" data-download="windows" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.0/JARVIS-Setup.exe">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-i18n="dlInstaller" data-en="Download installer">Завантажити інсталятор</span>
             </a>
@@ -803,8 +812,8 @@
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub" data-en="macOS 11+ · Apple Silicon · .zip">macOS 11+ · Apple Silicon · .zip</p>
             <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>81.1 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="macos" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.4.1/JARVIS-macOS.zip">
+            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-15">15.11.2026</time></div>
+            <a class="btn btn-primary js-download" data-download="macos" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.0/JARVIS-macOS.zip">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-i18n="dlZip" data-en="Download .zip">Завантажити .zip</span>
             </a>
@@ -822,8 +831,8 @@
             <span class="rec-badge" data-en="For your system">Для твоєї системи</span>
             <p class="platform-sub">Linux x86_64 · .tar.gz</p>
             <div class="platform-meta"><span data-i18n="dlSize" data-en="Size">Розмір</span><strong>110.7 MB</strong></div>
-            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-14">14.11.2026</time></div>
-            <a class="btn btn-primary js-download" data-download="linux" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.4.1/JARVIS-Linux.tar.gz">
+            <div class="platform-updated"><span class="pulse"></span> <span data-i18n="dlUpdatedShort" data-en="Updated">Оновлено</span> <time data-release-date datetime="2026-11-15">15.11.2026</time></div>
+            <a class="btn btn-primary js-download" data-download="linux" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.0/JARVIS-Linux.tar.gz">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span data-i18n="dlTar" data-en="Download .tar.gz">Завантажити .tar.gz</span>
             </a>
@@ -855,11 +864,11 @@
           <div>
             <span class="badge"><span class="pulse"></span> <span data-i18n="ttTiktok" data-en="TikTok">TikTok</span></span>
             <h2 style="margin-top:16px" data-i18n="ttTitle" data-en="See it in action.">Подивись, як це працює.</h2>
-            <p data-en="Four short vertical videos: a site walkthrough, the 2.3.0 features, the 2.4.0 languages and a download guide. Download the MP4 or watch on TikTok.">Чотири короткі вертикальні відео: екскурсія сайтом, фічі 2.3.0, мови 2.4.0 і інструкція зі скачування. Завантаж MP4 або дивись у TikTok.</p>
+            <p data-en="Five short vertical videos: a site walkthrough, the 2.3.0 features, the 2.4.0 languages, a download guide and the 2.6.0 intro. Download the MP4 or watch on TikTok.">П'ять коротких вертикальних відео: екскурсія сайтом, фічі 2.3.0, мови 2.4.0, інструкція зі скачування й інтро 2.6.0. Завантаж MP4 або дивись у TikTok.</p>
           </div>
           <div class="download-info">
             <div><span data-en="Format">Формат</span><strong>9:16 · 1080p</strong></div>
-            <div><span data-en="Length">Тривалість</span><strong>~31 с</strong></div>
+            <div><span data-en="Length">Тривалість</span><strong>15–31 с</strong></div>
           </div>
         </div>
         <div class="platform-grid">
@@ -901,6 +910,17 @@
             <p class="platform-sub" data-en="How to download JARVIS · 24.6 s">Як скачати JARVIS · 24.6 с</p>
             <div class="platform-meta"><span data-en="Resolution">Роздільність</span><strong>1080×1920</strong></div>
             <a class="btn btn-primary" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.4.1/JARVIS-TikTok-04.mp4" download>
+              <span data-i18n="ttMp4" data-en="Download MP4">Завантажити MP4</span>
+            </a>
+            <a class="platform-alt" href="https://www.tiktok.com/@jarvisnewera" target="_blank" rel="noopener">
+              <span data-i18n="ttWatch" data-en="Watch on TikTok →">Дивитись у TikTok →</span>
+            </a>
+          </article>
+          <article class="platform-card">
+            <h3>TikTok #5 · 2.6.0</h3>
+            <p class="platform-sub" data-en="Command Deck, voice, models, image generation · 25.0 s">Command Deck, голос, моделі, генерація картинок · 25.0 с</p>
+            <div class="platform-meta"><span data-en="Resolution">Роздільність</span><strong>1080×1920</strong></div>
+            <a class="btn btn-primary" href="https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/download/v2.6.0/JARVIS-TikTok-05.mp4" download>
               <span data-i18n="ttMp4" data-en="Download MP4">Завантажити MP4</span>
             </a>
             <a class="platform-alt" href="https://www.tiktok.com/@jarvisnewera" target="_blank" rel="noopener">
@@ -1110,7 +1130,7 @@
 
     <div class="footer-bottom">
       <span>© 2026 J.A.R.V.I.S. · <a href="https://github.com/nezerrucyk-alt" target="_blank" rel="noopener">Автор: nezerrucyk-alt</a> · <span data-en="Not affiliated with Microsoft or Roblox Corporation.">Не пов'язаний із Microsoft чи Roblox Corporation.</span></span>
-      <span class="mono">WINDOWS · MACOS · LINUX · V<span data-release-version>2.4.1</span> · <span id="footerDownloads">—</span> DOWNLOADS</span>
+      <span class="mono">WINDOWS · MACOS · LINUX · V<span data-release-version>2.6.0</span> · <span id="footerDownloads">—</span> DOWNLOADS</span>
     </div>
   </div>
 </footer>
@@ -1197,7 +1217,7 @@
   "name": "J.A.R.V.I.S.",
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Windows 10, Windows 11, macOS 11+, Linux",
-  "softwareVersion": "2.4.1",
+  "softwareVersion": "2.6.0",
   "author": {"@type": "Person", "name": "nezerrucyk-alt", "url": "https://github.com/nezerrucyk-alt"},
   "fileSize": "96.0MB",
   "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},

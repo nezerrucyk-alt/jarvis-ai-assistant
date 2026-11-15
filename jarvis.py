@@ -79,6 +79,7 @@ from core.memory_index import ensure_embedding, memory_prompt, rank_memories
 import core.i18n as i18n
 import core.clipboard_history as clipboard_store
 import core.file_organizer as file_organizer
+import core.image_gen as image_gen
 import core.proactive as proactive
 from core.telegram_bot import TelegramBot, TelegramError
 from ui.hud import HudOrb, state_from_status
@@ -93,7 +94,7 @@ from core.marketplace import (
 from modules.voice.wake import WakeWordListener
 
 APP_NAME = "Jarvis"
-APP_VERSION = "2.4.1"
+APP_VERSION = "2.6.0"
 GITHUB_REPO = "nezerrucyk-alt/jarvis-ai-assistant"
 APP_DIR = Path(__file__).resolve().parent
 if os.name == "nt":
@@ -869,6 +870,7 @@ RESTRICTED_TOOL_NAMES = frozenset({
     "reminder_create", "reminder_list", "reminder_cancel",
     "automation_create", "automation_list", "automation_cancel",
     "github_search", "github_repo_info", "roblox_reset_server",
+    "generate_image",
 })
 
 DEFAULT_CONFIG = {
@@ -927,6 +929,9 @@ DEFAULT_CONFIG = {
     "home_assistant_token": "",
     "gaming_mode": False,
     "plugins_enabled": True,
+    "image_model": "gpt-image-1",
+    "image_size": "1024x1024",
+    "image_quality": "auto",
     "auto_update_check": True,
     "minimize_to_tray": True,
     "ui_language": "uk",
@@ -971,7 +976,7 @@ SYSTEM_PROMPT = """Ти — J.A.R.V.I.S., особистий асистент, �
 - давай зрозуміле обґрунтування висновку, але не розкривай прихований ланцюг внутрішніх міркувань. Замість цього подавай перевірювані причини, розрахунки чи джерела.
 
 ІНСТРУМЕНТИ Й ДІЇ НА ПК:
-- доступні інструменти: run_powershell, open_app, find_files, read_file, write_file, project_open, project_memory, code_review, code_check, code_run, create_project_template, git_helper, system_info, system_control, play_media, smart_home, gaming_mode, plugin_list, check_update, look_at_screen, translate_screen, roblox_studio, roblox_reset_server, memory_save, memory_list, memory_forget, reminder_create, reminder_list, reminder_cancel, automation_create, automation_list, automation_cancel, clipboard_history, clipboard_copy, organize_downloads, daily_briefing;
+- доступні інструменти: run_powershell, open_app, find_files, read_file, write_file, project_open, project_memory, code_review, code_check, code_run, create_project_template, git_helper, system_info, system_control, play_media, smart_home, gaming_mode, plugin_list, check_update, look_at_screen, translate_screen, generate_image, roblox_studio, roblox_reset_server, memory_save, memory_list, memory_forget, reminder_create, reminder_list, reminder_cancel, automation_create, automation_list, automation_cancel, clipboard_history, clipboard_copy, organize_downloads, daily_briefing;
 - для програмування спершу визнач активний проєкт; читай файли перед правками й використовуй code_review/code_check для пошуку помилок; показуй diff у підтвердженні запису, запускай код лише після підтвердження, Git використовуй тільки для читання та підготовки повідомлення коміту;
 - project_memory читай за потреби, а зберігай нотатку лише після прямого прохання; create_project_template викликай лише за запитом створити новий шаблон; не коміть і не змінюй Git-історію;
 - для гучності, яскравості, скріншота, блокування екрана, сну, вимкнення або перезавантаження ПК використовуй system_control; вимкнення, перезавантаження, вихід і сон завжди підтверджуй;
@@ -980,6 +985,7 @@ SYSTEM_PROMPT = """Ти — J.A.R.V.I.S., особистий асистент, �
 - gaming_mode вмикає тихий ігровий режим; plugin_list показує локальні плагіни з %APPDATA%\\Jarvis\\plugins;
 - для питань «що на екрані», «глянь на екран», «прочитай помилку» використовуй look_at_screen;
 - для запитів «переклади екран», «переклади текст на екрані», «переведи игру» використовуй translate_screen; якщо користувач назвав мову (англійська, польська, німецька, французька, іспанська, італійська, португальська, чеська, словацька, румунська, болгарська, турецька, нідерландська, шведська, китайська, японська, корейська тощо), передай її в language; без вказівки перекладай українською;
+- для запитів «намалюй», «згенеруй картинку», «створи зображення», «зроби аватар/шпалери/постер» використовуй generate_image; перепиши короткий опис у детальний промпт (сюжет, стиль, композиція, світло, кольори), вибери доречний size і не вигадуй, що картинка готова, поки інструмент не повернув шлях до файлу; після успіху коротко опиши результат, не вставляй посилання й не дублюй шлях без потреби;
 - для питань «перевір оновлення», «є нова версія», «оновлення» використовуй check_update; він перевіряє GitHub і, якщо є новіша версія, відкриває вікно з підтвердженням завантаження й перезавантаження; без згоди користувача exe не замінюється;
 - для Roblox Studio використовуй roblox_studio: спочатку виклич tool='list_roblox_studios', потім get_studio_state або get_console_output для діагностики, script_read / script_grep / multi_edit для коду, execute_luau для перевірки, start_stop_play для запуску гри. Не вигадуй назви MCP-інструментів — за потреби виклич tool='list_tools';
 - якщо користувач просить перезапустити, ресетнути або відкрити приватний сервер Roblox, виклич інструмент roblox_reset_server;
@@ -1468,6 +1474,44 @@ TOOLS = [
                         ),
                     },
                 },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_image",
+            "description": (
+                "Generate a new picture from a text description with OpenAI Images "
+                "(gpt-image-1). Use when the user asks to draw, generate or create an "
+                "image, illustration, avatar, wallpaper, poster or concept art. The "
+                "picture is saved locally and shown in the chat automatically."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": (
+                            "Detailed description of the picture: subject, style, "
+                            "composition, lighting, colors and mood. Rewrite short "
+                            "requests into a rich prompt."
+                        ),
+                    },
+                    "size": {
+                        "type": "string",
+                        "enum": ["1024x1024", "1024x1536", "1536x1024", "auto"],
+                        "description": (
+                            "Square, portrait or landscape. Default comes from settings."
+                        ),
+                    },
+                    "quality": {
+                        "type": "string",
+                        "enum": ["auto", "low", "medium", "high"],
+                        "description": "Rendering quality. Default comes from settings.",
+                    },
+                },
+                "required": ["prompt"],
             },
         },
     },
@@ -3399,6 +3443,7 @@ class PcTools:
         self._plugin_tools: dict[str, object] = {}
         self._plugin_tool_names: set[str] = set()
         self._plugin_files: dict[str, int] = {}
+        self._generated_images: list[str] = []
         self.plugin_context = PluginContext(self)
         from modules.coding_workspace import CodingWorkspace
         self.coding = CodingWorkspace(
@@ -3966,6 +4011,46 @@ class PcTools:
             return "Перекладач екрана недоступний."
         self.log("⇄ Перекладаю текст на екрані…")
         return self.translate_runner(str(language or "українську"))
+
+    # ── генерація зображень ─────────────────────────────────────────────────
+    def take_generated_images(self) -> list[str]:
+        """Повертає шляхи до згенерованих картинок і очищає чергу."""
+        images, self._generated_images = self._generated_images, []
+        return images
+
+    def _generate_image(
+        self,
+        prompt: str = "",
+        size: str = "",
+        quality: str = "",
+    ) -> str:
+        cfg = self.get_cfg() if self.get_cfg else {}
+        cfg = cfg or {}
+        api_key = str(cfg.get("openai_api_key") or "")
+        model = str(cfg.get("image_model") or image_gen.DEFAULT_MODEL)
+        size = str(size or cfg.get("image_size") or "1024x1024")
+        quality = str(quality or cfg.get("image_quality") or "auto")
+        self.log("🎨 Генерую зображення…")
+        try:
+            path = image_gen.generate_image(
+                prompt,
+                api_key=api_key,
+                output_dir=DATA_DIR / "images",
+                model=model,
+                size=size,
+                quality=quality,
+            )
+        except image_gen.ImageGenError as exc:
+            return f"Не вдалося згенерувати зображення: {exc}"
+        except Exception as exc:  # noqa: BLE001 — інструмент не має валити чат
+            logging.exception("Image generation failed")
+            return f"Не вдалося згенерувати зображення: {exc}"
+        self._generated_images.append(str(path))
+        self.log(f"✅ Зображення готове: {path.name}")
+        return (
+            f"Зображення згенеровано й збережено у {path}. "
+            "Воно вже показане в чаті — коротко опиши результат."
+        )
 
     # ── буфер обміну, файли, брифінг ────────────────────────────────────────
     def _clipboard_history(self, query: str = "", limit: int = 10) -> str:
@@ -9061,7 +9146,10 @@ class JarvisApp:
         except BrainError as exc:
             reply = str(exc)
 
-        self.ui(self._log, "jarvis", reply)
+        images = self.tools.take_generated_images()
+        self.ui(self._log, "jarvis", reply, images[0] if images else None)
+        for path in images[1:]:
+            self.ui(self._log, "jarvis", "Ще одне зображення:", path)
 
         if speak and not self.cfg.get("mute"):
             self.ui(self.set_status, "Говорю…", CYAN)
@@ -10795,6 +10883,47 @@ class JarvisApp:
         refresh_free_button.pack(side="left", padx=(6, 0))
         dialog.after(100, refresh_free_models)
 
+        tk.Label(win, text="ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ · OPENAI", bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+        image_row = tk.Frame(win, bg=BG)
+        image_row.pack(fill="x", padx=18)
+        image_model_var = tk.StringVar(
+            value=self.cfg.get("image_model", DEFAULT_CONFIG["image_model"])
+        )
+        image_size_var = tk.StringVar(
+            value=self.cfg.get("image_size", DEFAULT_CONFIG["image_size"])
+        )
+        image_quality_var = tk.StringVar(
+            value=self.cfg.get("image_quality", DEFAULT_CONFIG["image_quality"])
+        )
+
+        def image_picker(parent, label, var, values) -> None:
+            tk.Label(
+                parent, text=label, bg=BG, fg=CYAN_DIM, font=("Consolas", 8),
+            ).pack(side="left")
+            box = tk.OptionMenu(parent, var, *values)
+            box.config(
+                bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
+                relief="flat", highlightthickness=0, font=("Consolas", 8),
+                anchor="w",
+            )
+            box["menu"].config(
+                bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
+            )
+            box.pack(side="left", padx=(6, 16))
+
+        image_picker(image_row, "МОДЕЛЬ", image_model_var, list(image_gen.MODELS))
+        image_picker(image_row, "РОЗМІР", image_size_var, list(image_gen.SIZES))
+        image_picker(image_row, "ЯКІСТЬ", image_quality_var, list(image_gen.QUALITIES))
+        tk.Label(
+            win,
+            text=(
+                "Потрібен OPENAI API ключ. Картинки зберігаються у "
+                "%APPDATA%\\Jarvis\\images і показуються прямо в чаті."
+            ),
+            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+        ).pack(anchor="w", padx=18, pady=(2, 0))
+
         tk.Label(win, text="ПОСИЛАННЯ НА ТВОЮ СТОРІНКУ PRIVATE SERVER", bg=BG,
                  fg=CYAN_DIM, font=("Consolas", 9)).pack(anchor="w", padx=18,
                                                           pady=(10, 2))
@@ -11203,6 +11332,9 @@ class JarvisApp:
             self.cfg["offline_piper_model"] = piper_model_var.get().strip()
             self.cfg["gaming_mode"] = bool(gaming_var.get())
             self.cfg["plugins_enabled"] = bool(plugins_var.get())
+            self.cfg["image_model"] = image_model_var.get()
+            self.cfg["image_size"] = image_size_var.get()
+            self.cfg["image_quality"] = image_quality_var.get()
             self.cfg["home_assistant_url"] = ha_url_var.get().strip()
             self.cfg["home_assistant_token"] = ha_token_var.get().strip()
             self.cfg["clipboard_history"] = bool(clip_hist_var.get())

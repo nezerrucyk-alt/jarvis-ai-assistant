@@ -1,9 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
+from pathlib import Path
+
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('assets', 'assets')]
+PROJECT_ROOT = Path(SPECPATH).resolve()
+
+datas = [(str(PROJECT_ROOT / 'assets'), 'assets')]
 binaries = []
-hiddenimports = ['PIL.Image', 'pystray._win32', 'modules.mobile_bridge', 'modules.coding_workspace', 'modules.voice.offline', 'core.automations', 'core.marketplace', 'core.memory_index']
+hiddenimports = ['PIL.Image', 'pystray._win32', 'modules.mobile_bridge', 'modules.coding_workspace', 'modules.voice.offline', 'core.automations', 'core.marketplace', 'core.memory_index', 'core.image_gen']
 tmp_ret = collect_all('edge_tts')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('pygame')
@@ -25,8 +29,8 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['jarvis.py'],
-    pathex=[],
+    [str(PROJECT_ROOT / 'jarvis.py')],
+    pathex=[str(PROJECT_ROOT)],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
@@ -58,5 +62,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['assets/jarvis.ico'],
+    icon=[str(PROJECT_ROOT / 'assets' / 'jarvis.ico')],
 )

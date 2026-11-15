@@ -67,3 +67,8 @@ website/downloads/*.exe
 
 # Inno Setup payload (built locally / in CI, never committed)
 installer/payload/
+
+# ── TikTok render outputs (release assets, not git) ──────────────────────────
+assets/social/*.mp4
+assets/social/*.wav
+assets/social/*.png
