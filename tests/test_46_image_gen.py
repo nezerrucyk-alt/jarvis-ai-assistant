@@ -108,6 +108,88 @@ class ImageGenClientTests(unittest.TestCase):
         self.assertEqual(captured["size"], "1024x1024")
         self.assertEqual(captured["quality"], "auto")
 
+    def test_too_long_prompt_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ImageGenError) as ctx:
+                generate_image(
+                    "x" * 4001, api_key="sk-test", output_dir=Path(tmp)
+                )
+            self.assertIn("занадто довгий", str(ctx.exception))
+
+    def test_429_is_retried_then_succeeds(self) -> None:
+        import base64
+
+        calls: list[int] = []
+
+        def fake_post(url, headers=None, json=None, timeout=None):
+            calls.append(1)
+            if len(calls) == 1:
+                return FakeResponse(
+                    status_code=429, payload={"error": {"message": "rate"}}
+                )
+            return FakeResponse(
+                payload={"data": [{"b64_json": base64.b64encode(png_bytes()).decode()}]}
+            )
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch(
+            "core.image_gen.time.sleep"
+        ):
+            path = generate_image(
+                "кіт", api_key="sk-test", output_dir=Path(tmp), post=fake_post
+            )
+            self.assertTrue(path.is_file())
+        self.assertEqual(len(calls), 2)
+
+    def test_400_unsupported_param_retries_with_minimal_payload(self) -> None:
+        import base64
+
+        payloads: list[dict] = []
+
+        def fake_post(url, headers=None, json=None, timeout=None):
+            payloads.append(dict(json or {}))
+            if len(payloads) == 1:
+                return FakeResponse(
+                    status_code=400,
+                    payload={"error": {"message": "Unknown parameter: quality"}},
+                )
+            return FakeResponse(
+                payload={"data": [{"b64_json": base64.b64encode(png_bytes()).decode()}]}
+            )
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch(
+            "core.image_gen.time.sleep"
+        ):
+            generate_image(
+                "кіт", api_key="sk-test", output_dir=Path(tmp),
+                model="gpt-image-1-mini", quality="high", post=fake_post,
+            )
+        self.assertEqual(payloads[1]["model"], DEFAULT_MODEL)
+        self.assertNotIn("quality", payloads[1])
+        self.assertNotIn("output_format", payloads[1])
+
+    def test_old_images_are_pruned(self) -> None:
+        import base64
+        import os
+
+        def fake_post(url, headers=None, json=None, timeout=None):
+            return FakeResponse(
+                payload={"data": [{"b64_json": base64.b64encode(png_bytes()).decode()}]}
+            )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / "images"
+            folder.mkdir()
+            for index in range(4):
+                old = folder / f"jarvis-old{index}.png"
+                old.write_bytes(png_bytes())
+                stamp = 1_700_000_000 - index * 100
+                os.utime(old, (stamp, stamp))
+            generate_image(
+                "кіт", api_key="sk-test", output_dir=folder,
+                keep=2, post=fake_post,
+            )
+            self.assertEqual(len(list(folder.glob("jarvis-*"))), 2)
+
     def test_401_and_429_have_friendly_messages(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             for status, fragment in ((401, "ключ"), (429, "частоту")):
@@ -196,6 +278,22 @@ class PcToolsImageTests(unittest.TestCase):
         self.assertEqual(kwargs["model"], "gpt-image-1-mini")
         self.assertEqual(kwargs["size"], "1024x1536")
         self.assertEqual(kwargs["quality"], "high")
+
+    def test_prompt_enhancer_is_used(self) -> None:
+        self.cfg["image_prompt_enhance"] = True
+        target = self.tmp_dir / "images" / "enhanced.png"
+        tools = self.jarvis.PcTools(
+            lambda action, detail: False,
+            lambda text: None,
+            get_cfg=lambda: self.cfg,
+            prompt_enhancer=lambda prompt: "DETAILED: " + prompt,
+        )
+        with mock.patch.object(
+            self.jarvis.image_gen, "generate_image", return_value=target
+        ) as generator:
+            result = tools.run("generate_image", {"prompt": "кіт"})
+        self.assertIn("чат-моделлю", result)
+        self.assertEqual(generator.call_args.args[0], "DETAILED: кіт")
 
     def test_generate_image_error_is_returned_without_queueing(self) -> None:
         with mock.patch.object(

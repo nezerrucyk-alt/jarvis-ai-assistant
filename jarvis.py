@@ -80,6 +80,7 @@ import core.i18n as i18n
 import core.clipboard_history as clipboard_store
 import core.file_organizer as file_organizer
 import core.image_gen as image_gen
+import core.image_prompt as image_prompt
 import core.proactive as proactive
 from core.telegram_bot import TelegramBot, TelegramError
 from ui.hud import HudOrb, state_from_status
@@ -932,6 +933,8 @@ DEFAULT_CONFIG = {
     "image_model": "gpt-image-1",
     "image_size": "1024x1024",
     "image_quality": "auto",
+    "image_prompt_enhance": True,
+    "image_keep": 200,
     "auto_update_check": True,
     "minimize_to_tray": True,
     "ui_language": "uk",
@@ -1485,7 +1488,9 @@ TOOLS = [
                 "Generate a new picture from a text description with OpenAI Images "
                 "(gpt-image-1). Use when the user asks to draw, generate or create an "
                 "image, illustration, avatar, wallpaper, poster or concept art. The "
-                "picture is saved locally and shown in the chat automatically."
+                "chat model first expands the idea into a detailed prompt, then "
+                "gpt-image-1 renders it; the picture is saved locally and shown in "
+                "the chat after the reply."
             ),
             "parameters": {
                 "type": "object",
@@ -2096,6 +2101,83 @@ class Brain:
 
     def reset(self) -> None:
         self.history.clear()
+
+    def complete_text(
+        self,
+        messages: list[dict],
+        max_tokens: int = 700,
+        temperature: float = 0.6,
+        timeout: float = 60.0,
+    ) -> str:
+        """Utility completion without tools, chat history or Jarvis persona."""
+        import requests
+
+        candidates = self._candidates()
+        if not candidates:
+            raise BrainError("Немає доступної моделі для службового запиту.")
+        errors: list[str] = []
+        for candidate in candidates:
+            try:
+                if candidate.get("api_style") == "anthropic":
+                    system_parts: list[str] = []
+                    converted: list[dict] = []
+                    for message in messages:
+                        role = str(message.get("role") or "")
+                        if role == "system":
+                            system_parts.append(str(message.get("content") or ""))
+                        elif role in ("user", "assistant"):
+                            blocks = self._anthropic_blocks(message.get("content"))
+                            if blocks:
+                                converted.append({"role": role, "content": blocks})
+                    converted = self._merge_anthropic_messages(converted)
+                    body: dict = {
+                        "model": candidate["api_model"],
+                        "max_tokens": max_tokens,
+                        "temperature": temperature,
+                        "messages": converted,
+                    }
+                    if system_parts:
+                        body["system"] = "\n\n".join(system_parts)
+                    headers = {
+                        "Content-Type": "application/json",
+                        "x-api-key": candidate["key"],
+                        "anthropic-version": "2023-06-01",
+                    }
+                    response = requests.post(
+                        candidate["url"], json=body, headers=headers,
+                        timeout=(10, timeout),
+                    )
+                else:
+                    body = {
+                        "messages": messages,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens,
+                    }
+                    response = self._post(
+                        requests, body, candidate["key"],
+                        candidate["url"], candidate["api_model"],
+                    )
+                if response.status_code != 200:
+                    errors.append(
+                        f'{candidate["provider"]}: HTTP {response.status_code}'
+                    )
+                    continue
+                data = response.json()
+                if candidate.get("api_style") == "anthropic":
+                    text = "".join(
+                        str(block.get("text") or "")
+                        for block in data.get("content") or []
+                        if isinstance(block, dict) and block.get("type") == "text"
+                    ).strip()
+                else:
+                    choice = (data.get("choices") or [{}])[0]
+                    text = str((choice.get("message") or {}).get("content") or "").strip()
+                if text:
+                    return text
+                errors.append(f'{candidate["provider"]}: порожня відповідь')
+            except Exception as exc:  # noqa: BLE001 — try the next provider
+                errors.append(f'{candidate["provider"]}: {exc}')
+        raise BrainError("Службовий запит не вдався: " + "; ".join(errors[-3:]))
 
     @staticmethod
     def _split_keys(value) -> list[str]:
@@ -3429,7 +3511,7 @@ class PcTools:
         "taskmgr", "discord", "steam", "spotify",
     })
 
-    def __init__(self, confirm, log, get_cfg=None, vision_runner=None, translate_runner=None, update_runner=None, clipboard_runner=None, briefing_runner=None):
+    def __init__(self, confirm, log, get_cfg=None, vision_runner=None, translate_runner=None, update_runner=None, clipboard_runner=None, briefing_runner=None, prompt_enhancer=None):
         self.confirm = confirm
         self.log = log
         self.get_cfg = get_cfg
@@ -3438,6 +3520,7 @@ class PcTools:
         self.update_runner = update_runner
         self.clipboard_runner = clipboard_runner
         self.briefing_runner = briefing_runner
+        self.prompt_enhancer = prompt_enhancer
         self._start_apps_cache: list[tuple[str, str]] | None = None
         self._registry_apps_cache: list[tuple[str, str]] | None = None
         self._plugin_tools: dict[str, object] = {}
@@ -4030,15 +4113,31 @@ class PcTools:
         model = str(cfg.get("image_model") or image_gen.DEFAULT_MODEL)
         size = str(size or cfg.get("image_size") or "1024x1024")
         quality = str(quality or cfg.get("image_quality") or "auto")
+        original = str(prompt or "").strip()
+        enhanced = original
+        if self.prompt_enhancer is not None and bool(
+            cfg.get("image_prompt_enhance", True)
+        ):
+            try:
+                candidate = self.prompt_enhancer(enhanced)
+                if isinstance(candidate, str) and candidate.strip():
+                    enhanced = candidate.strip()
+            except Exception:  # noqa: BLE001 — enhancement is optional
+                logging.exception("Image prompt enhancement failed")
+        try:
+            keep = int(cfg.get("image_keep") or image_gen.DEFAULT_KEEP)
+        except (TypeError, ValueError):
+            keep = image_gen.DEFAULT_KEEP
         self.log("🎨 Генерую зображення…")
         try:
             path = image_gen.generate_image(
-                prompt,
+                enhanced,
                 api_key=api_key,
                 output_dir=DATA_DIR / "images",
                 model=model,
                 size=size,
                 quality=quality,
+                keep=keep,
             )
         except image_gen.ImageGenError as exc:
             return f"Не вдалося згенерувати зображення: {exc}"
@@ -4047,9 +4146,10 @@ class PcTools:
             return f"Не вдалося згенерувати зображення: {exc}"
         self._generated_images.append(str(path))
         self.log(f"✅ Зображення готове: {path.name}")
+        note = " Промпт підготовлено чат-моделлю." if enhanced != original else ""
         return (
-            f"Зображення згенеровано й збережено у {path}. "
-            "Воно вже показане в чаті — коротко опиши результат."
+            f"Зображення згенеровано й збережено у {path}.{note} "
+            "Воно буде показане в чаті після відповіді — коротко опиши результат."
         )
 
     # ── буфер обміну, файли, брифінг ────────────────────────────────────────
@@ -5450,6 +5550,7 @@ class JarvisApp:
         self.ui_lang = i18n.normalize_language(self.cfg.get("ui_language"))
         SIDEBAR_LABELS.clear()
         SIDEBAR_LABELS.update(i18n.sidebar_labels(self.ui_lang))
+        self.image_prompt_brain = None
         self.tools = PcTools(
             self.request_confirmation,
             self._tool_log,
@@ -5459,6 +5560,7 @@ class JarvisApp:
             update_runner=self._on_check_update,
             clipboard_runner=self._clipboard_tool,
             briefing_runner=self._build_briefing_text,
+            prompt_enhancer=self._enhance_image_prompt,
         )
         self.gaming_active = False
         self._game_hint_window = None
@@ -8643,6 +8745,15 @@ class JarvisApp:
             self.ui(self.set_status, "Говорю…", CYAN)
             self.voice.speak(reply)
 
+    def _enhance_image_prompt(self, prompt: str) -> str:
+        if not self.cfg.get("image_prompt_enhance", True):
+            return prompt
+        brain = getattr(self, "image_prompt_brain", None)
+        if brain is None:
+            brain = Brain(dict(self.cfg))
+            self.image_prompt_brain = brain
+        return image_prompt.enhance_prompt(prompt, brain.complete_text)
+
     def _vision_tool(self, question: str) -> str:
         """Виклик сканера з інструмента LLM (працює у фоновому потоці)."""
         try:
@@ -10915,11 +11026,21 @@ class JarvisApp:
         image_picker(image_row, "МОДЕЛЬ", image_model_var, list(image_gen.MODELS))
         image_picker(image_row, "РОЗМІР", image_size_var, list(image_gen.SIZES))
         image_picker(image_row, "ЯКІСТЬ", image_quality_var, list(image_gen.QUALITIES))
+        image_enhance_var = tk.BooleanVar(
+            value=bool(self.cfg.get("image_prompt_enhance", True))
+        )
+        tk.Checkbutton(
+            win,
+            text="Покращувати промпт через чат-модель (ChatGPT-стиль)",
+            variable=image_enhance_var, bg=BG, fg=TEXT, selectcolor=PANEL,
+            activebackground=BG, activeforeground=CYAN, font=("Segoe UI", 9),
+        ).pack(anchor="w", padx=18, pady=(6, 0))
         tk.Label(
             win,
             text=(
-                "Потрібен OPENAI API ключ. Картинки зберігаються у "
-                "%APPDATA%\\Jarvis\\images і показуються прямо в чаті."
+                "Спочатку чат-модель переписує ідею в детальний промпт, потім "
+                "gpt-image-1 малює. Потрібен OPENAI API ключ. Картинки "
+                "зберігаються у %APPDATA%\\Jarvis\\images і показуються в чаті."
             ),
             bg=BG, fg=MUTED, font=("Segoe UI", 8),
         ).pack(anchor="w", padx=18, pady=(2, 0))
@@ -11335,6 +11456,7 @@ class JarvisApp:
             self.cfg["image_model"] = image_model_var.get()
             self.cfg["image_size"] = image_size_var.get()
             self.cfg["image_quality"] = image_quality_var.get()
+            self.cfg["image_prompt_enhance"] = bool(image_enhance_var.get())
             self.cfg["home_assistant_url"] = ha_url_var.get().strip()
             self.cfg["home_assistant_token"] = ha_token_var.get().strip()
             self.cfg["clipboard_history"] = bool(clip_hist_var.get())
@@ -11353,6 +11475,7 @@ class JarvisApp:
             self._update_mute_btn()
             self._update_access_label()
             self._apply_ui_language()
+            self.image_prompt_brain = None
             self._update_provider_chip()
             self._configure_hotkey()
             self._configure_wake_word()

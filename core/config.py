@@ -96,6 +96,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "image_model": "gpt-image-1",
     "image_size": "1024x1024",
     "image_quality": "auto",
+    "image_prompt_enhance": True,
+    "image_keep": 200,
     "briefing_city": "Київ",
     "briefing_lat": 50.45,
     "briefing_lon": 30.52,

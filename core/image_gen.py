@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import io
 import logging
+import time
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -23,7 +24,8 @@ MODELS: tuple[str, ...] = ("gpt-image-1", "gpt-image-1-mini")
 SIZES: tuple[str, ...] = ("1024x1024", "1024x1536", "1536x1024", "auto")
 QUALITIES: tuple[str, ...] = ("auto", "low", "medium", "high")
 MAX_PROMPT_CHARS = 4000
-DEFAULT_TIMEOUT = 180.0
+DEFAULT_TIMEOUT = 300.0
+DEFAULT_KEEP = 200
 
 
 class ImageGenError(Exception):
@@ -49,6 +51,35 @@ def _error_detail(response: Any) -> str:
     return str(data)[:300]
 
 
+_FALLBACK_HINTS = (
+    "model", "quality", "output_format", "size", "unsupported",
+    "not supported", "invalid value", "unknown parameter",
+)
+
+
+def _supports_fallback(detail: str) -> bool:
+    text = str(detail or "").lower()
+    return any(hint in text for hint in _FALLBACK_HINTS)
+
+
+def _prune(folder: Path, keep: int) -> None:
+    try:
+        keep = int(keep)
+    except (TypeError, ValueError):
+        keep = DEFAULT_KEEP
+    if keep <= 0:
+        return
+    files: list[Path] = []
+    for pattern in ("jarvis-*.png", "jarvis-*.jpg", "jarvis-*.webp"):
+        files.extend(folder.glob(pattern))
+    files.sort(key=lambda item: item.stat().st_mtime, reverse=True)
+    for old in files[keep:]:
+        try:
+            old.unlink()
+        except OSError:
+            pass
+
+
 def _read_image(raw: bytes) -> tuple[str, int, int]:
     """Validate image bytes and return (format, width, height)."""
     from PIL import Image
@@ -68,6 +99,7 @@ def generate_image(
     size: str = "1024x1024",
     quality: str = "auto",
     timeout: float = DEFAULT_TIMEOUT,
+    keep: int = DEFAULT_KEEP,
     post: Optional[Callable[..., Any]] = None,
     get: Optional[Callable[..., Any]] = None,
 ) -> Path:
@@ -79,7 +111,10 @@ def generate_image(
     if not prompt:
         raise ImageGenError("Опис зображення порожній — напиши, що саме намалювати.")
     if len(prompt) > MAX_PROMPT_CHARS:
-        prompt = prompt[:MAX_PROMPT_CHARS]
+        raise ImageGenError(
+            f"Опис занадто довгий ({len(prompt)} символів). "
+            f"Максимум {MAX_PROMPT_CHARS} — склади коротший промпт."
+        )
 
     api_key = str(api_key or "").strip()
     if not api_key:
@@ -112,12 +147,45 @@ def generate_image(
         import requests
 
         poster = requests.post
-    try:
-        response = poster(API_URL, headers=headers, json=payload, timeout=(10, timeout))
-    except Exception as exc:
-        raise ImageGenError(f"Не вдалося зв'язатися з OpenAI Images: {exc}") from exc
 
-    status = int(getattr(response, "status_code", 0) or 0)
+    def send(body: dict[str, Any]):
+        return poster(API_URL, headers=headers, json=body, timeout=(10, timeout))
+
+    response = None
+    for attempt in range(2):
+        try:
+            response = send(payload)
+        except Exception as exc:
+            if attempt == 0:
+                time.sleep(1.0)
+                continue
+            raise ImageGenError(f"Не вдалося зв'язатися з OpenAI Images: {exc}") from exc
+        status = int(getattr(response, "status_code", 0) or 0)
+        if status < 400:
+            break
+        detail = _error_detail(response)
+        if status == 429 and attempt == 0:
+            retry_after = (getattr(response, "headers", None) or {}).get("Retry-After")
+            try:
+                delay = min(max(float(retry_after), 0.5), 5.0)
+            except (TypeError, ValueError):
+                delay = 2.0
+            time.sleep(delay)
+            continue
+        if status >= 500 and attempt == 0:
+            time.sleep(1.5)
+            continue
+        if status == 400 and attempt == 0 and _supports_fallback(detail):
+            payload = {
+                "model": DEFAULT_MODEL,
+                "prompt": prompt,
+                "size": "1024x1024" if size == "auto" else size,
+                "n": 1,
+            }
+            continue
+        break
+
+    status = int(getattr(response, "status_code", 0) or 0) if response is not None else 0
     if status >= 400:
         detail = _error_detail(response)
         if status == 401:
@@ -172,6 +240,7 @@ def generate_image(
     try:
         temp.write_bytes(raw)
         temp.replace(target)
+        _prune(output_dir, keep)
     except OSError as exc:
         try:
             temp.unlink(missing_ok=True)
