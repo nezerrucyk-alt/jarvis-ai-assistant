@@ -47,22 +47,31 @@
   `website\downloads\JARVIS.exe` (обидві ігноруються git).
 - `build_exe.py --skip-desktop-copy --kill-running` пройшов: spec-контракт,
   свіжість, PE-заголовок і GUI-підсистема перевірені.
-- Реліз v2.6.0 — у процесі публікації: тег `v2.6.0` запускає
-  `.github/workflows/release.yml`, після CI сюди треба вписати розміри й
-  SHA256 для Windows/macOS/Linux та `SHA256SUMS.txt`.
-- TikTok #5 лежить у `assets/social/tiktok-01-intro-final.mp4`
-  (4 597 603 Б, 1080×1920, 25.0 с, H.264 + AAC) і завантажується в реліз
-  як `JARVIS-TikTok-05.mp4` разом з обкладинкою.
+
+Опублікований v2.6.0 (15.11.2026, CI run 43692423417):
+
+- Windows portable `JARVIS-Windows.exe` — 98 808 428 байт,
+  SHA256 `d42510833bd604d5c2f71acfc98f0c008eb94828af42508dd30a4340ddec579d`.
+- Windows installer `JARVIS-Setup.exe` — 96 013 988 байт,
+  SHA256 `d2b864165266518fe2ce850eee561632f351afe18296992c8c0d4bc3de4a4660`.
+- macOS `JARVIS-macOS.zip` — 81 155 035 байт,
+  SHA256 `b8d6a86a7bb226ce0f5bf9091f100d088db61241b3877cfae406ddb6039317a3`.
+- Linux `JARVIS-Linux.tar.gz` — 110 693 820 байт,
+  SHA256 `254db2640055c5887402b6e78a038a9e0f9e9262f06ff2860abda0a656a06225`.
+- `SHA256SUMS.txt` — 337 байтів; GitHub build provenance/атестації створені
+  для всіх збірок.
+- TikTok #5: `JARVIS-TikTok-05.mp4` — 4 597 603 Б (1080×1920, 25.0 с,
+  H.264 + AAC) та `JARVIS-TikTok-05-cover.png` — 288 023 Б.
+- Intel macOS і Android у цьому релізі не з'явилися (необов'язкові jobs).
 - Рендери TikTok (`*.mp4`, `*.wav`, `*.png` у `assets/social`) не комітяться:
   у git живе лише `render_tiktok_01.py`, медіа їде в GitHub Release.
-- Intel macOS і Android — необов'язкові, не блокують реліз.
 - Windows/macOS непідписані; SmartScreen і Gatekeeper попереджають.
 
 `website/index.html` оновлено на 2.6.0 / 15.11.2026: changelog 2.6.0, кнопки
 ведуть на v2.6.0, п'яте TikTok-відео, секція відео з MP4 та посилання на
-GitHub автора (`@nezerrucyk-alt`). Хеші й розміри в блоці перевірки
-замінюються після публікації CI-релізу. JS і далі підтягує останній
-non-prerelease реліз і віддає перевагу setup-ассету.
+GitHub автора (`@nezerrucyk-alt`). Хеші й розміри в блоці перевірки оновлені
+під опублікований CI-реліз. JS і далі підтягує останній non-prerelease реліз
+і віддає перевагу setup-ассету.
 
 ## Що нового у 2.6.0 (15.11.2026)
 
