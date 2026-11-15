@@ -103,7 +103,7 @@
         <a href="#troubleshooting" data-en="Troubleshooting">Проблеми</a>
       </nav>
       <div class="docs-sidebar-note">
-        <span class="mono">v2.6.1</span>
+        <span class="mono">v2.7.0</span>
         <p data-en="Docs match the 2.6 codebase. For older builds, check the repository tag.">Документація відповідає коду 2.6. Для старіших збірок дивись тег у репозиторії.</p>
         <a href="https://github.com/__GITHUB_REPOSITORY__" target="_blank" rel="noopener" data-en="Source on GitHub">Код на GitHub</a>
       </div>
@@ -544,7 +544,7 @@ curl -k https://192.168.1.10:8765/api/chat \
       <section id="images" class="docs-section">
         <span class="docs-kicker" data-en="10 · Image generation">10 · Генерація зображень</span>
         <h2 data-en="Draw with OpenAI Images">Малюй через OpenAI Images</h2>
-        <p data-en="Jarvis 2.6.1 creates pictures from a chat message. The chat model first acts as a prompt engineer and expands the idea into a detailed English prompt; then the generate_image tool calls OpenAI Images with gpt-image-1, saves the result to %APPDATA%\Jarvis\images and inserts a thumbnail into the conversation. History keeps the path, so the picture is restored on reopen.">Jarvis 2.6.1 створює картинки з повідомлення в чаті. Спершу чат-модель працює як промпт-інженер і розгортає ідею в детальний англомовний промпт; далі інструмент generate_image викликає OpenAI Images з gpt-image-1, зберігає результат у %APPDATA%\Jarvis\images і вставляє мініатюру в розмову. Історія зберігає шлях, тож картинка відновлюється після відкриття.</p>
+        <p data-en="Jarvis 2.7.0 creates pictures from a chat message. The chat model first expands the idea into a detailed English prompt; then the configured backend renders it: local ComfyUI + SDXL-Turbo (unlimited, offline), OpenAI gpt-image-1, or the free Pollinations cloud (public, watermark). Images are saved to %APPDATA%\Jarvis\images and shown in the conversation; history restores them on reopen.">Jarvis 2.7.0 створює картинки з повідомлення в чаті. Спершу чат-модель розгортає ідею в детальний англомовний промпт; далі обраний бекенд рендерить: локальний ComfyUI + SDXL-Turbo (без лімітів, офлайн), OpenAI gpt-image-1 або безкоштовна хмара Pollinations (публічна, з водяним знаком). Картинки зберігаються в %APPDATA%\Jarvis\images і показуються в розмові; історія відновлює їх після відкриття.</p>
 
         <div class="docs-table-wrap">
           <table class="docs-table">
@@ -555,11 +555,16 @@ curl -k https://192.168.1.10:8765/api/chat \
               <tr><td>image_quality</td><td>auto · low · medium · high</td></tr>
               <tr><td>image_prompt_enhance</td><td>true · false</td></tr>
               <tr><td>image_keep</td><td>200 (default)</td></tr>
+              <tr><td>image_backend</td><td>auto · comfyui · openai · pollinations</td></tr>
+              <tr><td>comfyui_url</td><td>http://127.0.0.1:8188</td></tr>
+              <tr><td>comfyui_checkpoint</td><td>sd_xl_turbo_1.0_fp16.safetensors</td></tr>
+              <tr><td>comfyui_steps</td><td>6</td></tr>
+              <tr><td>comfyui_autostart</td><td>true · false</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p data-en="Settings live under «Генерація зображень · OpenAI». The same OpenAI key is used for chat models and images; without it the tool returns a clear error instead of a fake picture. Each request is billed by OpenAI.">Налаштування — у блоці «Генерація зображень · OpenAI». Той самий ключ OpenAI використовується для чат-моделей і картинок; без нього інструмент повертає зрозумілу помилку, а не вигадану картинку. Кожен запит тарифікується OpenAI.</p>
+        <p data-en="Local generation requires ComfyUI with the SDXL-Turbo checkpoint in ~/ComfyUI (JARVIS can start it in low-VRAM mode). Pollinations needs no key and is a public service with a watermark. OpenAI needs its API key and bills each request. If the primary backend fails, JARVIS tries the next one in the chain.">Локальна генерація потребує ComfyUI з чекпойнтом SDXL-Turbo у ~/ComfyUI (JARVIS може запускати його в режимі low-VRAM). Pollinations не потребує ключа, але це публічний сервіс із водяним знаком. OpenAI потребує ключа й тарифікує кожен запит. Якщо основний бекенд падає, JARVIS пробує наступний у ланцюжку.</p>
 
         <div class="docs-code">
           <div class="code-head">

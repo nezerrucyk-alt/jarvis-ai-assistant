@@ -1,10 +1,10 @@
 # J.A.R.V.I.S. — стан проєкту та точка відновлення
 
-Оновлено: 2026-11-15 (реліз 2.6.1). Поточна гілка: `main`, останній релізний
-коміт: `36bdf48` (тег `v2.6.1`).
+Оновлено: 2026-11-15 (реліз 2.7.0). Поточна гілка: `main`, останній релізний
+коміт: `d455002` (тег `v2.7.0`).
 
-Версія в коді: **2.6.1** (`APP_VERSION`, `modules.__version__`).
-Публічний реліз: **v2.6.1** (15.11.2026).
+Версія в коді: **2.7.0** (`APP_VERSION`, `modules.__version__`).
+Публічний реліз: **v2.7.0** (15.11.2026).
 
 ## Де що лежить
 
@@ -29,7 +29,7 @@
 | Marketplace-плагіни | `C:\Users\nezer\Jarvis\assets\marketplace\plugins\` |
 | GitHub-репозиторій | `nezerrucyk-alt/jarvis-ai-assistant` |
 | GitHub Pages | `https://nezerrucyk-alt.github.io/jarvis-ai-assistant/` |
-| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.6.1` |
+| Останній реліз | `https://github.com/nezerrucyk-alt/jarvis-ai-assistant/releases/tag/v2.7.0` |
 | Лог останньої збірки | `C:\Users\nezer\Jarvis\build_last.log` |
 | Журнал змін | `C:\Users\nezer\Jarvis\CHANGES_SUMMARY.md` |
 | Стан проєкту | `C:\Users\nezer\Jarvis\JARVIS_STATE.md` (цей файл) |
@@ -48,18 +48,23 @@
 - `build_exe.py --skip-desktop-copy --kill-running` пройшов: spec-контракт,
   свіжість, PE-заголовок і GUI-підсистема перевірені.
 
-Опублікований v2.6.1 (15.11.2026):
+Опублікований v2.7.0 (15.11.2026):
 
-- Windows portable `JARVIS-Windows.exe` — 98 838 674 байти,
-  SHA256 `b188d91e0bb088d72ce4658aafc862eaf18fabf434c661c55adc75380cd10b54`.
-- Windows installer `JARVIS-Setup.exe` — 96 048 741 байт,
-  SHA256 `b7eef361a3c76ee77ade35b5ba8c39dadcec883c0df7e9a314e0680ba0e4a151`.
-- macOS `JARVIS-macOS.zip` — 81 186 430 байт,
-  SHA256 `89fbd9bac1158cfc05fb2f9a1a64cd8839a07dde194c233ee9f6a1b2e63a1e98`.
-- Linux `JARVIS-Linux.tar.gz` — 110 723 948 байт,
-  SHA256 `df1d24ef72f1c11a7d9a9a56fd9ee830e3712e10f399b7e907d246317da0a976`.
+- Windows portable `JARVIS-Windows.exe` — 98 849 778 байт,
+  SHA256 `1c25e5cc0a9f3227430c86f01db5909dab211a9e981256298427406a5e6386c3`.
+- Windows installer `JARVIS-Setup.exe` — 96 059 486 байт,
+  SHA256 `cb09d4be613f162e220fe4864c7d466decfd647d228b0f8e1be6fa3ef59b2ee9`.
+- macOS `JARVIS-macOS.zip` — 81 198 541 байт,
+  SHA256 `1b0495e1c80d9ec9031bb2df50a25aab6bb00fd9a59ebc7e7b13fecc832e91ed`.
+- Linux `JARVIS-Linux.tar.gz` — 110 734 435 байт,
+  SHA256 `189e0801e5b8f73c747de5d8c25e93a0691c889d78e23ed8d021aff14c1bc6e3`.
 - `SHA256SUMS.txt` — 337 байтів; GitHub build provenance/атестації створені
   для всіх збірок.
+- 2.7.0: локальний бекенд ComfyUI + SDXL-Turbo (без квот, офлайн), безкоштовний
+  Pollinations (публічний, з водяним знаком), селектор бекенду в налаштуваннях,
+  авто-ланцюжок ComfyUI → OpenAI → хмара, автозапуск ComfyUI в low-VRAM;
+  275 тестів OK. Інсталятор не містить ComfyUI — локальний бекенд потребує
+  окремого встановлення (див. нижче).
 - Патч 2.6.1: промпт для картинки готує чат-модель (ChatGPT-стиль
   промпт-інженер), таймаут 300 с із повторним запитом, fallback на gpt-image-1
   без опційних параметрів на 400, явна помилка для промптів >4000 символів,
@@ -71,11 +76,27 @@
   у git живе лише `render_tiktok_01.py`, медіа їде в GitHub Release.
 - Windows/macOS непідписані; SmartScreen і Gatekeeper попереджають.
 
-`website/index.html` оновлено на 2.6.1 / 15.11.2026: changelog 2.6.0, кнопки
-ведуть на v2.6.0, п'яте TikTok-відео, секція відео з MP4 та посилання на
+`website/index.html` оновлено на 2.7.0 / 15.11.2026: changelog 2.7.0, кнопки
+ведуть на v2.7.0, п'яте TikTok-відео, секція відео з MP4 та посилання на
 GitHub автора (`@nezerrucyk-alt`). Хеші й розміри в блоці перевірки оновлені
 під опублікований CI-реліз. JS і далі підтягує останній non-prerelease реліз
 і віддає перевагу setup-ассету.
+
+## Локальна генерація зображень (2.7.0)
+
+- ComfyUI: `C:\Users\nezer\ComfyUI` (git clone, venv у `C:\Users\nezer\ComfyUI\venv`).
+- Torch: **2.6.0+cu124** (Pascal sm_61 працює; `torch.cuda.is_available()` = True).
+- Модель: `C:\Users\nezer\ComfyUI\ComfyUI\models\checkpoints\sd_xl_turbo_1.0_fp16.safetensors`
+  (6 938 081 905 байт).
+- Патч залежності: у `venv\Lib\site-packages\comfy_kitchen` типи `list[int]`
+  замінено на `typing.List[int]`, інакше torch відхиляє custom-op (infer_schema).
+  Після оновлення ComfyUI патч може знадобитися знову.
+- Запуск вручну: `C:\Users\nezer\ComfyUI\start_comfyui.bat`
+  (`--lowvram --port 8188`). Jarvis також запускає його сам, якщо
+  `comfyui_autostart=true`.
+- Швидкість: 1024x1024, 6 кроків, SDXL-Turbo — ~53 с на Quadro P4200 8 ГБ.
+- Бекенди Jarvis: `image_backend` = auto/comfyui/openai/pollinations;
+  Pollinations без ключа, але публічний і з водяним знаком.
 
 ## Що нового у 2.6.0 (15.11.2026)
 
