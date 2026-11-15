@@ -266,18 +266,20 @@ class PcToolsImageTests(unittest.TestCase):
         self.cfg["image_quality"] = "high"
         target = self.tmp_dir / "images" / "result.png"
         with mock.patch.object(
-            self.jarvis.image_gen, "generate_image", return_value=target
+            self.jarvis.image_backends,
+            "generate_with_backend",
+            return_value=(target, "ComfyUI"),
         ) as generator:
             result = self.tools.run("generate_image", {"prompt": "нічне місто"})
         self.assertIn("Зображення згенеровано", result)
+        self.assertIn("ComfyUI", result)
         self.assertEqual(self.tools.take_generated_images(), [str(target)])
         self.assertEqual(self.tools.take_generated_images(), [])
         kwargs = generator.call_args.kwargs
-        self.assertEqual(kwargs["api_key"], "sk-test")
         self.assertEqual(kwargs["output_dir"], self.tmp_dir / "images")
-        self.assertEqual(kwargs["model"], "gpt-image-1-mini")
         self.assertEqual(kwargs["size"], "1024x1536")
         self.assertEqual(kwargs["quality"], "high")
+        self.assertEqual(kwargs["cfg"]["image_model"], "gpt-image-1-mini")
 
     def test_prompt_enhancer_is_used(self) -> None:
         self.cfg["image_prompt_enhance"] = True
@@ -289,7 +291,9 @@ class PcToolsImageTests(unittest.TestCase):
             prompt_enhancer=lambda prompt: "DETAILED: " + prompt,
         )
         with mock.patch.object(
-            self.jarvis.image_gen, "generate_image", return_value=target
+            self.jarvis.image_backends,
+            "generate_with_backend",
+            return_value=(target, "ComfyUI"),
         ) as generator:
             result = tools.run("generate_image", {"prompt": "кіт"})
         self.assertIn("чат-моделлю", result)
@@ -297,8 +301,8 @@ class PcToolsImageTests(unittest.TestCase):
 
     def test_generate_image_error_is_returned_without_queueing(self) -> None:
         with mock.patch.object(
-            self.jarvis.image_gen,
-            "generate_image",
+            self.jarvis.image_backends,
+            "generate_with_backend",
             side_effect=self.jarvis.image_gen.ImageGenError("немає ключа"),
         ):
             result = self.tools.run("generate_image", {"prompt": "кіт"})

@@ -80,6 +80,31 @@ def _prune(folder: Path, keep: int) -> None:
             pass
 
 
+def save_image_bytes(raw: bytes, output_dir: Path, keep: int = DEFAULT_KEEP) -> Path:
+    """Validate image bytes, save atomically and prune old JARVIS images."""
+    try:
+        fmt, _width, _height = _read_image(raw)
+    except Exception as exc:
+        raise ImageGenError("Отриманий файл не є зображенням.") from exc
+    extension = {"PNG": ".png", "JPEG": ".jpg", "WEBP": ".webp"}.get(fmt, ".png")
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    target = output_dir / f"jarvis-{stamp}-{uuid.uuid4().hex[:6]}{extension}"
+    temp = target.with_suffix(target.suffix + ".tmp")
+    try:
+        temp.write_bytes(raw)
+        temp.replace(target)
+        _prune(output_dir, keep)
+    except OSError as exc:
+        try:
+            temp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise ImageGenError(f"Не вдалося зберегти зображення: {exc}") from exc
+    return target
+
+
 def _read_image(raw: bytes) -> tuple[str, int, int]:
     """Validate image bytes and return (format, width, height)."""
     from PIL import Image
@@ -226,27 +251,6 @@ def generate_image(
     else:
         raise ImageGenError("OpenAI не повернув ні base64, ні URL зображення.")
 
-    try:
-        fmt, width, height = _read_image(raw)
-    except Exception as exc:
-        raise ImageGenError("OpenAI повернув файл, який не є зображенням.") from exc
-
-    extension = {"PNG": ".png", "JPEG": ".jpg", "WEBP": ".webp"}.get(fmt, ".png")
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    target = output_dir / f"jarvis-{stamp}-{uuid.uuid4().hex[:6]}{extension}"
-    temp = target.with_suffix(target.suffix + ".tmp")
-    try:
-        temp.write_bytes(raw)
-        temp.replace(target)
-        _prune(output_dir, keep)
-    except OSError as exc:
-        try:
-            temp.unlink(missing_ok=True)
-        except OSError:
-            pass
-        raise ImageGenError(f"Не вдалося зберегти зображення: {exc}") from exc
-
-    logger.info("Generated image %s (%sx%s, %s)", target, width, height, model)
-    return target
+    path = save_image_bytes(raw, output_dir, keep)
+    logger.info("Generated OpenAI image %s (%s)", path, model)
+    return path

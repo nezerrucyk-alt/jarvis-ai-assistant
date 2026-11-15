@@ -81,6 +81,7 @@ import core.clipboard_history as clipboard_store
 import core.file_organizer as file_organizer
 import core.image_gen as image_gen
 import core.image_prompt as image_prompt
+import core.image_backends as image_backends
 import core.proactive as proactive
 from core.telegram_bot import TelegramBot, TelegramError
 from ui.hud import HudOrb, state_from_status
@@ -95,7 +96,7 @@ from core.marketplace import (
 from modules.voice.wake import WakeWordListener
 
 APP_NAME = "Jarvis"
-APP_VERSION = "2.6.1"
+APP_VERSION = "2.7.0"
 GITHUB_REPO = "nezerrucyk-alt/jarvis-ai-assistant"
 APP_DIR = Path(__file__).resolve().parent
 if os.name == "nt":
@@ -935,6 +936,16 @@ DEFAULT_CONFIG = {
     "image_quality": "auto",
     "image_prompt_enhance": True,
     "image_keep": 200,
+    "image_backend": "auto",
+    "comfyui_url": "http://127.0.0.1:8188",
+    "comfyui_checkpoint": "sd_xl_turbo_1.0_fp16.safetensors",
+    "comfyui_steps": 6,
+    "comfyui_cfg": 1.0,
+    "comfyui_autostart": True,
+    "comfyui_dir": str(Path.home() / "ComfyUI"),
+    "comfyui_output_dir": str(Path.home() / "ComfyUI" / "ComfyUI" / "output"),
+    "image_allow_public_fallback": False,
+    "pollinations_model": "flux",
     "auto_update_check": True,
     "minimize_to_tray": True,
     "ui_language": "uk",
@@ -1488,9 +1499,10 @@ TOOLS = [
                 "Generate a new picture from a text description with OpenAI Images "
                 "(gpt-image-1). Use when the user asks to draw, generate or create an "
                 "image, illustration, avatar, wallpaper, poster or concept art. The "
-                "chat model first expands the idea into a detailed prompt, then "
-                "gpt-image-1 renders it; the picture is saved locally and shown in "
-                "the chat after the reply."
+                "chat model first expands the idea into a detailed prompt, then the "
+                "configured backend renders it: local ComfyUI (unlimited, offline), "
+                "OpenAI gpt-image-1, or free cloud. The picture is saved locally and "
+                "shown in the chat after the reply."
             ),
             "parameters": {
                 "type": "object",
@@ -4109,8 +4121,6 @@ class PcTools:
     ) -> str:
         cfg = self.get_cfg() if self.get_cfg else {}
         cfg = cfg or {}
-        api_key = str(cfg.get("openai_api_key") or "")
-        model = str(cfg.get("image_model") or image_gen.DEFAULT_MODEL)
         size = str(size or cfg.get("image_size") or "1024x1024")
         quality = str(quality or cfg.get("image_quality") or "auto")
         original = str(prompt or "").strip()
@@ -4130,11 +4140,10 @@ class PcTools:
             keep = image_gen.DEFAULT_KEEP
         self.log("🎨 Генерую зображення…")
         try:
-            path = image_gen.generate_image(
+            path, backend = image_backends.generate_with_backend(
                 enhanced,
-                api_key=api_key,
+                cfg=cfg,
                 output_dir=DATA_DIR / "images",
-                model=model,
                 size=size,
                 quality=quality,
                 keep=keep,
@@ -4145,10 +4154,10 @@ class PcTools:
             logging.exception("Image generation failed")
             return f"Не вдалося згенерувати зображення: {exc}"
         self._generated_images.append(str(path))
-        self.log(f"✅ Зображення готове: {path.name}")
+        self.log(f"✅ Зображення готове: {path.name} ({backend})")
         note = " Промпт підготовлено чат-моделлю." if enhanced != original else ""
         return (
-            f"Зображення згенеровано й збережено у {path}.{note} "
+            f"Зображення згенеровано й збережено у {path}. Бекенд: {backend}.{note} "
             "Воно буде показане в чаті після відповіді — коротко опиши результат."
         )
 
@@ -10994,8 +11003,77 @@ class JarvisApp:
         refresh_free_button.pack(side="left", padx=(6, 0))
         dialog.after(100, refresh_free_models)
 
-        tk.Label(win, text="ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ · OPENAI", bg=BG, fg=CYAN_DIM,
+        tk.Label(win, text="ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ · БЕКЕНД", bg=BG, fg=CYAN_DIM,
                  font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+        backend_labels = {
+            "auto": "Авто (ComfyUI → OpenAI)",
+            "comfyui": "ComfyUI (локально)",
+            "openai": "OpenAI Images",
+            "pollinations": "Pollinations (безкоштовно)",
+        }
+        backend_codes = {label: code for code, label in backend_labels.items()}
+        backend_var = tk.StringVar(
+            value=backend_labels.get(
+                self.cfg.get("image_backend", "auto"), backend_labels["auto"]
+            )
+        )
+        backend_box = tk.OptionMenu(
+            win, backend_var, *backend_labels.values()
+        )
+        backend_box.config(bg=PANEL, fg=TEXT, activebackground=LINE,
+                           activeforeground=CYAN, relief="flat",
+                           highlightthickness=0, font=("Consolas", 9), anchor="w")
+        backend_box["menu"].config(bg=PANEL, fg=TEXT, activebackground=LINE,
+                                   activeforeground=CYAN)
+        backend_box.pack(fill="x", padx=18)
+
+        comfy_flags = tk.Frame(win, bg=BG)
+        comfy_flags.pack(fill="x", padx=18, pady=(6, 0))
+        comfy_auto_var = tk.BooleanVar(
+            value=bool(self.cfg.get("comfyui_autostart", True))
+        )
+        public_var = tk.BooleanVar(
+            value=bool(self.cfg.get("image_allow_public_fallback", False))
+        )
+        tk.Checkbutton(
+            comfy_flags, text="Запускати ComfyUI автоматично",
+            variable=comfy_auto_var, bg=BG, fg=TEXT, selectcolor=PANEL,
+            activebackground=BG, activeforeground=CYAN, font=("Segoe UI", 8),
+        ).pack(side="left", padx=(0, 14))
+        tk.Checkbutton(
+            comfy_flags, text="Дозволяти публічну хмару як fallback",
+            variable=public_var, bg=BG, fg=TEXT, selectcolor=PANEL,
+            activebackground=BG, activeforeground=CYAN, font=("Segoe UI", 8),
+        ).pack(side="left")
+
+        comfy_row = tk.Frame(win, bg=BG)
+        comfy_row.pack(fill="x", padx=18, pady=(6, 0))
+        comfy_url_var = tk.StringVar(
+            value=self.cfg.get("comfyui_url", DEFAULT_CONFIG["comfyui_url"])
+        )
+        comfy_ckpt_var = tk.StringVar(
+            value=self.cfg.get(
+                "comfyui_checkpoint", DEFAULT_CONFIG["comfyui_checkpoint"]
+            )
+        )
+        comfy_steps_var = tk.StringVar(
+            value=str(self.cfg.get("comfyui_steps", DEFAULT_CONFIG["comfyui_steps"]))
+        )
+        for label, variable, width in (
+            ("URL", comfy_url_var, 28),
+            ("МОДЕЛЬ", comfy_ckpt_var, 30),
+            ("КРОКИ", comfy_steps_var, 5),
+        ):
+            tk.Label(comfy_row, text=label, bg=BG, fg=CYAN_DIM,
+                     font=("Consolas", 8)).pack(side="left", padx=(0, 6))
+            tk.Entry(
+                comfy_row, textvariable=variable, width=width, bg=PANEL,
+                fg=TEXT, insertbackground=CYAN, relief="flat",
+                font=("Consolas", 8),
+            ).pack(side="left", padx=(0, 12), ipady=4)
+
+        tk.Label(win, text="OPENAI · МОДЕЛЬ / РОЗМІР / ЯКІСТЬ", bg=BG, fg=CYAN_DIM,
+                 font=("Consolas", 8)).pack(anchor="w", padx=18, pady=(8, 0))
         image_row = tk.Frame(win, bg=BG)
         image_row.pack(fill="x", padx=18)
         image_model_var = tk.StringVar(
@@ -11038,9 +11116,10 @@ class JarvisApp:
         tk.Label(
             win,
             text=(
-                "Спочатку чат-модель переписує ідею в детальний промпт, потім "
-                "gpt-image-1 малює. Потрібен OPENAI API ключ. Картинки "
-                "зберігаються у %APPDATA%\\Jarvis\\images і показуються в чаті."
+                "Спочатку чат-модель готує детальний промпт. Далі — ComfyUI "
+                "(локально, без лімітів), OpenAI Images або безкоштовна хмара. "
+                "OpenAI-ключ потрібен лише для OpenAI. Картинки зберігаються у "
+                "%APPDATA%\\Jarvis\\images (останні 200)."
             ),
             bg=BG, fg=MUTED, font=("Segoe UI", 8),
         ).pack(anchor="w", padx=18, pady=(2, 0))
@@ -11457,6 +11536,25 @@ class JarvisApp:
             self.cfg["image_size"] = image_size_var.get()
             self.cfg["image_quality"] = image_quality_var.get()
             self.cfg["image_prompt_enhance"] = bool(image_enhance_var.get())
+            self.cfg["image_backend"] = backend_codes.get(
+                backend_var.get(), "auto"
+            )
+            self.cfg["comfyui_url"] = (
+                comfy_url_var.get().strip()
+                or DEFAULT_CONFIG["comfyui_url"]
+            )
+            self.cfg["comfyui_checkpoint"] = (
+                comfy_ckpt_var.get().strip()
+                or DEFAULT_CONFIG["comfyui_checkpoint"]
+            )
+            try:
+                self.cfg["comfyui_steps"] = max(
+                    1, min(int(comfy_steps_var.get().strip()), 30)
+                )
+            except (TypeError, ValueError):
+                self.cfg["comfyui_steps"] = DEFAULT_CONFIG["comfyui_steps"]
+            self.cfg["comfyui_autostart"] = bool(comfy_auto_var.get())
+            self.cfg["image_allow_public_fallback"] = bool(public_var.get())
             self.cfg["home_assistant_url"] = ha_url_var.get().strip()
             self.cfg["home_assistant_token"] = ha_token_var.get().strip()
             self.cfg["clipboard_history"] = bool(clip_hist_var.get())
