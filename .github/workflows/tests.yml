@@ -33,7 +33,7 @@ jobs:
     # macOS/Linux run in advisory mode until the platform-specific tests are fixed.
     continue-on-error: ${{ matrix.experimental }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Linux GUI and audio libraries
         if: runner.os == 'Linux'
@@ -67,7 +67,7 @@ jobs:
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -80,7 +80,7 @@ jobs:
     name: Website syntax
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: "20"
