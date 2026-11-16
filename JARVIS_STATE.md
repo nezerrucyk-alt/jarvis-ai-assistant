@@ -101,6 +101,9 @@ GitHub автора (`@nezerrucyk-alt`). Хеші й розміри в блоц�
   (`--lowvram --port 8188`). Jarvis також запускає його сам, якщо
   `comfyui_autostart=true`.
 - Швидкість: 1024x1024, 6 кроків, SDXL-Turbo — ~53 с на Quadro P4200 8 ГБ.
+- Перевірено end-to-end 16.11.2026: `generate_with_backend` з
+  `image_backend=comfyui` віддав валідний PNG 1024×1024 (1.67 МБ) за 120 с
+  разом із холодним стартом сервера.
 - Бекенди Jarvis: `image_backend` = auto/comfyui/openai/pollinations;
   Pollinations без ключа, але публічний і з водяним знаком.
 
