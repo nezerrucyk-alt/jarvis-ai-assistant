@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import ast
+import gc
 import json
 import logging
 import sys
@@ -259,6 +260,10 @@ class JarvisAppEnv(unittest.TestCase):
     def tearDown(self) -> None:
         app, self._app = self._app, None
         close_app(app)
+        del app
+        # Tk-змінні мають фіналізуватися в головному потоці: якщо це зробить
+        # GC у робочому потоці після destroy(), процес падає з Tcl_AsyncDelete.
+        gc.collect()
 
     # ── допоміжні методи ────────────────────────────────────────────────────
     def rewrite_config(self, **changes: Any) -> None:
