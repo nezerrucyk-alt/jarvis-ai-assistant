@@ -74,7 +74,7 @@ jobs:
           python -m PyInstaller --noconfirm --clean --onefile --windowed --name JARVIS --add-data "assets:assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all pyttsx3 jarvis.py
           mkdir -p release
           tar -czf release/JARVIS-Linux.tar.gz -C dist JARVIS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: desktop-${{ matrix.artifact }}
           path: release/*
@@ -99,7 +99,7 @@ jobs:
           python -m PyInstaller --noconfirm --clean --windowed --onedir --name JARVIS --add-data "assets:assets" --collect-all edge_tts --collect-all pygame --collect-all speech_recognition --collect-all pyttsx3 jarvis.py
           mkdir -p release
           ditto -c -k --sequesterRsrc --keepParent dist/JARVIS.app "release/JARVIS-macOS-Intel.zip"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: desktop-macos-intel
           path: release/*
@@ -129,7 +129,7 @@ jobs:
         run: |
           mkdir -p release
           find android/bin -maxdepth 1 -type f -name "*.apk" -exec cp {} release/JARVIS-Android.apk \;
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: android
           path: release/JARVIS-Android.apk
