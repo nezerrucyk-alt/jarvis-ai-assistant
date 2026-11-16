@@ -432,21 +432,22 @@
     }
 
     function parseReview(issue) {
-      const body = String(issue.body || "");
-      if (!body.includes(REVIEW_MARKER)) return null;
+      const rawBody = String(issue.body || "");
+      if (!rawBody.includes(REVIEW_MARKER)) return null;
+      const body = rawBody.replace(/<!--[\s\S]*?-->/g, "");
       const ratingMatch = body.match(
         /(?:Оцінка|Rating)[^\d\n]{0,12}([1-5])\s*\/\s*5/i
       );
       const textMatch = body.match(
-        /(?:Відгук|Review)\s*:?\s*\**\s*([\s\S]+)/i
+        /(?:^|\n)\s*(?:\*\*)?(?:Відгук|Review)(?:\*\*)?\s*:?\s*([\s\S]+)/i
       );
       if (!ratingMatch || !textMatch) return null;
       const nickMatch = body.match(
         /(?:Нік|Nickname)\s*:?\s*\**\s*([^\r\n]{1,40})/i
       );
       let text = textMatch[1]
-        .replace(/<!--[\s\S]*?-->/g, "")
         .replace(/\n---[\s\S]*$/, "")
+        .replace(/\*\*/g, "")
         .trim();
       if (!text) return null;
       if (text.length > 5000) text = text.slice(0, 5000);
@@ -1139,35 +1140,6 @@
       { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
     );
     trackedSections.forEach((section) => navObserver.observe(section));
-  }
-
-  /* ── pointer spotlight + hero tilt ──────────────────── */
-  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-  if (finePointer) {
-    document.querySelectorAll(".feature, .platform-card, .step, .review, .review-card, .verify-card").forEach((card) => {
-      card.addEventListener("pointermove", (event) => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
-        card.style.setProperty("--my", `${event.clientY - rect.top}px`);
-      });
-    });
-
-    const appFrame = document.querySelector(".app-frame");
-    const heroVisual = document.querySelector(".hero-visual");
-    if (appFrame && heroVisual && !reduceMotion) {
-      heroVisual.addEventListener("pointermove", (event) => {
-        const rect = heroVisual.getBoundingClientRect();
-        const x = (event.clientX - rect.left) / rect.width - 0.5;
-        const y = (event.clientY - rect.top) / rect.height - 0.5;
-        appFrame.style.setProperty("--ry", `${-3 + x * 4.5}deg`);
-        appFrame.style.setProperty("--rx", `${1.2 - y * 3.5}deg`);
-      });
-      heroVisual.addEventListener("pointerleave", () => {
-        appFrame.style.removeProperty("--ry");
-        appFrame.style.removeProperty("--rx");
-      });
-    }
   }
 
   /* ── recommend the visitor's platform ───────────────── */
