@@ -543,21 +543,22 @@ class CustomizeDialog:
         canvas.configure(bg=theme["bg"])
         canvas.delete("all")
         cx = cy = 37
-        for radius, color in (
-            (30, theme["ring_1"]),
-            (23, theme["ring_2"]),
-            (16, theme["ring_3"]),
-        ):
-            canvas.create_oval(
-                cx - radius, cy - radius, cx + radius, cy + radius,
-                outline=color, width=2,
-            )
+        r = 25
         canvas.create_oval(
-            cx - 9, cy - 9, cx + 9, cy + 9,
-            outline=theme["accent"], width=2,
+            cx - r - 3, cy - r - 3, cx + r + 3, cy + r + 3,
+            outline=theme["ring_2"], width=1,
+        )
+        points: list[float] = []
+        for index in range(6):
+            angle = math.radians(-90 + index * 60)
+            points.extend((cx + math.cos(angle) * r, cy + math.sin(angle) * r))
+        canvas.create_polygon(*points, outline=theme["accent"], fill="", width=2)
+        canvas.create_oval(
+            cx - r * 0.42, cy - r * 0.42, cx + r * 0.42, cy + r * 0.42,
+            outline=theme["accent_dim"], width=1,
         )
         canvas.create_oval(
-            cx - 4, cy - 4, cx + 4, cy + 4,
+            cx - 3, cy - 3, cx + 3, cy + 3,
             fill=theme["accent"], outline="",
         )
 

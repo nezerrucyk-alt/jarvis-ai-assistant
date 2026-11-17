@@ -33,18 +33,35 @@ from typing import Any
 # ── базова палітра Command Deck ──────────────────────────────────────────────
 
 DEFAULT_THEME: dict[str, str] = {
-    "bg": "#080B12",
+    "bg": "#07090F",
+    "panel": "#10141F",
+    "panel_alt": "#171C28",
+    "sidebar": "#0A0D14",
+    "line": "#242A38",
+    "accent": "#4D6BFE",
+    "accent_dim": "#8FA6FF",
+    "gold": "#FFCF6E",
+    "text": "#EEF1F8",
+    "muted": "#8E99AE",
+    "green": "#46E6A2",
+    "red": "#FF7B7B",
+}
+
+# Стара палітра Command Deck (до редизайну). Зберігаємо її, щоб тихо
+# перевести старі конфіги на новий вигляд, не зачіпаючи ручні налаштування.
+_LEGACY_COMMAND_THEME: dict[str, str] = {
+    "bg": "#080b12",
     "panel": "#101725",
-    "panel_alt": "#141D2E",
-    "sidebar": "#0B101B",
-    "line": "#22304A",
-    "accent": "#5B8CFF",
-    "accent_dim": "#93B4FF",
-    "gold": "#E8C987",
-    "text": "#F0F4FF",
-    "muted": "#7F8CA6",
-    "green": "#5AD1A0",
-    "red": "#FF7A90",
+    "panel_alt": "#141d2e",
+    "sidebar": "#0b101b",
+    "line": "#22304a",
+    "accent": "#5b8cff",
+    "accent_dim": "#93b4ff",
+    "gold": "#e8c987",
+    "text": "#f0f4ff",
+    "muted": "#7f8ca6",
+    "green": "#5ad1a0",
+    "red": "#ff7a90",
 }
 
 THEME_LABELS: dict[str, str] = {
@@ -385,12 +402,25 @@ def normalize_customization(data: Any) -> dict[str, Any]:
     return result
 
 
+def _is_legacy_command_theme(value: Any) -> bool:
+    """True, якщо збережена тема — стара стандартна палітра Command Deck."""
+    if not isinstance(value, dict):
+        return False
+    for key, legacy in _LEGACY_COMMAND_THEME.items():
+        if normalize_color(value.get(key)) != legacy:
+            return False
+    return True
+
+
 def load_customization(path: Path) -> dict[str, Any]:
     """Читає файл кастомізації; пошкоджений файл не ламає запуск."""
     try:
         if Path(path).is_file():
             raw = json.loads(Path(path).read_text(encoding="utf-8"))
-            return normalize_customization(raw)
+            data = normalize_customization(raw)
+            if isinstance(raw, dict) and _is_legacy_command_theme(raw.get("theme")):
+                data["theme"] = dict(DEFAULT_THEME)
+            return data
     except Exception:
         pass
     return default_customization()
@@ -427,25 +457,25 @@ WIDGET_COLOR_OPTIONS = (
 )
 
 ROLE_BY_DEFAULT: dict[str, str] = {
-    "#080b12": "bg",
-    "#101725": "panel",
-    "#141d2e": "panel_alt",
-    "#0b101b": "sidebar",
-    "#22304a": "line",
-    "#5b8cff": "accent",
-    "#93b4ff": "accent_dim",
-    "#e8c987": "gold",
-    "#f0f4ff": "text",
-    "#7f8ca6": "muted",
-    "#5ad1a0": "green",
-    "#ff7a90": "red",
-    "#1b2a4a": "line_deep",
-    "#2b3b66": "line_bright",
-    "#3a465c": "muted_dim",
-    "#eaf0ff": "text_bright",
-    "#1e2540": "ring_1",
-    "#273156": "ring_2",
-    "#35447a": "ring_3",
+    "#07090f": "bg",
+    "#10141f": "panel",
+    "#171c28": "panel_alt",
+    "#0a0d14": "sidebar",
+    "#242a38": "line",
+    "#4d6bfe": "accent",
+    "#8fa6ff": "accent_dim",
+    "#ffcf6e": "gold",
+    "#eef1f8": "text",
+    "#8e99ae": "muted",
+    "#46e6a2": "green",
+    "#ff7b7b": "red",
+    "#121935": "line_deep",
+    "#1c2657": "line_bright",
+    "#5b6272": "muted_dim",
+    "#f6f7fb": "text_bright",
+    "#0e1327": "ring_1",
+    "#141b3a": "ring_2",
+    "#1b2452": "ring_3",
 }
 
 
@@ -499,7 +529,13 @@ def apply_theme(
             pass
 
     if isinstance(widget, tk.Text):
-        for tag, role in (("you", "gold"), ("jarvis", "text"), ("sys", "muted")):
+        for tag, role in (
+            ("you", "text"),
+            ("you_label", "accent_dim"),
+            ("jarvis", "text"),
+            ("jarvis_label", "muted"),
+            ("sys", "muted_dim"),
+        ):
             try:
                 widget.tag_configure(tag, foreground=theme[role])
             except tk.TclError:

@@ -294,26 +294,131 @@ LOCAL_STORE_LOCK = threading.RLock()
 ICON_PATH = APP_DIR / "assets" / "jarvis.ico"
 
 # ── палітра ──────────────────────────────────────────────────────────────────
-# Глибокий космічний фон + електричний синій, теплий золотий для акцентів.
-BG = "#080B12"
-PANEL = "#101725"
-PANEL_ALT = "#141D2E"
-SIDEBAR = "#0B101B"
-LINE = "#22304A"
-CYAN = "#5B8CFF"
-CYAN_DIM = "#93B4FF"
-GOLD = "#E8C987"
-TEXT = "#F0F4FF"
-MUTED = "#7F8CA6"
-GREEN = "#5AD1A0"
-RED = "#FF7A90"
-LINE_DEEP = "#1B2A4A"
-LINE_BRIGHT = "#2B3B66"
-MUTED_DIM = "#3A465C"
-TEXT_BRIGHT = "#EAF0FF"
-RING_1 = "#1E2540"
-RING_2 = "#273156"
-RING_3 = "#35447A"
+# Плоский графіт + електричний синій; та сама мова, що на сайті.
+BG = "#07090F"
+PANEL = "#10141F"
+PANEL_ALT = "#171C28"
+SIDEBAR = "#0A0D14"
+LINE = "#242A38"
+CYAN = "#4D6BFE"
+CYAN_DIM = "#8FA6FF"
+GOLD = "#FFCF6E"
+TEXT = "#EEF1F8"
+MUTED = "#8E99AE"
+GREEN = "#46E6A2"
+RED = "#FF7B7B"
+LINE_DEEP = "#121935"
+LINE_BRIGHT = "#1C2657"
+MUTED_DIM = "#5B6272"
+TEXT_BRIGHT = "#F6F7FB"
+RING_1 = "#0E1327"
+RING_2 = "#141B3A"
+RING_3 = "#1B2452"
+
+# Шрифти підбираються під систему під час побудови вікна.
+UI_FONT = "Segoe UI"
+MONO_FONT = "Consolas"
+
+
+def _pick_font(candidates: tuple[str, ...], fallback: str) -> str:
+    """Повертає перший доступний шрифт із кандидатів."""
+    try:
+        families = set(tkfont.families())
+    except Exception:
+        return fallback
+    for name in candidates:
+        if name in families:
+            return name
+    return fallback
+
+
+class RoundedPanel(tk.Canvas):
+    """Плоска картка із заокругленими кутами та внутрішнім фреймом."""
+
+    def __init__(
+        self,
+        master: tk.Misc,
+        *,
+        radius: int = 10,
+        fill: str = PANEL,
+        border: str = LINE,
+        outer: str = BG,
+        fit: bool = False,
+        **kwargs,
+    ) -> None:
+        self._fit = bool(fit)
+        if self._fit and "height" not in kwargs:
+            kwargs["height"] = 1
+        super().__init__(master, bg=outer, highlightthickness=0, bd=0, **kwargs)
+        self._radius = max(0, int(radius))
+        self._fill = fill
+        self._border = border
+        self._bg_item: int | None = None
+        self.body = tk.Frame(self, bg=fill)
+        self._window = self.create_window(
+            self._radius, self._radius, window=self.body, anchor="nw"
+        )
+        self.bind("<Configure>", self._redraw, add="+")
+        if self._fit:
+            self.body.bind("<Configure>", self._fit_height, add="+")
+            self.after_idle(self._fit_height)
+        self.after_idle(self._redraw)
+
+    @staticmethod
+    def _rounded_points(
+        x1: float, y1: float, x2: float, y2: float, r: float, steps: int = 6
+    ) -> list[float]:
+        points: list[float] = []
+        corners = (
+            (x1 + r, y1 + r, math.pi, math.pi * 1.5),
+            (x2 - r, y1 + r, math.pi * 1.5, math.pi * 2),
+            (x2 - r, y2 - r, 0.0, math.pi * 0.5),
+            (x1 + r, y2 - r, math.pi * 0.5, math.pi),
+        )
+        for cx, cy, start, end in corners:
+            for index in range(steps + 1):
+                angle = start + (end - start) * index / steps
+                points.extend((cx + r * math.cos(angle), cy + r * math.sin(angle)))
+        return points
+
+    def _fit_height(self, _event=None) -> None:
+        if not self._fit:
+            return
+        try:
+            wanted = self.body.winfo_reqheight() + self._radius * 2
+            current = int(self.cget("height"))
+            if wanted > 1 and abs(current - wanted) > 1:
+                self.configure(height=wanted)
+        except (tk.TclError, ValueError):
+            pass
+
+    def _redraw(self, _event=None) -> None:
+        try:
+            width = max(1, self.winfo_width())
+            height = max(1, self.winfo_height())
+        except tk.TclError:
+            return
+        fill, border = self._fill, self._border
+        if self._bg_item is not None:
+            try:
+                fill = self.itemcget(self._bg_item, "fill") or fill
+                border = self.itemcget(self._bg_item, "outline") or border
+            except tk.TclError:
+                pass
+        radius = min(self._radius, width // 2, height // 2)
+        if self._bg_item is not None:
+            self.delete(self._bg_item)
+        points = self._rounded_points(0, 0, width, height, radius)
+        self._bg_item = self.create_polygon(
+            points, fill=fill, outline=border, width=1,
+        )
+        self.tag_lower(self._bg_item)
+        self.coords(self._window, radius, radius)
+        self.itemconfigure(
+            self._window,
+            width=max(1, width - radius * 2),
+            height=max(1, height - radius * 2),
+        )
 
 LANGUAGES = [
     "uk-UA", "ru-RU", "en-US",
@@ -5629,10 +5734,18 @@ class JarvisApp:
 
     # ── інтерфейс ────────────────────────────────────────────────────────────
     def _build(self) -> None:
+        global UI_FONT, MONO_FONT
+        UI_FONT = _pick_font(
+            ("Segoe UI Variable Text", "Segoe UI"), "Segoe UI"
+        )
+        MONO_FONT = _pick_font(
+            ("Cascadia Mono", "Cascadia Code", "Consolas"), "Consolas"
+        )
+
         self.root.title("J.A.R.V.I.S. · Command Deck")
         self.root.configure(bg=BG)
         self.root.geometry("1240x860")
-        self.root.minsize(900, 640)
+        self.root.minsize(920, 640)
         self.root.attributes("-topmost", bool(self.cfg.get("always_on_top")))
         try:
             if ICON_PATH.exists():
@@ -5641,7 +5754,7 @@ class JarvisApp:
             pass
 
         # ── ліва навігаційна панель ──────────────────────────────────────────
-        self.sidebar = tk.Frame(self.root, bg=SIDEBAR, width=232)
+        self.sidebar = tk.Frame(self.root, bg=SIDEBAR, width=252)
         self.sidebar.pack(side="left", fill="y")
         self.sidebar.pack_propagate(False)
         tk.Frame(self.sidebar, bg=LINE, width=1).pack(side="right", fill="y")
@@ -5651,45 +5764,55 @@ class JarvisApp:
         self._sidebar_section_labels: dict[str, tk.Label] = {}
 
         brand = tk.Frame(side_inner, bg=SIDEBAR)
-        brand.pack(fill="x", padx=16, pady=(18, 12))
-        logo = tk.Canvas(brand, width=36, height=36, bg=SIDEBAR, highlightthickness=0)
+        brand.pack(fill="x", padx=16, pady=(16, 10))
+        logo = tk.Canvas(brand, width=32, height=32, bg=SIDEBAR, highlightthickness=0)
         logo.pack(side="left", padx=(0, 10))
         logo.create_polygon(
-            18, 2, 33, 10, 33, 26, 18, 34, 3, 26, 3, 10,
-            outline=CYAN, fill="", width=2,
+            16, 2, 29, 9, 29, 23, 16, 30, 3, 23, 3, 9,
+            outline=CYAN, fill="", width=1,
         )
-        logo.create_oval(11, 11, 25, 25, outline=CYAN_DIM, width=1)
-        logo.create_oval(15, 15, 21, 21, fill=CYAN, outline="")
+        logo.create_oval(10, 10, 22, 22, outline=LINE_BRIGHT, width=1)
+        logo.create_oval(14, 14, 18, 18, fill=CYAN, outline="")
         brand_text = tk.Frame(brand, bg=SIDEBAR)
         brand_text.pack(side="left")
         tk.Label(
             brand_text, text="J.A.R.V.I.S.", bg=SIDEBAR, fg=TEXT,
-            font=("Segoe UI", 12, "bold"),
+            font=(UI_FONT, 12, "bold"),
         ).pack(anchor="w")
         tk.Label(
-            brand_text, text=f"COMMAND DECK · v{APP_VERSION}", bg=SIDEBAR, fg=MUTED,
-            font=("Consolas", 7),
+            brand_text, text="COMMAND DECK", bg=SIDEBAR, fg=MUTED,
+            font=(MONO_FONT, 7),
         ).pack(anchor="w", pady=(2, 0))
+        tk.Frame(side_inner, bg=LINE, height=1).pack(
+            fill="x", padx=14, pady=(0, 2)
+        )
 
         def section(title: str) -> None:
             label = tk.Label(
                 side_inner, text=title, bg=SIDEBAR, fg=MUTED,
-                font=("Consolas", 7), anchor="w",
+                font=(MONO_FONT, 7, "bold"), anchor="w",
             )
-            label.pack(fill="x", padx=20, pady=(12, 4))
+            label.pack(fill="x", padx=18, pady=(10, 4))
             self._sidebar_section_labels[title] = label
 
         def nav(text: str, command, accent: bool = False):
+            base_fg = TEXT if accent else MUTED
             button = tk.Button(
                 side_inner, text=text, command=command,
-                bg=SIDEBAR, fg=CYAN_DIM if accent else TEXT,
-                activebackground=PANEL_ALT, activeforeground=CYAN,
-                relief="flat", bd=0, anchor="w", font=("Segoe UI", 9),
-                padx=14, pady=6, cursor="hand2", highlightthickness=0,
+                bg=SIDEBAR, fg=base_fg,
+                activebackground=PANEL_ALT, activeforeground=TEXT,
+                relief="flat", bd=0, anchor="w", font=(UI_FONT, 9),
+                padx=12, pady=5, cursor="hand2", highlightthickness=0,
             )
             button.pack(fill="x", padx=8, pady=1)
-            button.bind("<Enter>", lambda _e, b=button: b.config(bg=PANEL_ALT))
-            button.bind("<Leave>", lambda _e, b=button: b.config(bg=SIDEBAR))
+            button.bind(
+                "<Enter>",
+                lambda _e, b=button: b.config(bg=PANEL_ALT, fg=TEXT),
+            )
+            button.bind(
+                "<Leave>",
+                lambda _e, b=button, fg=base_fg: b.config(bg=SIDEBAR, fg=fg),
+            )
             return button
 
         section("CORE")
@@ -5697,19 +5820,19 @@ class JarvisApp:
         self.scan_btn = nav(f"◈   {self.tr('sidebar.scan')}", self._on_scan, True)
         self.translate_btn = nav(f"⇄   {self.tr('sidebar.translate')}", self._on_translate, True)
         self.new_chat_btn = nav(f"＋   {self.tr('sidebar.new_chat')}", self._new_conversation)
-        self.clipboard_btn = nav(f"📋   {self.tr('sidebar.clipboard')}", self.open_clipboard_manager)
+        self.clipboard_btn = nav(f"▣   {self.tr('sidebar.clipboard')}", self.open_clipboard_manager)
         self.briefing_btn = nav(f"☀   {self.tr('sidebar.briefing')}", self.open_briefing)
 
         section("SYSTEM")
         self.settings_btn = nav(f"⚙   {self.tr('sidebar.settings')}", self.open_settings)
         self.customize_btn = nav(f"✦   {self.tr('sidebar.customize')}", self.open_customize, True)
-        self.update_btn = nav(f"⬆   {self.tr('sidebar.update')}", self._on_check_update, True)
+        self.update_btn = nav(f"⇧   {self.tr('sidebar.update')}", self._on_check_update, True)
         self.memory_btn = nav(f"◇   {self.tr('sidebar.memory')}", self.open_memory_manager)
         self.reminders_btn = nav(f"◷   {self.tr('sidebar.reminders')}", self.open_reminders_manager)
         self.automations_btn = nav(f"⟳   {self.tr('sidebar.automations')}", self.open_automations_manager)
-        self.organizer_btn = nav(f"🗂   {self.tr('sidebar.organizer')}", self.open_organizer)
-        self.plugins_btn = nav(f"🧩   {self.tr('sidebar.plugins')}", self.open_marketplace)
-        self.gaming_btn = nav(f"🎮   {self.tr('sidebar.gaming')}", self._toggle_gaming_mode)
+        self.organizer_btn = nav(f"▦   {self.tr('sidebar.organizer')}", self.open_organizer)
+        self.plugins_btn = nav(f"❖   {self.tr('sidebar.plugins')}", self.open_marketplace)
+        self.gaming_btn = nav(f"◎   {self.tr('sidebar.gaming')}", self._toggle_gaming_mode)
 
         section("RECENT")
         self.history_list = tk.Frame(side_inner, bg=SIDEBAR)
@@ -5757,172 +5880,177 @@ class JarvisApp:
             ("item", "history", self.history_btn),
         ]
 
-        side_bottom = tk.Frame(
-            side_inner, bg=PANEL_ALT, highlightthickness=1,
-            highlightbackground=LINE,
+        side_card = RoundedPanel(
+            side_inner, radius=8, fill=PANEL, border=LINE, outer=SIDEBAR,
+            fit=True,
         )
-        side_bottom.pack(side="bottom", fill="x", padx=12, pady=14)
-        self.side_bottom = side_bottom
-        status_row = tk.Frame(side_bottom, bg=PANEL_ALT)
-        status_row.pack(fill="x", padx=10, pady=(9, 5))
+        side_card.pack(side="bottom", fill="x", padx=12, pady=10)
+        self.side_bottom = side_card
+        side_body = side_card.body
+        status_row = tk.Frame(side_body, bg=PANEL)
+        status_row.pack(fill="x", padx=8, pady=(7, 5))
         self.side_status_dot = tk.Label(
-            status_row, text="●", bg=PANEL_ALT, fg=GREEN,
-            font=("Segoe UI", 8),
+            status_row, text="●", bg=PANEL, fg=GREEN,
+            font=(UI_FONT, 8),
         )
-        self.side_status_dot.pack(side="left", padx=(1, 6))
+        self.side_status_dot.pack(side="left", padx=(0, 6))
         self.side_status_label = tk.Label(
-            status_row, text=self.tr("status.system_ready"), bg=PANEL_ALT, fg=MUTED,
-            font=("Consolas", 7),
+            status_row, text=self.tr("status.system_ready"), bg=PANEL, fg=MUTED,
+            font=(MONO_FONT, 7),
         )
         self.side_status_label.pack(side="left")
+        tk.Frame(side_body, bg=LINE, height=1).pack(
+            fill="x", padx=8, pady=(0, 4)
+        )
         self.mobile_btn = tk.Button(
-            side_bottom, text=self.tr("sidebar.android_connect"), command=self._toggle_mobile_bridge,
-            bg=PANEL_ALT, fg=CYAN_DIM, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", bd=0, anchor="w", font=("Segoe UI", 8),
-            padx=8, pady=5, cursor="hand2",
+            side_body, text=self.tr("sidebar.android_connect"), command=self._toggle_mobile_bridge,
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT, activeforeground=TEXT,
+            relief="flat", bd=0, anchor="w", font=(UI_FONT, 8),
+            padx=8, pady=4, cursor="hand2", highlightthickness=0,
         )
         self.mobile_btn.pack(fill="x", padx=4)
         self.mute_btn = tk.Button(
-            side_bottom, text=self.tr("status.sound_on"), command=self._toggle_mute,
-            bg=PANEL_ALT, fg=MUTED, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", bd=0, anchor="w", font=("Segoe UI", 8),
-            padx=8, pady=5, cursor="hand2",
+            side_body, text=self.tr("status.sound_on"), command=self._toggle_mute,
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT, activeforeground=TEXT,
+            relief="flat", bd=0, anchor="w", font=(UI_FONT, 8),
+            padx=8, pady=4, cursor="hand2", highlightthickness=0,
         )
         self.mute_btn.pack(fill="x", padx=4)
         self.access_label = tk.Label(
-            side_bottom, text=self.tr("status.access_full"), bg=PANEL_ALT, fg=GOLD,
-            font=("Consolas", 7), anchor="w",
+            side_body, text=self.tr("status.access_full"), bg=PANEL, fg=GOLD,
+            font=(MONO_FONT, 7), anchor="w",
         )
-        self.access_label.pack(fill="x", padx=8, pady=(4, 8))
+        self.access_label.pack(fill="x", padx=8, pady=(4, 6))
 
         # ── основна робоча область ───────────────────────────────────────────
         self.main_frame = tk.Frame(self.root, bg=BG)
         self.main_frame.pack(side="left", fill="both", expand=True)
         main = self.main_frame
 
-        self._accent_canvas = tk.Canvas(
-            main, height=2, bg=BG, highlightthickness=0, bd=0,
-        )
-        self._accent_canvas.pack(fill="x")
-        self._accent_canvas.bind("<Configure>", lambda _e: self._draw_accent_line())
-
-        self.topbar = tk.Frame(main, bg=BG, height=54)
+        # Верхня смуга: вкладка поточної розмови та швидке створення нової.
+        self.topbar = tk.Frame(main, bg=BG, height=42)
         topbar = self.topbar
-        topbar.pack(fill="x", padx=28, pady=(10, 0))
+        topbar.pack(fill="x", padx=18, pady=(10, 0))
         topbar.pack_propagate(False)
         top_left = tk.Frame(topbar, bg=BG)
         top_left.pack(side="left", fill="y")
-        self.chat_title_label = tk.Label(
-            top_left, text="РОЗМОВА", bg=BG, fg=MUTED,
-            font=("Consolas", 8),
+        tab = tk.Frame(
+            top_left, bg=PANEL, highlightthickness=1, highlightbackground=LINE,
         )
-        self.chat_title_label.pack(side="left", anchor="center")
+        tab.pack(side="left", fill="y", pady=(1, 1))
         tk.Label(
-            top_left, text="  ·  LIVE SESSION", bg=BG, fg=GREEN,
-            font=("Consolas", 7),
-        ).pack(side="left", anchor="center")
+            tab, text="●", bg=PANEL, fg=CYAN, font=(UI_FONT, 7),
+        ).pack(side="left", padx=(10, 7))
+        self.chat_title_label = tk.Label(
+            tab, text="РОЗМОВА", bg=PANEL, fg=TEXT,
+            font=(UI_FONT, 9),
+        )
+        self.chat_title_label.pack(side="left", padx=(0, 14), pady=6)
+        self.tab_new_btn = tk.Button(
+            top_left, text="＋", command=self._new_conversation,
+            bg=BG, fg=MUTED, activebackground=PANEL_ALT, activeforeground=TEXT,
+            relief="flat", bd=0, font=(UI_FONT, 11), padx=8, pady=2,
+            cursor="hand2", highlightthickness=0,
+        )
+        self.tab_new_btn.pack(side="left", padx=(6, 0), pady=(1, 1))
         top_right = tk.Frame(topbar, bg=BG)
         top_right.pack(side="right", fill="y")
-        self.status = tk.Label(
-            top_right, text="Ініціалізація…", bg=BG, fg=MUTED,
-            font=("Segoe UI", 8),
-        )
-        self.status.pack(side="right", anchor="center")
         self.provider_chip = tk.Label(
-            top_right, text="", bg=PANEL_ALT, fg=CYAN_DIM,
-            font=("Consolas", 7), padx=9, pady=5,
+            top_right, text="", bg=PANEL, fg=MUTED,
+            font=(MONO_FONT, 7), padx=9, pady=5,
+            highlightthickness=1, highlightbackground=LINE,
         )
-        self.provider_chip.pack(side="right", padx=(10, 0), anchor="center")
+        self.provider_chip.pack(side="right", pady=(3, 3))
 
         # Банер оновлення — прихований, показується після автоперевірки.
         self.update_banner = tk.Frame(
-            main, bg=PANEL_ALT, highlightthickness=1, highlightbackground=CYAN,
+            main, bg=PANEL_ALT, highlightthickness=1, highlightbackground=CYAN_DIM,
         )
         self.update_banner_label = tk.Label(
-            self.update_banner, text="", bg=PANEL_ALT, fg=CYAN, cursor="hand2",
-            font=("Segoe UI", 9), anchor="w", padx=14, pady=7,
+            self.update_banner, text="", bg=PANEL_ALT, fg=CYAN_DIM, cursor="hand2",
+            font=(UI_FONT, 9), anchor="w", padx=14, pady=7,
         )
         self.update_banner_label.pack(side="left", fill="x", expand=True)
         self.update_banner_label.bind("<Button-1>", lambda _e: self._on_check_update())
         update_close = tk.Label(
             self.update_banner, text="✕", bg=PANEL_ALT, fg=MUTED,
-            cursor="hand2", padx=10, font=("Segoe UI", 9),
+            cursor="hand2", padx=10, font=(UI_FONT, 9),
         )
         update_close.pack(side="right")
         update_close.bind("<Button-1>", lambda _e: self.update_banner.pack_forget())
 
         self._hero = tk.Frame(main, bg=BG)
         hero = self._hero
-        hero.pack(fill="x", padx=28, pady=(2, 8))
+        hero.pack(fill="x", padx=18, pady=(10, 4))
         self.reactor = tk.Canvas(
-            hero, width=92, height=92, bg=BG, highlightthickness=0, bd=0,
+            hero, width=54, height=54, bg=BG, highlightthickness=0, bd=0,
         )
-        self.reactor.pack(side="left", padx=(0, 16))
+        self.reactor.pack(side="left", padx=(2, 12))
         hero_text = tk.Frame(hero, bg=BG)
         hero_text.pack(side="left", fill="x", expand=True)
         tk.Label(
             hero_text, text="J.A.R.V.I.S.  /  COMMAND DECK", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 7, "bold"),
+            font=(MONO_FONT, 7, "bold"),
         ).pack(anchor="w")
         self._welcome_title = tk.Label(
             hero_text, text=self.tr("welcome.title"), bg=BG, fg=TEXT,
-            font=("Segoe UI", 19, "bold"),
+            font=(UI_FONT, 15, "bold"),
         )
-        self._welcome_title.pack(anchor="w", pady=(1, 1))
+        self._welcome_title.pack(anchor="w", pady=(1, 0))
         self._welcome_sub = tk.Label(
             hero_text,
             text=self.tr("welcome.subtitle"),
-            bg=BG, fg=MUTED, font=("Segoe UI", 9),
-            wraplength=560, justify="left",
+            bg=BG, fg=MUTED, font=(UI_FONT, 9),
+            wraplength=620, justify="left",
         )
-        self._welcome_sub.pack(anchor="w")
+        self._welcome_sub.pack(anchor="w", pady=(1, 0))
 
         # ── кастомний блок, який малює код користувача ──────────────────────
         self.custom_panel = tk.Frame(
             main, bg=PANEL, highlightthickness=1, highlightbackground=LINE,
         )
         custom_head = tk.Frame(self.custom_panel, bg=PANEL)
-        custom_head.pack(fill="x", padx=14, pady=(8, 0))
+        custom_head.pack(fill="x", padx=14, pady=(9, 0))
         tk.Label(
-            custom_head, text="CUSTOM MODULE", bg=PANEL, fg=CYAN_DIM,
-            font=("Consolas", 7, "bold"),
+            custom_head, text="CUSTOM MODULE", bg=PANEL, fg=MUTED_DIM,
+            font=(MONO_FONT, 7, "bold"),
         ).pack(side="left")
         tk.Button(
             custom_head, text="Налаштувати", command=self.open_customize,
-            bg=PANEL, fg=MUTED, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", bd=0, font=("Segoe UI", 8), padx=8, pady=2,
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT, activeforeground=TEXT,
+            relief="flat", bd=0, font=(UI_FONT, 8), padx=8, pady=2,
             cursor="hand2",
         ).pack(side="right")
         self.custom_host = tk.Frame(self.custom_panel, bg=PANEL)
         self.custom_host.pack(fill="both", expand=True, padx=10, pady=(6, 10))
 
         # ── стрічка діалогу ─────────────────────────────────────────────────
-        self.log_frame = tk.Frame(
-            main, bg=PANEL, highlightthickness=1, highlightbackground=LINE,
+        self.log_frame = RoundedPanel(
+            main, radius=10, fill=PANEL, border=LINE, outer=BG,
         )
-        self.log_frame.pack(fill="both", expand=True, padx=28, pady=(8, 10))
-        tk.Frame(self.log_frame, bg=CYAN, width=2).pack(side="left", fill="y")
-        log_body = tk.Frame(self.log_frame, bg=PANEL)
-        log_body.pack(side="left", fill="both", expand=True)
+        self.log_frame.pack(fill="both", expand=True, padx=18, pady=(4, 8))
+        log_body = self.log_frame.body
         log_head = tk.Frame(log_body, bg=PANEL)
-        log_head.pack(fill="x", padx=14, pady=(8, 0))
+        log_head.pack(fill="x", padx=14, pady=(10, 0))
         tk.Label(
-            log_head, text="ДІАЛОГ", bg=PANEL, fg=CYAN_DIM,
-            font=("Consolas", 7, "bold"),
+            log_head, text="ДІАЛОГ", bg=PANEL, fg=MUTED,
+            font=(MONO_FONT, 7, "bold"),
         ).pack(side="left")
         self.context_label = tk.Label(
-            log_head, text="LIVE CONTEXT", bg=PANEL, fg=MUTED,
-            font=("Consolas", 7),
+            log_head, text="LIVE CONTEXT", bg=PANEL, fg=MUTED_DIM,
+            font=(MONO_FONT, 7),
         )
         self.context_label.pack(side="right")
-        tk.Frame(log_body, bg=LINE, height=1).pack(fill="x", padx=14, pady=(6, 0))
+        tk.Frame(log_body, bg=LINE, height=1).pack(
+            fill="x", padx=14, pady=(8, 0)
+        )
 
         text_wrap = tk.Frame(log_body, bg=PANEL)
-        text_wrap.pack(fill="both", expand=True, padx=(10, 0), pady=(0, 8))
+        text_wrap.pack(fill="both", expand=True, padx=(8, 2), pady=(0, 8))
         self.log = tk.Text(
             text_wrap, bg=PANEL, fg=TEXT, insertbackground=CYAN,
-            relief="flat", bd=0, wrap="word", font=("Segoe UI", 10),
-            height=8, padx=10, pady=8,
+            relief="flat", bd=0, wrap="word", font=(UI_FONT, 10),
+            height=8, padx=10, pady=10,
             state="disabled", cursor="arrow", takefocus=0,
             exportselection=False,
         )
@@ -5931,15 +6059,23 @@ class JarvisApp:
         self.log.pack(side="left", fill="both", expand=True)
         self._bind_clipboard_shortcuts(self.log)
         self.log.tag_configure(
-            "you", foreground=GOLD, font=("Segoe UI", 10, "bold"),
-            spacing1=8, spacing3=2,
+            "you_label", foreground=CYAN_DIM, font=(MONO_FONT, 7, "bold"),
+            spacing1=10,
         )
         self.log.tag_configure(
-            "jarvis", foreground=TEXT, font=("Segoe UI", 10),
-            spacing1=2, spacing3=8,
+            "you", foreground=TEXT, font=(UI_FONT, 10),
+            spacing1=2, spacing3=10,
         )
         self.log.tag_configure(
-            "sys", foreground=MUTED, font=("Segoe UI", 9, "italic"),
+            "jarvis_label", foreground=MUTED, font=(MONO_FONT, 7, "bold"),
+            spacing1=8,
+        )
+        self.log.tag_configure(
+            "jarvis", foreground=TEXT, font=(UI_FONT, 10),
+            spacing1=1, spacing3=10,
+        )
+        self.log.tag_configure(
+            "sys", foreground=MUTED_DIM, font=(UI_FONT, 9, "italic"),
             spacing1=3, spacing3=3,
         )
 
@@ -5948,65 +6084,66 @@ class JarvisApp:
             main, bg=PANEL, highlightthickness=1, highlightbackground=LINE,
         )
         queue_head = tk.Frame(self.queue_panel, bg=PANEL)
-        queue_head.pack(fill="x", padx=12, pady=(7, 4))
+        queue_head.pack(fill="x", padx=14, pady=(9, 4))
         tk.Label(
             queue_head, text="ЧЕРГА ЗАВДАНЬ", bg=PANEL, fg=GOLD,
-            font=("Consolas", 7, "bold"),
+            font=(MONO_FONT, 7, "bold"),
         ).pack(side="left")
         self.queue_count_label = tk.Label(
             queue_head, text="0", bg=PANEL, fg=MUTED,
-            font=("Consolas", 7),
+            font=(MONO_FONT, 7),
         )
         self.queue_count_label.pack(side="left", padx=(6, 0))
         tk.Button(
             queue_head, text="Очистити", command=self._clear_queue,
-            bg=PANEL, fg=MUTED, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", bd=0, font=("Segoe UI", 8), padx=8, pady=2,
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT, activeforeground=TEXT,
+            relief="flat", bd=0, font=(UI_FONT, 8), padx=8, pady=2,
             cursor="hand2",
         ).pack(side="right")
         self.queue_items_frame = tk.Frame(self.queue_panel, bg=PANEL)
-        self.queue_items_frame.pack(fill="x", padx=10, pady=(0, 7))
+        self.queue_items_frame.pack(fill="x", padx=12, pady=(0, 8))
 
         # ── командний рядок ─────────────────────────────────────────────────
-        self.composer = tk.Frame(
-            main, bg=PANEL, highlightthickness=1, highlightbackground=LINE,
+        self.composer = RoundedPanel(
+            main, radius=10, fill=PANEL, border=LINE, outer=BG, fit=True,
         )
-        self.composer.pack(fill="x", padx=28, pady=(0, 8))
-        composer_head = tk.Frame(self.composer, bg=PANEL)
+        self.composer.pack(fill="x", padx=18, pady=(0, 8))
+        composer_body = self.composer.body
+        composer_head = tk.Frame(composer_body, bg=PANEL)
         composer_head.pack(fill="x", padx=12, pady=(8, 0))
         tk.Label(
-            composer_head, text="COMMAND INPUT", bg=PANEL, fg=CYAN_DIM,
-            font=("Consolas", 7, "bold"),
+            composer_head, text="COMMAND INPUT", bg=PANEL, fg=MUTED_DIM,
+            font=(MONO_FONT, 7, "bold"),
         ).pack(side="left")
         self._composer_hint = tk.Label(
             composer_head,
             text=self.tr("composer.hint"),
-            bg=PANEL, fg=MUTED, font=("Consolas", 7),
+            bg=PANEL, fg=MUTED_DIM, font=(MONO_FONT, 7),
         )
         self._composer_hint.pack(side="right")
 
-        self.attach_panel = tk.Frame(self.composer, bg=PANEL)
+        self.attach_panel = tk.Frame(composer_body, bg=PANEL)
         attach_head = tk.Frame(self.attach_panel, bg=PANEL)
         attach_head.pack(fill="x", padx=12, pady=(5, 1))
         tk.Label(
-            attach_head, text="ВКЛАДЕННЯ", bg=PANEL, fg=CYAN_DIM,
-            font=("Consolas", 7),
+            attach_head, text="ВКЛАДЕННЯ", bg=PANEL, fg=MUTED_DIM,
+            font=(MONO_FONT, 7),
         ).pack(side="left")
         tk.Button(
             attach_head, text="Очистити", command=self._clear_attachments,
-            bg=PANEL, fg=MUTED, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", bd=0, font=("Segoe UI", 8), padx=8, pady=1,
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT, activeforeground=TEXT,
+            relief="flat", bd=0, font=(UI_FONT, 8), padx=8, pady=1,
             cursor="hand2",
         ).pack(side="right")
         self.attach_chips = tk.Frame(self.attach_panel, bg=PANEL)
         self.attach_chips.pack(fill="x", padx=10, pady=(0, 2))
 
-        self.entry_row = tk.Frame(self.composer, bg=PANEL)
-        self.entry_row.pack(fill="x", padx=10, pady=(4, 0))
+        self.entry_row = tk.Frame(composer_body, bg=PANEL)
+        self.entry_row.pack(fill="x", padx=12, pady=(4, 0))
         self.entry = tk.Text(
             self.entry_row, bg=PANEL, fg=MUTED, insertbackground=CYAN,
-            relief="flat", bd=0, font=("Segoe UI", 11), height=2,
-            wrap="word", padx=8, pady=5, undo=True,
+            relief="flat", bd=0, font=(UI_FONT, 11), height=2,
+            wrap="word", padx=4, pady=4, undo=True,
         )
         self.entry.pack(fill="x", expand=True)
         self._bind_clipboard_shortcuts(self.entry)
@@ -6018,33 +6155,35 @@ class JarvisApp:
         self.entry.bind("<FocusOut>", self._on_entry_focus_out)
         self._show_entry_placeholder()
 
-        composer_actions = tk.Frame(self.composer, bg=PANEL)
-        composer_actions.pack(fill="x", padx=10, pady=(2, 8))
+        composer_actions = tk.Frame(composer_body, bg=PANEL)
+        composer_actions.pack(fill="x", padx=12, pady=(4, 8))
 
         self.attach_btn = tk.Button(
             composer_actions, text="＋", command=self._show_attach_menu,
-            bg=PANEL_ALT, fg=CYAN, activebackground=LINE,
-            activeforeground=CYAN, relief="flat", bd=0,
-            font=("Segoe UI", 13, "bold"), padx=10, pady=3,
-            cursor="hand2",
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT,
+            activeforeground=TEXT, relief="flat", bd=0,
+            font=(UI_FONT, 13, "bold"), padx=6, pady=1,
+            cursor="hand2", highlightthickness=0,
         )
-        self.attach_btn.pack(side="left", padx=(0, 6))
+        self.attach_btn.pack(side="left", padx=(0, 2))
 
         self.speak_var = tk.BooleanVar(value=not bool(self.cfg.get("mute")))
         self._speak_check = tk.Checkbutton(
             composer_actions, text=self.tr("composer.speak"),
             variable=self.speak_var, bg=PANEL, fg=MUTED,
-            selectcolor=BG, activebackground=PANEL,
-            activeforeground=CYAN, highlightthickness=0, bd=0,
-            font=("Segoe UI", 8), cursor="hand2",
+            selectcolor=PANEL_ALT, activebackground=PANEL_ALT,
+            activeforeground=TEXT, highlightthickness=0, bd=0,
+            indicatoron=False, relief="flat", overrelief="flat",
+            offrelief="flat", padx=6, pady=4,
+            font=(UI_FONT, 8), cursor="hand2",
         )
-        self._speak_check.pack(side="left", padx=(0, 4))
+        self._speak_check.pack(side="left", padx=(2, 4))
         self.mic_btn = tk.Button(
             composer_actions, text=f"◉  {self.tr('composer.voice')}", command=self._on_mic,
-            bg=PANEL_ALT, fg=CYAN, activebackground=LINE,
-            activeforeground=CYAN, relief="flat", bd=0,
-            font=("Segoe UI", 8, "bold"), padx=9, pady=5,
-            cursor="hand2",
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT,
+            activeforeground=TEXT, relief="flat", bd=0,
+            font=(UI_FONT, 8), padx=6, pady=4,
+            cursor="hand2", highlightthickness=0,
         )
         self.mic_btn.pack(side="left")
 
@@ -6052,17 +6191,18 @@ class JarvisApp:
             composer_actions, text="↑", command=self._on_send,
             bg=CYAN, fg=BG, activebackground=CYAN_DIM,
             activeforeground=BG, relief="flat", bd=0,
-            font=("Segoe UI", 13, "bold"), padx=12, pady=3,
-            cursor="hand2",
+            font=(UI_FONT, 13, "bold"), padx=10, pady=2,
+            cursor="hand2", highlightthickness=0, width=2,
         )
         self.send_btn.pack(side="right", padx=(6, 0))
         self.queue_btn = tk.Button(
             composer_actions, text=self.tr("composer.queue"), command=self._enqueue_current,
-            bg=PANEL_ALT, fg=GOLD, activebackground=LINE,
+            bg=PANEL, fg=GOLD, activebackground=PANEL_ALT,
             activeforeground=GOLD, relief="flat", bd=0,
-            font=("Segoe UI", 8), padx=9, pady=5, cursor="hand2",
+            font=(UI_FONT, 8), padx=7, pady=4, cursor="hand2",
+            highlightthickness=0,
         )
-        self.queue_btn.pack(side="right", padx=(6, 0))
+        self.queue_btn.pack(side="right", padx=(4, 0))
 
         mode_key = self.cfg.get("response_mode", "natural")
         if mode_key not in RESPONSE_MODES:
@@ -6070,33 +6210,55 @@ class JarvisApp:
         self.mode_var = tk.StringVar(value=RESPONSE_MODES[mode_key]["label"])
         self.mode_btn = tk.Button(
             composer_actions, textvariable=self.mode_var, command=self._show_mode_menu,
-            bg=PANEL_ALT, fg=TEXT, activebackground=LINE,
-            activeforeground=CYAN, relief="flat", bd=0,
-            font=("Consolas", 8), padx=9, pady=5, cursor="hand2",
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT,
+            activeforeground=TEXT, relief="flat", bd=0,
+            font=(MONO_FONT, 8), padx=7, pady=4, cursor="hand2",
+            highlightthickness=0,
         )
-        self.mode_btn.pack(side="right", padx=(6, 0))
+        self.mode_btn.pack(side="right", padx=(4, 0))
 
         current_model = self.cfg.get("model") or DEFAULT_CONFIG["model"]
-        self.model_var = tk.StringVar(value=self._short_model_label(current_model))
+        self.model_var = tk.StringVar(
+            value=f"{self._short_model_label(current_model)}  ▾"
+        )
         self.model_btn = tk.Button(
             composer_actions, textvariable=self.model_var, command=self._show_model_menu,
-            bg=PANEL_ALT, fg=CYAN_DIM, activebackground=LINE,
-            activeforeground=CYAN, relief="flat", bd=0,
-            font=("Consolas", 8), padx=9, pady=5, cursor="hand2",
-            width=24,
+            bg=PANEL, fg=MUTED, activebackground=PANEL_ALT,
+            activeforeground=TEXT, relief="flat", bd=0,
+            font=(MONO_FONT, 8), padx=7, pady=4, cursor="hand2",
+            width=20, highlightthickness=0,
         )
-        self.model_btn.pack(side="right", padx=(6, 0))
+        self.model_btn.pack(side="right", padx=(4, 0))
 
-        self.footer = tk.Frame(main, bg=BG)
-        self.footer.pack(fill="x", padx=28, pady=(0, 8))
+        # ── нижня смуга стану ───────────────────────────────────────────────
+        self.footer = tk.Frame(main, bg=PANEL, height=28)
+        self.footer.pack(fill="x")
+        self.footer.pack_propagate(False)
+        tk.Frame(self.footer, bg=LINE, height=1).pack(fill="x", side="top")
+        footer_body = tk.Frame(self.footer, bg=PANEL)
+        footer_body.pack(fill="both", expand=True, padx=14)
+        self.footer_status_dot = tk.Label(
+            footer_body, text="●", bg=PANEL, fg=GREEN,
+            font=(UI_FONT, 7),
+        )
+        self.footer_status_dot.pack(side="left", padx=(0, 6), pady=4)
+        self.status = tk.Label(
+            footer_body, text="Ініціалізація…", bg=PANEL, fg=MUTED,
+            font=(UI_FONT, 8),
+        )
+        self.status.pack(side="left", pady=4)
         tk.Label(
-            self.footer, text=f"J.A.R.V.I.S. · MULTI-PROVIDER AI · v{APP_VERSION}",
-            bg=BG, fg=MUTED, font=("Consolas", 7),
-        ).pack(side="left")
+            footer_body, text="MULTI-PROVIDER AI", bg=PANEL, fg=MUTED_DIM,
+            font=(MONO_FONT, 7),
+        ).pack(side="left", padx=(10, 0), pady=4)
         tk.Label(
-            self.footer, text="PRIVATE BY DEFAULT · LOCAL HISTORY",
-            bg=BG, fg=MUTED_DIM, font=("Consolas", 7),
-        ).pack(side="right")
+            footer_body, text="PRIVATE BY DEFAULT · LOCAL HISTORY",
+            bg=PANEL, fg=MUTED_DIM, font=(MONO_FONT, 7),
+        ).pack(side="right", pady=4)
+        tk.Label(
+            footer_body, text=f"v{APP_VERSION}", bg=PANEL, fg=MUTED,
+            font=(MONO_FONT, 7),
+        ).pack(side="right", padx=(0, 12), pady=4)
 
         self.root.bind("<space>", self._on_space)
         self.root.bind("<Escape>", self._on_escape)
@@ -6105,28 +6267,28 @@ class JarvisApp:
         self._main_blocks = {
             "topbar": (
                 self.topbar,
-                {"fill": "x", "padx": 28, "pady": (10, 0)},
+                {"fill": "x", "padx": 18, "pady": (10, 0)},
             ),
-            "hero": (self._hero, {"fill": "x", "padx": 28, "pady": (2, 8)}),
+            "hero": (self._hero, {"fill": "x", "padx": 18, "pady": (10, 4)}),
             "log": (
                 self.log_frame,
-                {"fill": "both", "expand": True, "padx": 28, "pady": (8, 10)},
+                {"fill": "both", "expand": True, "padx": 18, "pady": (4, 8)},
             ),
             "queue": (
                 self.queue_panel,
-                {"fill": "x", "padx": 28, "pady": (0, 8)},
+                {"fill": "x", "padx": 18, "pady": (0, 8)},
             ),
             "custom": (
                 self.custom_panel,
-                {"fill": "x", "padx": 28, "pady": (0, 8)},
+                {"fill": "x", "padx": 18, "pady": (0, 8)},
             ),
             "composer": (
                 self.composer,
-                {"fill": "x", "padx": 28, "pady": (0, 8)},
+                {"fill": "x", "padx": 18, "pady": (0, 8)},
             ),
             "footer": (
                 self.footer,
-                {"fill": "x", "padx": 28, "pady": (0, 8)},
+                {"fill": "x", "pady": (0, 0)},
             ),
         }
 
@@ -6142,7 +6304,6 @@ class JarvisApp:
         except tk.TclError:
             pass
 
-    # ── кастомізація інтерфейсу ──────────────────────────────────────────────
     def _set_theme_globals(self, theme: dict[str, str]) -> None:
         """Оновлює модульні кольори, щоб нові віджети одразу були в темі."""
         global BG, PANEL, PANEL_ALT, SIDEBAR, LINE, CYAN, CYAN_DIM, GOLD
@@ -6284,12 +6445,12 @@ class JarvisApp:
             if kind == "item" and widget is not None
         }
         sections = (
-            ("CORE", ("voice", "scan", "translate", "new_chat")),
+            ("CORE", ("voice", "scan", "translate", "new_chat", "clipboard", "briefing")),
             (
                 "SYSTEM",
                 (
                     "settings", "customize", "update", "memory",
-                    "reminders", "gaming",
+                    "reminders", "automations", "organizer", "plugins", "gaming",
                 ),
             ),
             ("RECENT", ("history",)),
@@ -6302,7 +6463,7 @@ class JarvisApp:
             label = self._sidebar_section_labels.get(title)
             if label is not None:
                 try:
-                    label.pack(fill="x", padx=20, pady=(12, 4))
+                    label.pack(fill="x", padx=18, pady=(10, 4))
                 except tk.TclError:
                     pass
             visible_items.sort(key=lambda key: rank.get(key, 999))
@@ -6371,7 +6532,7 @@ class JarvisApp:
             tk.Label(
                 host,
                 text=f"Помилка кастомного коду:\n{exc}",
-                bg=PANEL, fg=RED, font=("Consolas", 8),
+                bg=PANEL, fg=RED, font=(MONO_FONT, 8),
                 justify="left", anchor="w", wraplength=760,
             ).pack(fill="x", padx=8, pady=8)
             self._custom_active = True
@@ -6470,7 +6631,7 @@ class JarvisApp:
         menu = tk.Menu(
             self.root, tearoff=0, bg=PANEL, fg=TEXT,
             activebackground=LINE, activeforeground=CYAN,
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         )
         self._model_menu = menu
         groups: dict[str, list[str]] = {}
@@ -6493,7 +6654,7 @@ class JarvisApp:
             submenu = tk.Menu(
                 menu, tearoff=0, bg=PANEL, fg=TEXT,
                 activebackground=LINE, activeforeground=CYAN,
-                font=("Segoe UI", 9),
+                font=(UI_FONT, 9),
             )
             for model_id in ids:
                 submenu.add_command(
@@ -6516,7 +6677,7 @@ class JarvisApp:
         save_config(self.cfg)
         self.brain.cfg = self.cfg
         if hasattr(self, "model_var"):
-            self.model_var.set(self._short_model_label(model_id))
+            self.model_var.set(f"{self._short_model_label(model_id)}  ▾")
         self._update_provider_chip()
         direct = DIRECT_MODEL_CONFIG.get(model_id, {})
         key_field = str(direct.get("api_key") or "")
@@ -6536,7 +6697,7 @@ class JarvisApp:
         menu = tk.Menu(
             self.root, tearoff=0, bg=PANEL, fg=TEXT,
             activebackground=LINE, activeforeground=CYAN,
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         )
         for key, mode in RESPONSE_MODES.items():
             menu.add_command(
@@ -6788,7 +6949,7 @@ class JarvisApp:
             self.attach_panel.pack(fill="x")
         for index, attachment in enumerate(self.attachments[:4]):
             kind = str(attachment.get("kind") or "file")
-            icon = "🖼" if kind == "image" else "📄"
+            icon = "▧" if kind == "image" else "▤"
             name = str(attachment.get("name") or "файл")
             if len(name) > 26:
                 name = name[:25].rstrip() + "…"
@@ -6799,12 +6960,12 @@ class JarvisApp:
             chip.pack(side="left", padx=(0, 6), pady=1)
             tk.Label(
                 chip, text=f"{icon} {name} · {self._format_size(attachment.get('size', 0))}",
-                bg=PANEL_ALT, fg=TEXT, font=("Segoe UI", 8),
+                bg=PANEL_ALT, fg=TEXT, font=(UI_FONT, 8),
                 padx=6, pady=3,
             ).pack(side="left")
             close = tk.Label(
                 chip, text="✕", bg=PANEL_ALT, fg=MUTED,
-                cursor="hand2", font=("Segoe UI", 8), padx=5,
+                cursor="hand2", font=(UI_FONT, 8), padx=5,
             )
             close.pack(side="left")
             close.bind(
@@ -6814,7 +6975,7 @@ class JarvisApp:
         if len(self.attachments) > 4:
             tk.Label(
                 self.attach_chips, text=f"+{len(self.attachments) - 4}",
-                bg=PANEL, fg=MUTED, font=("Consolas", 8), padx=4,
+                bg=PANEL, fg=MUTED, font=(MONO_FONT, 8), padx=4,
             ).pack(side="left")
 
     def _remove_attachment(self, index: int) -> None:
@@ -6833,17 +6994,17 @@ class JarvisApp:
         menu = tk.Menu(
             self.root, tearoff=0, bg=PANEL, fg=TEXT,
             activebackground=LINE, activeforeground=CYAN,
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         )
         self._attach_menu = menu
         menu.add_command(
-            label="🖼  Скріншот екрана", command=self._attach_screenshot,
+            label="▧  Скріншот екрана", command=self._attach_screenshot,
         )
         menu.add_command(
-            label="📎  Файл або зображення…", command=self._attach_files,
+            label="▤  Файл або зображення…", command=self._attach_files,
         )
         menu.add_command(
-            label="📋  З буфера обміну", command=self._attach_clipboard,
+            label="▣  З буфера обміну", command=self._attach_clipboard,
         )
         menu.add_separator()
         menu.add_command(
@@ -6876,28 +7037,28 @@ class JarvisApp:
             row.pack(fill="x", pady=1)
             tk.Label(
                 row, text=f"{index + 1:02d}", bg=PANEL, fg=CYAN_DIM,
-                font=("Consolas", 7), width=3, anchor="w",
+                font=(MONO_FONT, 7), width=3, anchor="w",
             ).pack(side="left")
             tk.Label(
                 row, text=self._queue_preview(item.get("text")), bg=PANEL,
-                fg=TEXT, font=("Segoe UI", 8), anchor="w",
+                fg=TEXT, font=(UI_FONT, 8), anchor="w",
             ).pack(side="left", fill="x", expand=True)
             attachments = item.get("attachments") or []
             if attachments:
                 tk.Label(
                     row, text=f"📎{len(attachments)}", bg=PANEL, fg=MUTED,
-                    font=("Consolas", 7), padx=4,
+                    font=(MONO_FONT, 7), padx=4,
                 ).pack(side="left")
             tk.Label(
                 row,
                 text=self._short_model_label(
                     str(item.get("model") or self.cfg.get("model") or "")
                 ),
-                bg=PANEL, fg=MUTED, font=("Consolas", 7), padx=6,
+                bg=PANEL, fg=MUTED, font=(MONO_FONT, 7), padx=6,
             ).pack(side="left")
             close = tk.Label(
                 row, text="✕", bg=PANEL, fg=MUTED, cursor="hand2",
-                font=("Segoe UI", 8), padx=5,
+                font=(UI_FONT, 8), padx=5,
             )
             close.pack(side="right")
             close.bind(
@@ -6907,7 +7068,7 @@ class JarvisApp:
         if count > 4:
             tk.Label(
                 self.queue_items_frame, text=f"… і ще {count - 4}",
-                bg=PANEL, fg=MUTED, font=("Consolas", 7), anchor="w",
+                bg=PANEL, fg=MUTED, font=(MONO_FONT, 7), anchor="w",
             ).pack(fill="x", padx=30)
 
     def _remove_queue_item(self, index: int) -> None:
@@ -7159,11 +7320,11 @@ class JarvisApp:
             panel.pack(fill="both", expand=True, padx=1, pady=1)
             tk.Label(
                 panel, text="J.A.R.V.I.S.  ·  ГРА", bg=PANEL, fg=CYAN,
-                font=("Consolas", 8, "bold"), anchor="w",
+                font=(MONO_FONT, 8, "bold"), anchor="w",
             ).pack(fill="x", padx=14, pady=(9, 0))
             tk.Label(
                 panel, text=message[:260], bg=PANEL, fg=TEXT,
-                font=("Segoe UI", 9), wraplength=width - 30,
+                font=(UI_FONT, 9), wraplength=width - 30,
                 justify="left", anchor="w",
             ).pack(fill="both", expand=True, padx=14, pady=(2, 8))
             self._game_hint_window = win
@@ -7232,6 +7393,9 @@ class JarvisApp:
         self._status_color = color
         short = text if len(text) <= 40 else text[:39].rstrip() + "…"
         self.status.config(text=short, fg=color)
+        footer_dot = getattr(self, "footer_status_dot", None)
+        if footer_dot is not None:
+            footer_dot.config(fg=color)
         if hasattr(self, "side_status_label"):
             self.side_status_label.config(text=text[:22], fg=color)
             self.side_status_dot.config(fg=color)
@@ -7266,7 +7430,8 @@ class JarvisApp:
         attachments: list[str] | None = None,
         animate: bool = True,
     ) -> None:
-        prefix = {"you": "ВИ:  ", "jarvis": "JARVIS:  "}.get(who, "·  ")
+        prefix = {"you": "ВИ", "jarvis": "J.A.R.V.I.S.", "sys": "·"}.get(who, "·")
+        label_tag = {"you": "you_label", "jarvis": "jarvis_label"}.get(who, "sys")
         tag = who if who in ("you", "jarvis", "sys") else "sys"
         fade_tag = None
         tags: tuple[str, ...] = (tag,)
@@ -7285,7 +7450,8 @@ class JarvisApp:
                 fade_tag = None
                 tags = (tag,)
         self.log.config(state="normal")
-        self.log.insert("end", prefix, tags)
+        self.log.insert("end", prefix, (label_tag,))
+        self.log.insert("end", "   ", (label_tag,))
         if image and self._insert_log_image(str(image)):
             self.log.insert("end", "\n", tags)
         self.log.insert("end", str(text), tags)
@@ -7293,14 +7459,13 @@ class JarvisApp:
             names = ", ".join(str(name) for name in attachments[:6])
             if len(attachments) > 6:
                 names += f" (+{len(attachments) - 6})"
-            self.log.insert("end", f"\n📎 {names}", "sys")
+            self.log.insert("end", f"\n▤ {names}", "sys")
         self.log.insert("end", "\n\n", tags)
         self.log.tag_remove("sel", "1.0", "end")
         self.log.see("end")
         self.log.config(state="disabled")
         if fade_tag:
-            final = GOLD if who == "you" else TEXT
-            self._animate_log_tag(fade_tag, final)
+            self._animate_log_tag(fade_tag, TEXT)
 
     def _animate_log_tag(
         self,
@@ -7451,8 +7616,7 @@ class JarvisApp:
             if len(title) > 34:
                 title = title[:33].rstrip() + "…"
             count = len(chat.get("messages") or [])
-            suffix = f"  ·  {count}" if count else ""
-            label.config(text=f"{title.upper()}{suffix}")
+            label.config(text=title)
             context = getattr(self, "context_label", None)
             if context is not None and context.winfo_exists():
                 context.config(
@@ -7536,23 +7700,36 @@ class JarvisApp:
                 if len(title) > 30:
                     title = title[:29].rstrip() + "…"
                 active = chat.get("id") == current_id
+                base_bg = PANEL_ALT if active else SIDEBAR
+                base_fg = TEXT if active else MUTED
                 button = tk.Button(
                     container,
-                    text=("●  " if active else "   ") + title,
+                    text=("●  " if active else "    ") + title,
                     command=lambda selected=chat: self._switch_chat(selected),
-                    bg=LINE if active else SIDEBAR,
-                    fg=CYAN if active else MUTED,
-                    activebackground=LINE,
-                    activeforeground=CYAN,
+                    bg=base_bg,
+                    fg=base_fg,
+                    activebackground=PANEL_ALT,
+                    activeforeground=TEXT,
                     relief="flat",
                     bd=0,
                     anchor="w",
-                    font=("Segoe UI", 9),
+                    font=(UI_FONT, 9),
                     padx=10,
-                    pady=6,
+                    pady=5,
                     cursor="hand2",
+                    highlightthickness=0,
                 )
                 button.pack(fill="x", pady=1)
+                button.bind(
+                    "<Enter>",
+                    lambda _e, b=button: b.config(bg=PANEL_ALT, fg=TEXT),
+                )
+                button.bind(
+                    "<Leave>",
+                    lambda _e, b=button, bg=base_bg, fg=base_fg: b.config(
+                        bg=bg, fg=fg
+                    ),
+                )
         except tk.TclError:
             pass
 
@@ -8034,17 +8211,17 @@ class JarvisApp:
         win.transient(self.root)
         tk.Label(
             win, text="ПІДКЛЮЧЕННЯ ANDROID", bg=BG, fg=TEXT,
-            font=("Consolas", 13, "bold"),
+            font=(MONO_FONT, 13, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 6))
         tk.Label(
             win,
             text="Телефон і комп’ютер мають бути в одній Wi-Fi мережі. Вибери адресу зі списку та введи її в Android-застосунку.",
             bg=BG, fg=MUTED, wraplength=610, justify="left",
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         ).pack(anchor="w", padx=18, pady=(0, 10))
         info = tk.Text(
             win, height=8, bg=PANEL, fg=TEXT, insertbackground=CYAN,
-            relief="flat", wrap="word", font=("Consolas", 10),
+            relief="flat", wrap="word", font=(MONO_FONT, 10),
         )
         info.pack(fill="both", expand=True, padx=18)
         info.insert(
@@ -8118,7 +8295,7 @@ class JarvisApp:
             text="ПОТРІБЕН ДОЗВІЛ",
             bg=BG,
             fg=GOLD,
-            font=("Consolas", 13, "bold"),
+            font=(MONO_FONT, 13, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 4))
 
         tk.Label(
@@ -8126,7 +8303,7 @@ class JarvisApp:
             text=action,
             bg=BG,
             fg=TEXT,
-            font=("Segoe UI", 11, "bold"),
+            font=(UI_FONT, 11, "bold"),
             wraplength=580,
             justify="left",
         ).pack(anchor="w", padx=18, pady=(0, 8))
@@ -8145,7 +8322,7 @@ class JarvisApp:
             relief="flat",
             bd=0,
             wrap="word",
-            font=("Consolas", 9),
+            font=(MONO_FONT, 9),
             padx=10,
             pady=8,
             height=9,
@@ -8162,7 +8339,7 @@ class JarvisApp:
             text="Сер, ця дія може змінити файли або систему. Підтверджуєте?",
             bg=BG,
             fg=MUTED,
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         ).pack(anchor="w", padx=18)
 
         def finish(ok: bool) -> None:
@@ -8196,7 +8373,7 @@ class JarvisApp:
             activeforeground=CYAN,
             relief="flat",
             bd=0,
-            font=("Segoe UI", 10, "bold"),
+            font=(UI_FONT, 10, "bold"),
             padx=18,
             pady=8,
             cursor="hand2",
@@ -8212,7 +8389,7 @@ class JarvisApp:
             activeforeground=CYAN,
             relief="flat",
             bd=0,
-            font=("Segoe UI", 10),
+            font=(UI_FONT, 10),
             padx=14,
             pady=8,
             cursor="hand2",
@@ -8259,59 +8436,37 @@ class JarvisApp:
     def _draw_reactor(self) -> None:
         c = self.reactor
         c.delete("all")
-        w = c.winfo_width() or 92
-        h = c.winfo_height() or 92
+        w = c.winfo_width() or 54
+        h = c.winfo_height() or 54
         cx, cy = w / 2, h / 2
 
         busy = self.busy.is_set()
-        speed = 5.0 if busy else 2.2
-        pulse = math.sin(self._t * speed) * (5 if busy else 2.5)
-        r = min(w, h) * 0.34 + pulse
-        angle = (self._t * (90 if busy else 22)) % 360
-
-        for rr, color in (
-            (r + 18, RING_1),
-            (r + 12, RING_2),
-            (r + 6, RING_3),
-        ):
-            c.create_oval(
-                cx - rr, cy - rr, cx + rr, cy + rr,
-                outline=color, width=1,
-            )
-
-        for k in range(12):
-            start = angle + k * 30
-            c.create_arc(
-                cx - r, cy - r, cx + r, cy + r,
-                start=start, extent=18, style="arc", outline=CYAN, width=3,
-            )
+        pulse = math.sin(self._t * (5.0 if busy else 2.2)) * (1.5 if busy else 0.8)
+        r = min(w, h) * 0.38 + pulse
 
         c.create_oval(
-            cx - r * 0.60, cy - r * 0.60,
-            cx + r * 0.60, cy + r * 0.60,
+            cx - r - 3, cy - r - 3, cx + r + 3, cy + r + 3,
+            outline=RING_2, width=1,
+        )
+        points: list[float] = []
+        for index in range(6):
+            angle = math.radians(-90 + index * 60)
+            points.extend((cx + math.cos(angle) * r, cy + math.sin(angle) * r))
+        c.create_polygon(*points, outline=CYAN, fill="", width=2)
+        c.create_oval(
+            cx - r * 0.42, cy - r * 0.42, cx + r * 0.42, cy + r * 0.42,
             outline=CYAN_DIM, width=1,
         )
+        core = 3.0 + (1.2 * math.sin(self._t * 6) if busy else 0)
         c.create_oval(
-            cx - r * 0.48, cy - r * 0.48,
-            cx + r * 0.48, cy + r * 0.48,
-            outline=CYAN, width=1,
+            cx - core, cy - core, cx + core, cy + core,
+            fill=CYAN, outline="",
         )
-        c.create_polygon(
-            cx, cy - r * 0.36,
-            cx - r * 0.31, cy + r * 0.23,
-            cx + r * 0.31, cy + r * 0.23,
-            outline=CYAN, fill="", width=2,
+        angle = (self._t * (120 if busy else 30)) % 360
+        c.create_arc(
+            cx - r - 3, cy - r - 3, cx + r + 3, cy + r + 3,
+            start=angle, extent=54, style="arc", outline=CYAN_DIM, width=1,
         )
-        core = 8 + (2 if busy else 0) * math.sin(self._t * 6)
-        c.create_oval(cx - core, cy - core, cx + core, cy + core, fill=CYAN, outline="")
-        c.create_oval(cx - 3, cy - 3, cx + 3, cy + 3, fill=TEXT_BRIGHT, outline="")
-
-        for k in range(3):
-            a = math.radians(angle * (1.4 + k * 0.2) + k * 120)
-            orbit = r + 18
-            x = cx + math.cos(a) * orbit
-            y = cy + math.sin(a) * orbit
-            c.create_oval(x - 2, y - 2, x + 2, y + 2, fill=CYAN_DIM, outline="")
 
     def _draw_accent_line(self) -> None:
         canvas = getattr(self, "_accent_canvas", None)
@@ -9047,9 +9202,9 @@ class JarvisApp:
             text=f"⬆ Доступна версія {latest} — натисни, щоб завантажити й оновити"
         )
         try:
-            self.update_banner.pack(fill="x", padx=30, pady=(6, 0), before=self._hero)
+            self.update_banner.pack(fill="x", padx=18, pady=(6, 0), before=self._hero)
         except tk.TclError:
-            self.update_banner.pack(fill="x", padx=30, pady=(6, 0))
+            self.update_banner.pack(fill="x", padx=18, pady=(6, 0))
 
     def _show_translation_overlay(
         self,
@@ -9077,17 +9232,17 @@ class JarvisApp:
             header.pack(fill="x")
             tk.Label(
                 header, text="◈", bg=SIDEBAR, fg=CYAN,
-                font=("Segoe UI", 15, "bold"),
+                font=(UI_FONT, 15, "bold"),
             ).pack(side="left", padx=(16, 8), pady=11)
             title_label = tk.Label(
                 header, text=f"ПЕРЕКЛАД ЕКРАНА  ·  {label}", bg=SIDEBAR, fg=TEXT,
-                font=("Consolas", 10, "bold"),
+                font=(MONO_FONT, 10, "bold"),
             )
             title_label.pack(side="left")
             tk.Button(
                 header, text="✕", command=win.destroy,
                 bg=SIDEBAR, fg=MUTED, activebackground=LINE, activeforeground=CYAN,
-                relief="flat", bd=0, font=("Segoe UI", 11), padx=14, pady=6,
+                relief="flat", bd=0, font=(UI_FONT, 11), padx=14, pady=6,
                 cursor="hand2",
             ).pack(side="right", padx=8, pady=6)
 
@@ -9097,16 +9252,16 @@ class JarvisApp:
             scroll.pack(side="right", fill="y")
             text = tk.Text(
                 body, bg=PANEL, fg=TEXT, relief="flat", wrap="word",
-                font=("Segoe UI", 11), padx=16, pady=14, bd=0,
+                font=(UI_FONT, 11), padx=16, pady=14, bd=0,
                 insertbackground=TEXT, selectbackground="#2F3E75",
                 highlightthickness=1, highlightbackground=LINE,
                 yscrollcommand=scroll.set,
             )
             text.pack(side="left", fill="both", expand=True, padx=(0, 8))
             scroll.config(command=text.yview)
-            text.tag_configure("orig", foreground=MUTED, font=("Segoe UI", 9), spacing1=6)
-            text.tag_configure("trans", foreground=TEXT, font=("Segoe UI", 12), spacing3=14)
-            text.tag_configure("raw", foreground=TEXT, font=("Segoe UI", 11))
+            text.tag_configure("orig", foreground=MUTED, font=(UI_FONT, 9), spacing1=6)
+            text.tag_configure("trans", foreground=TEXT, font=(UI_FONT, 12), spacing3=14)
+            text.tag_configure("raw", foreground=TEXT, font=(UI_FONT, 11))
             if entries:
                 for original, translated in entries:
                     if original:
@@ -9122,14 +9277,14 @@ class JarvisApp:
             tk.Label(
                 footer,
                 text=f"Блоків: {count}  ·  Ctrl+Alt+T — повторити  ·  Esc — закрити",
-                bg=BG, fg=MUTED, font=("Consolas", 8),
+                bg=BG, fg=MUTED, font=(MONO_FONT, 8),
             ).pack(side="left")
 
             copy_text = "\n".join(translated for _, translated in entries) or raw
             copy_btn = tk.Button(
                 footer, text="КОПІЮВАТИ",
                 bg=PANEL, fg=CYAN, activebackground=LINE, activeforeground=CYAN,
-                relief="flat", bd=0, font=("Segoe UI", 9, "bold"),
+                relief="flat", bd=0, font=(UI_FONT, 9, "bold"),
                 padx=14, pady=7, cursor="hand2",
             )
             copy_btn.pack(side="right")
@@ -9149,14 +9304,14 @@ class JarvisApp:
                         target=self.voice.speak, args=(copy_text,), daemon=True
                     ).start(),
                     bg=PANEL, fg=CYAN_DIM, activebackground=LINE, activeforeground=CYAN,
-                    relief="flat", bd=0, font=("Segoe UI", 9, "bold"),
+                    relief="flat", bd=0, font=(UI_FONT, 9, "bold"),
                     padx=14, pady=7, cursor="hand2",
                 ).pack(side="right", padx=(0, 8))
 
             tk.Button(
                 footer, text="ЗАКРИТИ", command=win.destroy,
                 bg=CYAN, fg=BG, activebackground=CYAN_DIM, activeforeground=BG,
-                relief="flat", bd=0, font=("Segoe UI", 9, "bold"),
+                relief="flat", bd=0, font=(UI_FONT, 9, "bold"),
                 padx=16, pady=7, cursor="hand2",
             ).pack(side="right", padx=(0, 8))
 
@@ -9199,12 +9354,12 @@ class JarvisApp:
             canvas.create_text(
                 width // 2, height // 2 - 34,
                 text="J.A.R.V.I.S.  VISION", fill=CYAN,
-                font=("Consolas", 24, "bold"),
+                font=(MONO_FONT, 24, "bold"),
             )
             canvas.create_text(
                 width // 2, height // 2 + 10,
                 text="СКАНУЮ ЕКРАН…", fill=CYAN_DIM,
-                font=("Consolas", 10),
+                font=(MONO_FONT, 10),
             )
             canvas.create_line(
                 width // 2 - 220, height // 2 + 48,
@@ -9427,18 +9582,18 @@ class JarvisApp:
 
         tk.Label(
             win, text="БУФЕР ОБМІНУ", bg=BG, fg=TEXT,
-            font=("Segoe UI", 14, "bold"),
+            font=(UI_FONT, 14, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
         tk.Label(
             win,
             text=f"Історія копіювань зберігається локально: %APPDATA%\\Jarvis\\{CLIPBOARD_PATH.name}",
-            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            bg=BG, fg=MUTED, font=(UI_FONT, 8),
         ).pack(anchor="w", padx=18)
 
         search_var = tk.StringVar()
         search_entry = tk.Entry(
             win, textvariable=search_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Segoe UI", 9),
+            insertbackground=CYAN, relief="flat", font=(UI_FONT, 9),
         )
         search_entry.pack(fill="x", padx=18, pady=(10, 6), ipady=6)
         self._bind_clipboard_shortcuts(search_entry)
@@ -9448,7 +9603,7 @@ class JarvisApp:
         listbox = tk.Listbox(
             frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
             selectforeground=TEXT, activestyle="none", relief="flat",
-            font=("Consolas", 9), height=14,
+            font=(MONO_FONT, 9), height=14,
         )
         scroll = ttk.Scrollbar(
             frame, orient="vertical", command=listbox.yview,
@@ -9459,7 +9614,7 @@ class JarvisApp:
         listbox.pack(side="left", fill="both", expand=True, padx=8, pady=8)
 
         status = tk.Label(
-            win, text="", bg=BG, fg=CYAN_DIM, font=("Segoe UI", 8),
+            win, text="", bg=BG, fg=CYAN_DIM, font=(UI_FONT, 8),
         )
         status.pack(anchor="w", padx=18, pady=(6, 0))
 
@@ -9547,7 +9702,7 @@ class JarvisApp:
             tk.Button(
                 buttons, text=label, command=command, bg=PANEL, fg=TEXT,
                 activebackground=LINE, activeforeground=CYAN, relief="flat",
-                bd=0, font=("Segoe UI", 9), padx=12, pady=6, cursor="hand2",
+                bd=0, font=(UI_FONT, 9), padx=12, pady=6, cursor="hand2",
             ).pack(side="left", padx=(0, 6))
 
         refresh()
@@ -9563,10 +9718,10 @@ class JarvisApp:
 
         tk.Label(
             win, text="ПОРЯДОК У ФАЙЛАХ", bg=BG, fg=TEXT,
-            font=("Segoe UI", 14, "bold"),
+            font=(UI_FONT, 14, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
         tk.Label(
-            win, text=f"Папка: {folder}", bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            win, text=f"Папка: {folder}", bg=BG, fg=MUTED, font=(UI_FONT, 8),
         ).pack(anchor="w", padx=18)
 
         frame = tk.Frame(win, bg=LINE, padx=1, pady=1)
@@ -9574,7 +9729,7 @@ class JarvisApp:
         listbox = tk.Listbox(
             frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
             selectforeground=TEXT, activestyle="none", relief="flat",
-            font=("Consolas", 9), height=16,
+            font=(MONO_FONT, 9), height=16,
         )
         scroll = ttk.Scrollbar(
             frame, orient="vertical", command=listbox.yview,
@@ -9584,7 +9739,7 @@ class JarvisApp:
         scroll.pack(side="right", fill="y")
         listbox.pack(side="left", fill="both", expand=True, padx=8, pady=8)
 
-        status = tk.Label(win, text="", bg=BG, fg=CYAN_DIM, font=("Segoe UI", 8))
+        status = tk.Label(win, text="", bg=BG, fg=CYAN_DIM, font=(UI_FONT, 8))
         status.pack(anchor="w", padx=18)
         moves: list[dict] = []
 
@@ -9640,7 +9795,7 @@ class JarvisApp:
             tk.Button(
                 buttons, text=label, command=command, bg=PANEL, fg=TEXT,
                 activebackground=LINE, activeforeground=CYAN, relief="flat",
-                bd=0, font=("Segoe UI", 9), padx=12, pady=6, cursor="hand2",
+                bd=0, font=(UI_FONT, 9), padx=12, pady=6, cursor="hand2",
             ).pack(side="left", padx=(0, 6))
         refresh()
 
@@ -9675,7 +9830,7 @@ class JarvisApp:
 
         tk.Label(
             win, text="РАНКОВИЙ БРИФІНГ", bg=BG, fg=TEXT,
-            font=("Segoe UI", 14, "bold"),
+            font=(UI_FONT, 14, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
         info = tk.Label(
             win,
@@ -9683,18 +9838,18 @@ class JarvisApp:
                 f"Місто: {self.cfg.get('briefing_city') or 'Київ'} · "
                 f"час: {self.cfg.get('briefing_time') or '09:00'}"
             ),
-            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            bg=BG, fg=MUTED, font=(UI_FONT, 8),
         )
         info.pack(anchor="w", padx=18)
 
         text_box = tk.Text(
             win, bg=PANEL, fg=TEXT, insertbackground=CYAN, relief="flat",
-            wrap="word", font=("Segoe UI", 10), height=16,
+            wrap="word", font=(UI_FONT, 10), height=16,
         )
         text_box.pack(fill="both", expand=True, padx=18, pady=10)
         text_box.insert("1.0", "Збираю дані…")
         text_box.config(state="disabled")
-        status = tk.Label(win, text="", bg=BG, fg=CYAN_DIM, font=("Segoe UI", 8))
+        status = tk.Label(win, text="", bg=BG, fg=CYAN_DIM, font=(UI_FONT, 8))
         status.pack(anchor="w", padx=18)
 
         def fill(value: str) -> None:
@@ -9756,7 +9911,7 @@ class JarvisApp:
             tk.Button(
                 buttons, text=label, command=command, bg=PANEL, fg=TEXT,
                 activebackground=LINE, activeforeground=CYAN, relief="flat",
-                bd=0, font=("Segoe UI", 9), padx=10, pady=6, cursor="hand2",
+                bd=0, font=(UI_FONT, 9), padx=10, pady=6, cursor="hand2",
             ).pack(side="left", padx=(0, 6))
         win.after(200, run_now)
 
@@ -9924,13 +10079,13 @@ class JarvisApp:
 
         tk.Label(
             win, text="ПАМ’ЯТЬ", bg=BG, fg=TEXT,
-            font=("Segoe UI", 14, "bold"),
+            font=(UI_FONT, 14, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
         tk.Label(
             win,
             text="Записи зберігаються локально. Вони передаються OpenRouter лише з увімкненою опцією нижче.",
             bg=BG, fg=MUTED, wraplength=570, justify="left",
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         ).pack(anchor="w", padx=18, pady=(0, 10))
 
         use_memory_var = tk.BooleanVar(value=bool(self.cfg.get("use_memory")))
@@ -9938,7 +10093,7 @@ class JarvisApp:
             win, text="Додавати збережену пам’ять до запитів моделі",
             variable=use_memory_var, bg=BG, fg=TEXT, selectcolor=PANEL,
             activebackground=BG, activeforeground=CYAN,
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
             command=lambda: self._set_memory_enabled(use_memory_var.get()),
         ).pack(anchor="w", padx=18, pady=(0, 6))
 
@@ -9946,17 +10101,17 @@ class JarvisApp:
         search_row.pack(fill="x", padx=18, pady=(0, 10))
         tk.Label(
             search_row, text="ПОШУК", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).pack(side="left", padx=(0, 8))
         search_var = tk.StringVar()
         search_entry = tk.Entry(
             search_row, textvariable=search_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Segoe UI", 9),
+            insertbackground=CYAN, relief="flat", font=(UI_FONT, 9),
         )
         search_entry.pack(side="left", fill="x", expand=True, ipady=5)
         tk.Label(
             search_row, text="семантичний (локальні embeddings)", bg=BG, fg=MUTED,
-            font=("Segoe UI", 8),
+            font=(UI_FONT, 8),
         ).pack(side="left", padx=(8, 0))
 
         frame = tk.Frame(win, bg=LINE, padx=1, pady=1)
@@ -9964,7 +10119,7 @@ class JarvisApp:
         listbox = tk.Listbox(
             frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
             selectforeground=TEXT, activestyle="none", relief="flat",
-            font=("Segoe UI", 9), height=12,
+            font=(UI_FONT, 9), height=12,
         )
         scroll = ttk.Scrollbar(
             frame, orient="vertical", command=listbox.yview,
@@ -10010,7 +10165,7 @@ class JarvisApp:
 
         search_entry.bind("<KeyRelease>", lambda _event: refresh())
         count_label = tk.Label(
-            win, text="", bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            win, text="", bg=BG, fg=MUTED, font=(UI_FONT, 8),
         )
         count_label.pack(anchor="w", padx=20, pady=(6, 0))
 
@@ -10046,12 +10201,12 @@ class JarvisApp:
         win.transient(self.root)
         tk.Label(
             win, text="НАГАДУВАННЯ", bg=BG, fg=TEXT,
-            font=("Segoe UI", 14, "bold"),
+            font=(UI_FONT, 14, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
         tk.Label(
             win, text="Нагадування зберігаються локально. Для сповіщення Jarvis має бути запущений.",
             bg=BG, fg=MUTED, wraplength=570, justify="left",
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         ).pack(anchor="w", padx=18, pady=(0, 12))
 
         frame = tk.Frame(win, bg=LINE, padx=1, pady=1)
@@ -10059,7 +10214,7 @@ class JarvisApp:
         listbox = tk.Listbox(
             frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
             selectforeground=TEXT, activestyle="none", relief="flat",
-            font=("Segoe UI", 9), height=12,
+            font=(UI_FONT, 9), height=12,
         )
         scroll = ttk.Scrollbar(
             frame, orient="vertical", command=listbox.yview,
@@ -10118,14 +10273,14 @@ class JarvisApp:
         win.transient(self.root)
         tk.Label(
             win, text="АВТОМАТИЗАЦІЇ", bg=BG, fg=TEXT,
-            font=("Segoe UI", 14, "bold"),
+            font=(UI_FONT, 14, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
         tk.Label(
             win,
             text="Локальні розклади: once, daily 09:00, weekly mon 09:00 або every 30m. "
                  "Дія prompt надсилає запит асистенту, notify — нагадує голосом.",
             bg=BG, fg=MUTED, wraplength=650, justify="left",
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         ).pack(anchor="w", padx=18, pady=(0, 10))
 
         frame = tk.Frame(win, bg=LINE, padx=1, pady=1)
@@ -10133,7 +10288,7 @@ class JarvisApp:
         listbox = tk.Listbox(
             frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
             selectforeground=TEXT, activestyle="none", relief="flat",
-            font=("Segoe UI", 9), height=10,
+            font=(UI_FONT, 9), height=10,
         )
         scroll = ttk.Scrollbar(
             frame, orient="vertical", command=listbox.yview,
@@ -10157,34 +10312,34 @@ class JarvisApp:
         form.pack(fill="x", padx=18, pady=(12, 0))
         tk.Label(
             form, text="ЩО ЗРОБИТИ", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).grid(row=0, column=0, sticky="w")
         text_var = tk.StringVar()
         text_entry = tk.Entry(
             form, textvariable=text_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Segoe UI", 9),
+            insertbackground=CYAN, relief="flat", font=(UI_FONT, 9),
         )
         text_entry.grid(row=1, column=0, columnspan=2, sticky="ew", ipady=5, pady=(3, 8))
 
         tk.Label(
             form, text="РОЗКЛАД", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).grid(row=2, column=0, sticky="w")
         tk.Label(
             form, text="ДІЯ", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).grid(row=2, column=1, sticky="w", padx=(10, 0))
         schedule_var = tk.StringVar(value="daily 09:00")
         schedule_entry = tk.Entry(
             form, textvariable=schedule_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Segoe UI", 9),
+            insertbackground=CYAN, relief="flat", font=(UI_FONT, 9),
         )
         schedule_entry.grid(row=3, column=0, sticky="ew", ipady=5, pady=(3, 0))
         action_var = tk.StringVar(value="prompt")
         action_box = tk.OptionMenu(form, action_var, "prompt", "notify")
         action_box.config(
             bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", highlightthickness=0, font=("Segoe UI", 9), anchor="w",
+            relief="flat", highlightthickness=0, font=(UI_FONT, 9), anchor="w",
         )
         action_box["menu"].config(
             bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
@@ -10194,7 +10349,7 @@ class JarvisApp:
         form.columnconfigure(1, weight=0)
 
         status_label = tk.Label(
-            win, text="", bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            win, text="", bg=BG, fg=MUTED, font=(UI_FONT, 8),
         )
         status_label.pack(anchor="w", padx=20, pady=(8, 0))
 
@@ -10253,14 +10408,14 @@ class JarvisApp:
 
         tk.Label(
             win, text="MARKETPLACE ПЛАГІНІВ", bg=BG, fg=TEXT,
-            font=("Segoe UI", 14, "bold"),
+            font=(UI_FONT, 14, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
         tk.Label(
             win,
             text="Локальний каталог із перевіркою SHA256. Плагіни — це довірений код "
                  "з тими самими правами, що й JARVIS. Переглянь код перед встановленням.",
             bg=BG, fg=MUTED, wraplength=710, justify="left",
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         ).pack(anchor="w", padx=18, pady=(0, 10))
 
         frame = tk.Frame(win, bg=LINE, padx=1, pady=1)
@@ -10268,7 +10423,7 @@ class JarvisApp:
         listbox = tk.Listbox(
             frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
             selectforeground=TEXT, activestyle="none", relief="flat",
-            font=("Segoe UI", 9), height=13,
+            font=(UI_FONT, 9), height=13,
         )
         scroll = ttk.Scrollbar(
             frame, orient="vertical", command=listbox.yview,
@@ -10288,7 +10443,7 @@ class JarvisApp:
 
         status_label = tk.Label(
             win, text=registry_error, bg=BG, fg=RED if registry_error else MUTED,
-            wraplength=710, justify="left", font=("Segoe UI", 8),
+            wraplength=710, justify="left", font=(UI_FONT, 8),
         )
         status_label.pack(anchor="w", padx=20, pady=(8, 0))
 
@@ -10468,14 +10623,14 @@ class JarvisApp:
 
         tk.Label(
             win, text="ІСТОРІЯ РОЗМОВ", bg=BG, fg=TEXT,
-            font=("Segoe UI", 14, "bold"),
+            font=(UI_FONT, 14, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
         tk.Label(
             win,
             text="Розмови зберігаються локально у %APPDATA%\\Jarvis\\chats.json. "
                  "Подвійний клік відкриває вибрану розмову.",
             bg=BG, fg=MUTED, wraplength=660, justify="left",
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         ).pack(anchor="w", padx=18, pady=(0, 10))
 
         search_var = tk.StringVar()
@@ -10483,11 +10638,11 @@ class JarvisApp:
         search_row.pack(fill="x", padx=18)
         tk.Label(
             search_row, text="ПОШУК ЗА НАЗВОЮ АБО ТЕКСТОМ", bg=BG, fg=MUTED,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).pack(anchor="w", pady=(0, 3))
         search_entry = tk.Entry(
             search_row, textvariable=search_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Segoe UI", 10),
+            insertbackground=CYAN, relief="flat", font=(UI_FONT, 10),
         )
         search_entry.pack(fill="x", ipady=6)
         self._bind_clipboard_shortcuts(search_entry)
@@ -10497,7 +10652,7 @@ class JarvisApp:
         listbox = tk.Listbox(
             frame, bg=PANEL, fg=TEXT, selectbackground=CYAN_DIM,
             selectforeground=TEXT, activestyle="none", relief="flat",
-            font=("Segoe UI", 9), height=12,
+            font=(UI_FONT, 9), height=12,
         )
         scroll = ttk.Scrollbar(
             frame, orient="vertical", command=listbox.yview,
@@ -10663,7 +10818,7 @@ class JarvisApp:
         )
 
         paste_status = tk.Label(footer, text="", bg=BG, fg=MUTED,
-                                font=("Segoe UI", 8))
+                                font=(UI_FONT, 8))
 
         def paste_api_key(entry: tk.Entry) -> None:
             try:
@@ -10681,20 +10836,20 @@ class JarvisApp:
             )
 
         tk.Label(win, text="КЛЮЧ OPENROUTER", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(18, 2))
+                 font=(MONO_FONT, 9)).pack(anchor="w", padx=18, pady=(18, 2))
         key_var = tk.StringVar(value=self.cfg.get("openrouter_key", ""))
         openrouter_key_row = tk.Frame(win, bg=BG)
         openrouter_key_row.pack(fill="x", padx=18)
         key_entry = tk.Entry(
             openrouter_key_row, textvariable=key_var, show="•", bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 10),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 10),
         )
         key_entry.pack(side="left", fill="x", expand=True, ipady=6)
         self._bind_clipboard_shortcuts(key_entry)
         tk.Button(
             openrouter_key_row, text="Вставити", command=lambda: paste_api_key(key_entry),
             bg=PANEL, fg=CYAN, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", font=("Segoe UI", 8), padx=8, pady=5,
+            relief="flat", font=(UI_FONT, 8), padx=8, pady=5,
         ).pack(side="left", padx=(6, 0))
 
         provider_keys = tk.Frame(win, bg=BG)
@@ -10703,55 +10858,55 @@ class JarvisApp:
         gemini_key_frame = tk.Frame(provider_keys, bg=BG)
         gemini_key_frame.pack(side="left", fill="x", expand=True)
         tk.Label(gemini_key_frame, text="GEMINI API · FREE", bg=BG,
-                 fg=CYAN_DIM, font=("Consolas", 9)).pack(anchor="w", pady=(0, 2))
+                 fg=CYAN_DIM, font=(MONO_FONT, 9)).pack(anchor="w", pady=(0, 2))
         gemini_key_var = tk.StringVar(value=self.cfg.get("gemini_api_key", ""))
         gemini_key_row = tk.Frame(gemini_key_frame, bg=BG)
         gemini_key_row.pack(fill="x")
         gemini_key_entry = tk.Entry(
             gemini_key_row, textvariable=gemini_key_var, show="•", bg=PANEL,
-            fg=TEXT, insertbackground=CYAN, relief="flat", font=("Consolas", 10),
+            fg=TEXT, insertbackground=CYAN, relief="flat", font=(MONO_FONT, 10),
         )
         gemini_key_entry.pack(side="left", fill="x", expand=True, ipady=6)
         self._bind_clipboard_shortcuts(gemini_key_entry)
         tk.Button(
             gemini_key_row, text="Вставити", command=lambda: paste_api_key(gemini_key_entry),
             bg=PANEL, fg=CYAN, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", font=("Segoe UI", 8), padx=8, pady=5,
+            relief="flat", font=(UI_FONT, 8), padx=8, pady=5,
         ).pack(side="left", padx=(6, 0))
         groq_key_frame = tk.Frame(provider_keys, bg=BG)
         groq_key_frame.pack(side="left", fill="x", expand=True, padx=(12, 0))
         tk.Label(groq_key_frame, text="GROQ API · FREE PLAN", bg=BG,
-                 fg=CYAN_DIM, font=("Consolas", 9)).pack(anchor="w", pady=(0, 2))
+                 fg=CYAN_DIM, font=(MONO_FONT, 9)).pack(anchor="w", pady=(0, 2))
         groq_key_var = tk.StringVar(value=self.cfg.get("groq_api_key", ""))
         groq_key_row = tk.Frame(groq_key_frame, bg=BG)
         groq_key_row.pack(fill="x")
         groq_key_entry = tk.Entry(
             groq_key_row, textvariable=groq_key_var, show="•", bg=PANEL,
-            fg=TEXT, insertbackground=CYAN, relief="flat", font=("Consolas", 10),
+            fg=TEXT, insertbackground=CYAN, relief="flat", font=(MONO_FONT, 10),
         )
         groq_key_entry.pack(side="left", fill="x", expand=True, ipady=6)
         self._bind_clipboard_shortcuts(groq_key_entry)
         tk.Button(
             groq_key_row, text="Вставити", command=lambda: paste_api_key(groq_key_entry),
             bg=PANEL, fg=CYAN, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", font=("Segoe UI", 8), padx=8, pady=5,
+            relief="flat", font=(UI_FONT, 8), padx=8, pady=5,
         ).pack(side="left", padx=(6, 0))
 
         tk.Label(win, text="КЛЮЧ XKIRO API (QWEN CODER, FLASH, MAX)", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(8, 2))
+                 font=(MONO_FONT, 9)).pack(anchor="w", padx=18, pady=(8, 2))
         xkiro_key_var = tk.StringVar(value=self.cfg.get("xkiro_api_key", ""))
         xkiro_key_row = tk.Frame(win, bg=BG)
         xkiro_key_row.pack(fill="x", padx=18)
         xkiro_key_entry = tk.Entry(
             xkiro_key_row, textvariable=xkiro_key_var, show="•", bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 10),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 10),
         )
         xkiro_key_entry.pack(side="left", fill="x", expand=True, ipady=6)
         self._bind_clipboard_shortcuts(xkiro_key_entry)
         tk.Button(
             xkiro_key_row, text="Вставити", command=lambda: paste_api_key(xkiro_key_entry),
             bg=PANEL, fg=CYAN, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", font=("Segoe UI", 8), padx=8, pady=5,
+            relief="flat", font=(UI_FONT, 8), padx=8, pady=5,
         ).pack(side="left", padx=(6, 0))
 
         extra_vars: dict[str, tk.StringVar] = {}
@@ -10775,14 +10930,14 @@ class JarvisApp:
                 padx=(0 if col == 0 else 12, 0), pady=(0, 8),
             )
             tk.Label(cell, text=title, bg=BG, fg=CYAN_DIM,
-                     font=("Consolas", 9)).pack(anchor="w", pady=(0, 2))
+                     font=(MONO_FONT, 9)).pack(anchor="w", pady=(0, 2))
             var = tk.StringVar(value=self.cfg.get(field, ""))
             row_frame = tk.Frame(cell, bg=BG)
             row_frame.pack(fill="x")
             entry = tk.Entry(
                 row_frame, textvariable=var, show="•" if secret else "",
                 bg=PANEL, fg=TEXT, insertbackground=CYAN, relief="flat",
-                font=("Consolas", 10),
+                font=(MONO_FONT, 10),
             )
             entry.pack(side="left", fill="x", expand=True, ipady=6)
             self._bind_clipboard_shortcuts(entry)
@@ -10790,12 +10945,12 @@ class JarvisApp:
                 row_frame, text="Вставити",
                 command=lambda e=entry: paste_api_key(e),
                 bg=PANEL, fg=CYAN, activebackground=LINE, activeforeground=CYAN,
-                relief="flat", font=("Segoe UI", 8), padx=8, pady=5,
+                relief="flat", font=(UI_FONT, 8), padx=8, pady=5,
             ).pack(side="left", padx=(6, 0))
             if hint:
                 tk.Label(
                     cell, text=hint, bg=BG, fg=MUTED,
-                    font=("Segoe UI", 7), justify="left", wraplength=280,
+                    font=(UI_FONT, 7), justify="left", wraplength=280,
                 ).pack(anchor="w", pady=(1, 0))
             extra_vars[field] = var
 
@@ -10850,12 +11005,12 @@ class JarvisApp:
                 "Jarvis перебиратиме їх по черзі."
             ),
             bg=BG, fg=MUTED, wraplength=600, justify="left",
-            font=("Segoe UI", 8),
+            font=(UI_FONT, 8),
         ).pack(anchor="w", padx=18, pady=(3, 0))
         paste_status.pack(anchor="w", padx=18, pady=(3, 0))
 
         tk.Label(win, text="МОДЕЛЬ", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+                 font=(MONO_FONT, 9)).pack(anchor="w", padx=18, pady=(12, 2))
         current_model = self.cfg.get("model", DEFAULT_CONFIG["model"])
         model_ids_by_label: dict[str, str] = {}
 
@@ -10885,7 +11040,7 @@ class JarvisApp:
         )
         model_box.config(bg=PANEL, fg=TEXT, activebackground="#25304F",
                          activeforeground=CYAN, relief="flat", highlightthickness=0,
-                         font=("Consolas", 9), anchor="w")
+                         font=(MONO_FONT, 9), anchor="w")
         model_box["menu"].config(bg=PANEL, fg=TEXT, activebackground="#25304F",
                                  activeforeground=CYAN)
         model_box.pack(side="left", fill="x", expand=True)
@@ -10894,23 +11049,23 @@ class JarvisApp:
         custom_model_row.pack(fill="x", padx=18, pady=(5, 0))
         tk.Label(
             custom_model_row, text="СВІЙ ID МОДЕЛІ", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).pack(side="left", padx=(0, 8))
         custom_model_var = tk.StringVar(value="")
         custom_model_entry = tk.Entry(
             custom_model_row, textvariable=custom_model_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9),
         )
         custom_model_entry.pack(side="left", fill="x", expand=True, ipady=5)
         self._bind_clipboard_shortcuts(custom_model_entry)
         tk.Label(
             win,
             text="Для свого провайдера введи custom/<model> — напр. custom/gpt-4o-mini.",
-            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            bg=BG, fg=MUTED, font=(UI_FONT, 8),
         ).pack(anchor="w", padx=18, pady=(2, 0))
         free_models_status = tk.Label(
             win, text="Безкоштовні моделі ще не оновлено.", bg=BG, fg=MUTED,
-            font=("Segoe UI", 8),
+            font=(UI_FONT, 8),
         )
         free_models_status.pack(anchor="w", padx=18, pady=(3, 0))
 
@@ -10918,7 +11073,7 @@ class JarvisApp:
         connection_row.pack(fill="x", padx=18, pady=(8, 0))
         connection_status = tk.Label(
             connection_row, text="Тест надсилає короткий запит і витрачає квоту провайдера.",
-            bg=BG, fg=MUTED, font=("Segoe UI", 8), anchor="w",
+            bg=BG, fg=MUTED, font=(UI_FONT, 8), anchor="w",
         )
         connection_status.pack(side="left", fill="x", expand=True)
 
@@ -10955,7 +11110,7 @@ class JarvisApp:
         connection_button = tk.Button(
             connection_row, text="Тест з’єднання", command=test_connection,
             bg=PANEL, fg=CYAN, activebackground=LINE,
-            activeforeground=CYAN, relief="flat", font=("Segoe UI", 8),
+            activeforeground=CYAN, relief="flat", font=(UI_FONT, 8),
             padx=10, pady=5,
         )
         connection_button.pack(side="right", padx=(8, 0))
@@ -10997,14 +11152,14 @@ class JarvisApp:
         refresh_free_button = tk.Button(
             model_picker, text="Оновити", command=refresh_free_models,
             bg=PANEL, fg=CYAN, activebackground="#25304F",
-            activeforeground=CYAN, relief="flat", font=("Segoe UI", 8),
+            activeforeground=CYAN, relief="flat", font=(UI_FONT, 8),
             padx=8, pady=5,
         )
         refresh_free_button.pack(side="left", padx=(6, 0))
         dialog.after(100, refresh_free_models)
 
         tk.Label(win, text="ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ · БЕКЕНД", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+                 font=(MONO_FONT, 9)).pack(anchor="w", padx=18, pady=(12, 2))
         backend_labels = {
             "auto": "Авто (ComfyUI → OpenAI)",
             "comfyui": "ComfyUI (локально)",
@@ -11022,7 +11177,7 @@ class JarvisApp:
         )
         backend_box.config(bg=PANEL, fg=TEXT, activebackground=LINE,
                            activeforeground=CYAN, relief="flat",
-                           highlightthickness=0, font=("Consolas", 9), anchor="w")
+                           highlightthickness=0, font=(MONO_FONT, 9), anchor="w")
         backend_box["menu"].config(bg=PANEL, fg=TEXT, activebackground=LINE,
                                    activeforeground=CYAN)
         backend_box.pack(fill="x", padx=18)
@@ -11038,12 +11193,12 @@ class JarvisApp:
         tk.Checkbutton(
             comfy_flags, text="Запускати ComfyUI автоматично",
             variable=comfy_auto_var, bg=BG, fg=TEXT, selectcolor=PANEL,
-            activebackground=BG, activeforeground=CYAN, font=("Segoe UI", 8),
+            activebackground=BG, activeforeground=CYAN, font=(UI_FONT, 8),
         ).pack(side="left", padx=(0, 14))
         tk.Checkbutton(
             comfy_flags, text="Дозволяти публічну хмару як fallback",
             variable=public_var, bg=BG, fg=TEXT, selectcolor=PANEL,
-            activebackground=BG, activeforeground=CYAN, font=("Segoe UI", 8),
+            activebackground=BG, activeforeground=CYAN, font=(UI_FONT, 8),
         ).pack(side="left")
 
         comfy_row = tk.Frame(win, bg=BG)
@@ -11065,15 +11220,15 @@ class JarvisApp:
             ("КРОКИ", comfy_steps_var, 5),
         ):
             tk.Label(comfy_row, text=label, bg=BG, fg=CYAN_DIM,
-                     font=("Consolas", 8)).pack(side="left", padx=(0, 6))
+                     font=(MONO_FONT, 8)).pack(side="left", padx=(0, 6))
             tk.Entry(
                 comfy_row, textvariable=variable, width=width, bg=PANEL,
                 fg=TEXT, insertbackground=CYAN, relief="flat",
-                font=("Consolas", 8),
+                font=(MONO_FONT, 8),
             ).pack(side="left", padx=(0, 12), ipady=4)
 
         tk.Label(win, text="OPENAI · МОДЕЛЬ / РОЗМІР / ЯКІСТЬ", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 8)).pack(anchor="w", padx=18, pady=(8, 0))
+                 font=(MONO_FONT, 8)).pack(anchor="w", padx=18, pady=(8, 0))
         image_row = tk.Frame(win, bg=BG)
         image_row.pack(fill="x", padx=18)
         image_model_var = tk.StringVar(
@@ -11088,12 +11243,12 @@ class JarvisApp:
 
         def image_picker(parent, label, var, values) -> None:
             tk.Label(
-                parent, text=label, bg=BG, fg=CYAN_DIM, font=("Consolas", 8),
+                parent, text=label, bg=BG, fg=CYAN_DIM, font=(MONO_FONT, 8),
             ).pack(side="left")
             box = tk.OptionMenu(parent, var, *values)
             box.config(
                 bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
-                relief="flat", highlightthickness=0, font=("Consolas", 8),
+                relief="flat", highlightthickness=0, font=(MONO_FONT, 8),
                 anchor="w",
             )
             box["menu"].config(
@@ -11111,7 +11266,7 @@ class JarvisApp:
             win,
             text="Покращувати промпт через чат-модель (ChatGPT-стиль)",
             variable=image_enhance_var, bg=BG, fg=TEXT, selectcolor=PANEL,
-            activebackground=BG, activeforeground=CYAN, font=("Segoe UI", 9),
+            activebackground=BG, activeforeground=CYAN, font=(UI_FONT, 9),
         ).pack(anchor="w", padx=18, pady=(6, 0))
         tk.Label(
             win,
@@ -11121,24 +11276,24 @@ class JarvisApp:
                 "OpenAI-ключ потрібен лише для OpenAI. Картинки зберігаються у "
                 "%APPDATA%\\Jarvis\\images (останні 200)."
             ),
-            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            bg=BG, fg=MUTED, font=(UI_FONT, 8),
         ).pack(anchor="w", padx=18, pady=(2, 0))
 
         tk.Label(win, text="ПОСИЛАННЯ НА ТВОЮ СТОРІНКУ PRIVATE SERVER", bg=BG,
-                 fg=CYAN_DIM, font=("Consolas", 9)).pack(anchor="w", padx=18,
+                 fg=CYAN_DIM, font=(MONO_FONT, 9)).pack(anchor="w", padx=18,
                                                           pady=(10, 2))
         roblox_server_var = tk.StringVar(
             value=self.cfg.get("roblox_private_server", "")
         )
         roblox_server_entry = tk.Entry(
             win, textvariable=roblox_server_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9),
         )
         roblox_server_entry.pack(fill="x", padx=18, ipady=6)
         self._bind_clipboard_shortcuts(roblox_server_entry)
 
         tk.Label(win, text=self.tr("settings.ui_language").upper(), bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+                 font=(MONO_FONT, 9)).pack(anchor="w", padx=18, pady=(12, 2))
         ui_lang_by_label = {label: code for code, label in i18n.UI_LANGUAGES}
         ui_lang_by_code = {code: label for code, label in i18n.UI_LANGUAGES}
         ui_lang_var = tk.StringVar(value=ui_lang_by_code.get(self.ui_lang, "Українська"))
@@ -11147,7 +11302,7 @@ class JarvisApp:
         )
         ui_lang_box.config(bg=PANEL, fg=TEXT, activebackground="#25304F",
                            activeforeground=CYAN, relief="flat", highlightthickness=0,
-                           font=("Consolas", 9), anchor="w")
+                           font=(MONO_FONT, 9), anchor="w")
         ui_lang_box["menu"].config(bg=PANEL, fg=TEXT, activebackground="#25304F",
                                    activeforeground=CYAN)
         ui_lang_box.pack(fill="x", padx=18)
@@ -11158,12 +11313,12 @@ class JarvisApp:
         left = tk.Frame(row, bg=BG)
         left.pack(side="left", fill="x", expand=True)
         tk.Label(left, text="МОВА", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w")
+                 font=(MONO_FONT, 9)).pack(anchor="w")
         lang_var = tk.StringVar(value=self.cfg.get("language", "uk-UA"))
         lang_box = tk.OptionMenu(left, lang_var, *LANGUAGES)
         lang_box.config(bg=PANEL, fg=TEXT, activebackground="#25304F",
                         activeforeground=CYAN, relief="flat", highlightthickness=0,
-                        font=("Consolas", 9), anchor="w")
+                        font=(MONO_FONT, 9), anchor="w")
         lang_box["menu"].config(bg=PANEL, fg=TEXT, activebackground="#25304F",
                                 activeforeground=CYAN)
         lang_box.pack(fill="x")
@@ -11171,12 +11326,12 @@ class JarvisApp:
         right = tk.Frame(row, bg=BG)
         right.pack(side="left", fill="x", expand=True, padx=(14, 0))
         tk.Label(right, text="ГОЛОС", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w")
+                 font=(MONO_FONT, 9)).pack(anchor="w")
         voice_var = tk.StringVar(value=self.cfg.get("voice", VOICE_BY_LANG["uk-UA"]))
         voice_box = tk.OptionMenu(right, voice_var, *VOICES)
         voice_box.config(bg=PANEL, fg=TEXT, activebackground="#25304F",
                          activeforeground=CYAN, relief="flat", highlightthickness=0,
-                         font=("Consolas", 9), anchor="w")
+                         font=(MONO_FONT, 9), anchor="w")
         voice_box["menu"].config(bg=PANEL, fg=TEXT, activebackground="#25304F",
                                  activeforeground=CYAN)
         voice_box.pack(fill="x")
@@ -11194,17 +11349,17 @@ class JarvisApp:
 
         tk.Checkbutton(opts, text="Без звуку", variable=mute_var, bg=BG, fg=TEXT,
                        selectcolor=PANEL, activebackground=BG, activeforeground=CYAN,
-                       font=("Segoe UI", 10)).pack(side="left")
+                       font=(UI_FONT, 10)).pack(side="left")
         tk.Checkbutton(opts, text="Поверх усіх вікон", variable=top_var, bg=BG, fg=TEXT,
                        selectcolor=PANEL, activebackground=BG, activeforeground=CYAN,
-                       font=("Segoe UI", 10)).pack(side="left", padx=(18, 0))
+                       font=(UI_FONT, 10)).pack(side="left", padx=(18, 0))
 
         hotkey_var = tk.BooleanVar(value=bool(self.cfg.get("voice_hotkey")))
         tk.Checkbutton(
             win, text="Глобальна голосова клавіша: Ctrl+Alt+J",
             variable=hotkey_var, bg=BG, fg=TEXT, selectcolor=PANEL,
             activebackground=BG, activeforeground=CYAN,
-            font=("Segoe UI", 10),
+            font=(UI_FONT, 10),
         ).pack(anchor="w", padx=18, pady=(10, 0))
 
         wake_var = tk.BooleanVar(value=bool(self.cfg.get("wake_word")))
@@ -11217,18 +11372,18 @@ class JarvisApp:
             wake, text="Слухати «Hey Jarvis» без кнопки (wake word)",
             variable=wake_var, bg=BG, fg=TEXT, selectcolor=PANEL,
             activebackground=BG, activeforeground=CYAN,
-            font=("Segoe UI", 10),
+            font=(UI_FONT, 10),
         ).pack(anchor="w")
         tk.Checkbutton(
             wake, text="Продовжувати діалог після відповіді",
             variable=wake_cont_var, bg=BG, fg=TEXT, selectcolor=PANEL,
             activebackground=BG, activeforeground=CYAN,
-            font=("Segoe UI", 9),
+            font=(UI_FONT, 9),
         ).pack(anchor="w", padx=26)
         tk.Label(
             wake,
             text="openWakeWord — офлайн; без нього резервний STT потребує інтернету.",
-            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            bg=BG, fg=MUTED, font=(UI_FONT, 8),
         ).pack(anchor="w", padx=26)
 
         offline_var = tk.BooleanVar(value=bool(self.cfg.get("offline_mode")))
@@ -11238,13 +11393,13 @@ class JarvisApp:
             offline, text="Офлайн-режим: тільки локальні моделі Ollama",
             variable=offline_var, bg=BG, fg=TEXT, selectcolor=PANEL,
             activebackground=BG, activeforeground=CYAN,
-            font=("Segoe UI", 10),
+            font=(UI_FONT, 10),
         ).pack(anchor="w")
         tk.Label(
             offline,
             text="Хмарні API не використовуються. Потрібна запущена Ollama "
                  "і завантажена модель (ollama pull llama3.2).",
-            bg=BG, fg=MUTED, font=("Segoe UI", 8),
+            bg=BG, fg=MUTED, font=(UI_FONT, 8),
         ).pack(anchor="w", padx=26)
 
         offline_model_var = tk.StringVar(
@@ -11254,11 +11409,11 @@ class JarvisApp:
         model_row.pack(fill="x", padx=26, pady=(6, 0))
         tk.Label(
             model_row, text="МОДЕЛЬ", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).pack(side="left")
         offline_model_entry = tk.Entry(
             model_row, textvariable=offline_model_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9),
         )
         offline_model_entry.pack(
             side="left", fill="x", expand=True, padx=(8, 0), ipady=4
@@ -11269,7 +11424,7 @@ class JarvisApp:
         backend_row.pack(fill="x", padx=26, pady=(6, 0))
         tk.Label(
             backend_row, text="STT", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).pack(side="left")
         stt_backend_var = tk.StringVar(
             value=self.cfg.get("stt_backend", "auto")
@@ -11277,7 +11432,7 @@ class JarvisApp:
         stt_box = tk.OptionMenu(backend_row, stt_backend_var, "auto", "google", "offline")
         stt_box.config(
             bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", highlightthickness=0, font=("Consolas", 8), anchor="w",
+            relief="flat", highlightthickness=0, font=(MONO_FONT, 8), anchor="w",
         )
         stt_box["menu"].config(
             bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
@@ -11285,7 +11440,7 @@ class JarvisApp:
         stt_box.pack(side="left", padx=(8, 18))
         tk.Label(
             backend_row, text="TTS", bg=BG, fg=CYAN_DIM,
-            font=("Consolas", 8),
+            font=(MONO_FONT, 8),
         ).pack(side="left")
         tts_backend_var = tk.StringVar(
             value=self.cfg.get("tts_backend", "auto")
@@ -11293,7 +11448,7 @@ class JarvisApp:
         tts_box = tk.OptionMenu(backend_row, tts_backend_var, "auto", "offline")
         tts_box.config(
             bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", highlightthickness=0, font=("Consolas", 8), anchor="w",
+            relief="flat", highlightthickness=0, font=(MONO_FONT, 8), anchor="w",
         )
         tts_box["menu"].config(
             bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
@@ -11318,11 +11473,11 @@ class JarvisApp:
         )):
             tk.Label(
                 local_paths, text=label, bg=BG, fg=CYAN_DIM,
-                font=("Consolas", 8),
+                font=(MONO_FONT, 8),
             ).grid(row=row_index, column=0, sticky="w", pady=(4, 0))
             entry = tk.Entry(
                 local_paths, textvariable=var, bg=PANEL, fg=TEXT,
-                insertbackground=CYAN, relief="flat", font=("Consolas", 8),
+                insertbackground=CYAN, relief="flat", font=(MONO_FONT, 8),
             )
             entry.grid(
                 row=row_index, column=1, sticky="ew", padx=(8, 0),
@@ -11336,7 +11491,7 @@ class JarvisApp:
         status_row.pack(fill="x", padx=26, pady=(6, 0))
         tk.Label(
             status_row, textvariable=offline_status_var, bg=BG, fg=MUTED,
-            font=("Segoe UI", 8), anchor="w", justify="left",
+            font=(UI_FONT, 8), anchor="w", justify="left",
         ).pack(side="left", fill="x", expand=True)
 
         def refresh_offline_status() -> None:
@@ -11362,7 +11517,7 @@ class JarvisApp:
         tk.Button(
             status_row, text="Перевірити", command=refresh_offline_status,
             bg=PANEL, fg=TEXT, activebackground=LINE, activeforeground=CYAN,
-            relief="flat", font=("Segoe UI", 8), padx=10, pady=3,
+            relief="flat", font=(UI_FONT, 8), padx=10, pady=3,
         ).pack(side="right")
         refresh_offline_status()
 
@@ -11378,14 +11533,14 @@ class JarvisApp:
             selectcolor=PANEL,
             activebackground=BG,
             activeforeground=CYAN,
-            font=("Segoe UI", 10),
+            font=(UI_FONT, 10),
         ).pack(anchor="w")
         tk.Label(
             access,
             text="Небезпечні дії Jarvis попросить підтвердити.",
             bg=BG,
             fg="#C97B7B",
-            font=("Segoe UI", 8),
+            font=(UI_FONT, 8),
         ).pack(anchor="w", padx=26)
 
         extras = tk.Frame(win, bg=BG)
@@ -11396,38 +11551,38 @@ class JarvisApp:
             extras, text="Режим ґеймера (тихі підказки поверх гри)",
             variable=gaming_var, bg=BG, fg=TEXT, selectcolor=PANEL,
             activebackground=BG, activeforeground=CYAN,
-            font=("Segoe UI", 10),
+            font=(UI_FONT, 10),
         ).pack(anchor="w")
         tk.Checkbutton(
             extras, text="Локальні плагіни з %APPDATA%\\Jarvis\\plugins",
             variable=plugins_var, bg=BG, fg=TEXT, selectcolor=PANEL,
             activebackground=BG, activeforeground=CYAN,
-            font=("Segoe UI", 10),
+            font=(UI_FONT, 10),
         ).pack(anchor="w", pady=(4, 0))
 
         tk.Label(win, text="HOME ASSISTANT · URL", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+                 font=(MONO_FONT, 9)).pack(anchor="w", padx=18, pady=(12, 2))
         ha_url_var = tk.StringVar(value=self.cfg.get("home_assistant_url", ""))
         ha_url_entry = tk.Entry(
             win, textvariable=ha_url_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9),
         )
         ha_url_entry.pack(fill="x", padx=18, ipady=6)
         self._bind_clipboard_shortcuts(ha_url_entry)
 
         tk.Label(win, text="HOME ASSISTANT · ДОВГОСТРОКОВИЙ ТОКЕН", bg=BG,
-                 fg=CYAN_DIM, font=("Consolas", 9)).pack(anchor="w", padx=18,
+                 fg=CYAN_DIM, font=(MONO_FONT, 9)).pack(anchor="w", padx=18,
                                                           pady=(8, 2))
         ha_token_var = tk.StringVar(value=self.cfg.get("home_assistant_token", ""))
         ha_token_entry = tk.Entry(
             win, textvariable=ha_token_var, bg=PANEL, fg=TEXT, show="•",
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9),
         )
         ha_token_entry.pack(fill="x", padx=18, ipady=6)
         self._bind_clipboard_shortcuts(ha_token_entry)
 
         tk.Label(win, text="ФІЧІ JARVIS", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 9)).pack(anchor="w", padx=18, pady=(12, 2))
+                 font=(MONO_FONT, 9)).pack(anchor="w", padx=18, pady=(12, 2))
         clip_hist_var = tk.BooleanVar(
             value=bool(self.cfg.get("clipboard_history", True))
         )
@@ -11445,17 +11600,17 @@ class JarvisApp:
             tk.Checkbutton(
                 features_row, text=text, variable=variable, bg=BG, fg=TEXT,
                 selectcolor=PANEL, activebackground=BG, activeforeground=CYAN,
-                font=("Segoe UI", 9),
+                font=(UI_FONT, 9),
             ).pack(side="left", padx=(0, 12))
 
         tg_row = tk.Frame(win, bg=BG)
         tg_row.pack(fill="x", padx=18, pady=(6, 0))
         tk.Label(tg_row, text="TELEGRAM · ТОКЕН", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 8)).pack(anchor="w")
+                 font=(MONO_FONT, 8)).pack(anchor="w")
         tg_token_var = tk.StringVar(value=str(self.cfg.get("telegram_token") or ""))
         tg_token_entry = tk.Entry(
             tg_row, textvariable=tg_token_var, bg=PANEL, fg=TEXT, show="•",
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9),
         )
         tg_token_entry.pack(fill="x", ipady=5)
         self._bind_clipboard_shortcuts(tg_token_entry)
@@ -11464,10 +11619,10 @@ class JarvisApp:
         tg_chat_row = tk.Frame(win, bg=BG)
         tg_chat_row.pack(fill="x", padx=18, pady=(6, 0))
         tk.Label(tg_chat_row, text="TELEGRAM · CHAT ID", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 8)).pack(side="left", padx=(0, 8))
+                 font=(MONO_FONT, 8)).pack(side="left", padx=(0, 8))
         tg_chat_entry = tk.Entry(
             tg_chat_row, textvariable=tg_chat_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9),
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9),
         )
         tg_chat_entry.pack(side="left", fill="x", expand=True, ipady=5)
         self._bind_clipboard_shortcuts(tg_chat_entry)
@@ -11475,24 +11630,24 @@ class JarvisApp:
         brief_row = tk.Frame(win, bg=BG)
         brief_row.pack(fill="x", padx=18, pady=(6, 0))
         tk.Label(brief_row, text="БРИФІНГ · МІСТО", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 8)).pack(side="left", padx=(0, 8))
+                 font=(MONO_FONT, 8)).pack(side="left", padx=(0, 8))
         brief_city_var = tk.StringVar(
             value=str(self.cfg.get("briefing_city") or "Київ")
         )
         brief_city_entry = tk.Entry(
             brief_row, textvariable=brief_city_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9), width=18,
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9), width=18,
         )
         brief_city_entry.pack(side="left", ipady=5)
         self._bind_clipboard_shortcuts(brief_city_entry)
         tk.Label(brief_row, text="ЧАС", bg=BG, fg=CYAN_DIM,
-                 font=("Consolas", 8)).pack(side="left", padx=(12, 8))
+                 font=(MONO_FONT, 8)).pack(side="left", padx=(12, 8))
         brief_time_var = tk.StringVar(
             value=str(self.cfg.get("briefing_time") or "09:00")
         )
         brief_time_entry = tk.Entry(
             brief_row, textvariable=brief_time_var, bg=PANEL, fg=TEXT,
-            insertbackground=CYAN, relief="flat", font=("Consolas", 9), width=8,
+            insertbackground=CYAN, relief="flat", font=(MONO_FONT, 9), width=8,
         )
         brief_time_entry.pack(side="left", ipady=5)
         self._bind_clipboard_shortcuts(brief_time_entry)
@@ -11591,13 +11746,13 @@ class JarvisApp:
         btns.pack(fill="x", padx=18, pady=(6, 10))
         tk.Button(btns, text="ЗБЕРЕГТИ", command=save, bg="#4D6BFE", fg="#FFFFFF",
                   activebackground="#25304F", activeforeground=CYAN, relief="flat",
-                  font=("Segoe UI", 10, "bold"), padx=18, pady=8).pack(side="right")
+                  font=(UI_FONT, 10, "bold"), padx=18, pady=8).pack(side="right")
         tk.Button(btns, text="СКАСУВАТИ", command=dialog.destroy, bg=PANEL, fg=MUTED,
                   activebackground="#25304F", activeforeground=CYAN, relief="flat",
-                  font=("Segoe UI", 10), padx=14, pady=8).pack(side="right", padx=(0, 8))
+                  font=(UI_FONT, 10), padx=14, pady=8).pack(side="right", padx=(0, 8))
 
         tk.Label(win, text="Ключ зберігається локально у %APPDATA%\\Jarvis\\config.json",
-                 bg=BG, fg="#3A4150", font=("Segoe UI", 8)).pack(anchor="w", padx=18, pady=(4, 0))
+                 bg=BG, fg="#3A4150", font=(UI_FONT, 8)).pack(anchor="w", padx=18, pady=(4, 0))
 
 
 # ── self-test ────────────────────────────────────────────────────────────────
